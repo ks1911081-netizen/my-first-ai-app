@@ -4,63 +4,231 @@
     <meta charset="utf-8">
     <meta name="viewport" content="width=device-width, initial-scale=1">
     <meta name="theme-color" content="#050a12">
-    <meta name="description" content="ネオンブルーのAIアシスタント">
-    <title>AETHER — AIアシスタント</title>
+    <meta name="description" content="J.A.R.V.I.S. AIコックピット・インターフェース">
+    <title>J.A.R.V.I.S. — TACTICAL INTERFACE</title>
     <link rel="stylesheet" href="/static/styles.css">
   </head>
   <body>
     <div class="app-shell">
       <header class="topbar">
-        <a class="brand" href="/" aria-label="AETHER ホーム">
-          <span class="brand-mark" aria-hidden="true">A</span>
-          <span>AETHER<span class="brand-sub">PERSONAL AI</span></span>
+        <a class="brand" href="/" aria-label="J.A.R.V.I.S. ホーム">
+          <span class="brand-mark" aria-hidden="true"><span>J</span></span>
+          <span class="brand-name">J.A.R.V.I.S.<span class="brand-sub">STARK INTELLIGENCE SYSTEM</span></span>
         </a>
-        <div class="system-status"><span class="status-dot"></span><span id="connection-status">SYSTEM ONLINE</span></div>
+        <div class="memory-strip" aria-label="今月の日付メモリ">
+          <div class="memory-heading"><span>DATE MEMORY</span><span id="memory-month">-- / ----</span></div>
+          <div class="memory-days" id="memory-days" aria-hidden="true"></div>
+        </div>
+        <div class="topbar-readout">
+          <span class="top-date" id="top-date">---- / -- / --</span>
+          <span class="system-status"><i class="status-dot"></i><span id="connection-status">SYSTEM ONLINE</span></span>
+        </div>
       </header>
 
-      <main class="main-layout">
-        <section class="core-section" aria-label="AIコア">
-          <div class="core-wrap" id="core" aria-hidden="true">
-            <div class="orbit orbit-one"></div>
-            <div class="orbit orbit-two"></div>
-            <div class="core-halo"></div>
-            <div class="core-disc"><span class="core-glyph">A</span></div>
-          </div>
-          <p class="core-label">AETHER <span>INTELLIGENCE CORE</span></p>
-          <p class="core-caption" id="core-caption">いつでもお手伝いいたします、サー。</p>
-        </section>
-
-        <section class="conversation" aria-label="会話">
-          <div class="conversation-heading">
-            <div>
-              <p class="eyebrow">SECURE CHANNEL <span> / 01</span></p>
-              <h1>アシスタント</h1>
+      <main class="cockpit-grid">
+        <aside class="side-column left-column" aria-label="システム監視">
+          <section class="panel date-panel">
+            <div class="panel-heading"><span>CHRONOS</span><span class="panel-code">SYS / 01</span></div>
+            <div class="date-orb">
+              <span class="date-orb-ring"></span>
+              <span class="date-month" id="date-month">---</span>
+              <strong id="date-day">--</strong>
+              <span class="date-year" id="date-year">----</span>
             </div>
-            <button class="clear-button" id="clear-chat" type="button" title="会話をクリア">クリア <span aria-hidden="true">↻</span></button>
-          </div>
+            <p class="weekday" id="weekday">曜日データを取得中</p>
+            <div class="panel-foot"><span>LOCAL DATE</span><span class="live-indicator">● LIVE</span></div>
+          </section>
 
-          <div class="messages" id="messages" aria-live="polite" aria-relevant="additions text">
-            <article class="message assistant-message">
-              <span class="message-avatar" aria-hidden="true">A</span>
-              <div class="message-content">
-                <span class="message-sender">AETHER <time>NOW</time></span>
-                <p>お帰りなさいませ、サー。ご用件をどうぞ。調査でもアイデア出しでも、お手伝いいたします。</p>
+          <section class="panel telemetry-panel">
+            <div class="panel-heading"><span>CORE TELEMETRY</span><span class="panel-code">SYS / 02</span></div>
+            <div class="gauges">
+              <div class="gauge-unit">
+                <div class="gauge" id="cpu-gauge" style="--level: 32%">
+                  <div class="gauge-inner"><strong id="cpu-value">32</strong><span>%</span></div>
+                </div>
+                <div class="gauge-caption"><span>CPU LOAD</span><small>PROCESSOR</small></div>
               </div>
-            </article>
-          </div>
+              <div class="gauge-unit">
+                <div class="gauge gauge-orange" id="ram-gauge" style="--level: 58%">
+                  <div class="gauge-inner"><strong id="ram-value">58</strong><span>%</span></div>
+                </div>
+                <div class="gauge-caption"><span>MEMORY</span><small>RAM USAGE</small></div>
+              </div>
+            </div>
+            <div class="sim-note">SIMULATED TELEMETRY</div>
+          </section>
 
-          <form class="composer" id="chat-form">
-            <label class="sr-only" for="prompt">メッセージ</label>
-            <textarea id="prompt" name="prompt" rows="1" maxlength="4000" placeholder="メッセージを入力..." required></textarea>
-            <button class="send-button" id="send-button" type="submit" aria-label="送信">
-              <span>送信</span><span aria-hidden="true">↗</span>
-            </button>
-            <p class="composer-hint">ENTER で送信 ・ SHIFT + ENTER で改行</p>
-          </form>
+          <section class="panel power-panel">
+            <div class="panel-heading"><span>AUXILIARY POWER</span><span class="panel-code">PWR / SIM</span></div>
+            <div class="battery-readout">
+              <div class="battery-icon"><span></span></div>
+              <div class="battery-copy"><strong>86<span>%</span></strong><small>BACKUP CELL</small></div>
+              <span class="power-state">SIMULATED</span>
+            </div>
+            <div class="battery-track"><span></span></div>
+            <div class="panel-foot"><span>RESERVE CAPACITY</span><span>SIM DATA</span></div>
+          </section>
+
+          <section class="panel network-panel">
+            <div class="panel-heading"><span>NETWORK UPLINK</span><span class="panel-code">COM / SIM</span></div>
+            <div class="network-meta"><span><i class="live-indicator">●</i> ENCRYPTED</span><span>24.8 <small>MB/S</small></span></div>
+            <div class="waveform network-wave" aria-hidden="true"></div>
+            <div class="panel-foot"><span>LATENCY <b>18 MS</b></span><span>PACKET FLOW</span></div>
+          </section>
+
+          <section class="panel launcher-panel" aria-label="クイックプロトコルとランチャー">
+            <div class="panel-heading"><span>QUICK PROTOCOLS</span><span class="panel-code">LAUNCHER</span></div>
+            <div class="launcher-grid">
+              <button class="launcher-button briefing-launcher" type="button" data-protocol="briefing">
+                <svg viewBox="0 0 24 24" aria-hidden="true"><circle cx="12" cy="12" r="8"/><circle cx="12" cy="12" r="3"/><path d="M12 1v4m0 14v4M1 12h4m14 0h4M17.5 6.5 21 3"/></svg>
+                <span>BRIEFING</span><small>DAILY INTEL</small>
+              </button>
+              <a class="launcher-button coding-launcher" href="https://github.com/" target="_blank" rel="noopener noreferrer">
+                <svg viewBox="0 0 24 24" aria-hidden="true"><path d="m8 7-5 5 5 5m8-10 5 5-5 5m-3-13-2 16"/></svg>
+                <span>CODING</span><small>DEVELOPMENT</small>
+              </a>
+              <a class="launcher-button gaming-launcher" href="https://pogl.com/ja/experiences/6b4ed890-f7a4-48cc-8ee5-c8380044567f" target="_blank" rel="noopener noreferrer">
+                <svg viewBox="0 0 24 24" aria-hidden="true"><path d="M7 8h10a4 4 0 0 1 3.8 2.8l1.2 4.1a2.5 2.5 0 0 1-4.1 2.5l-2.2-1.9H8.3l-2.2 1.9A2.5 2.5 0 0 1 2 14.9l1.2-4.1A4 4 0 0 1 7 8Z"/><path d="M8 10v5m-2.5-2.5h5m5-1h.01m3 3h.01"/></svg>
+                <span>GAMING</span><small>EXPERIENCE</small>
+              </a>
+              <a class="launcher-button watching-launcher" href="https://wkt-plus-axhs.onrender.com/wkt" target="_blank" rel="noopener noreferrer">
+                <svg viewBox="0 0 24 24" aria-hidden="true"><rect x="3" y="4" width="18" height="13" rx="1"/><path d="m10 8 5 2.5-5 2.5zM8 21h8m-4-4v4"/></svg>
+                <span>WATCHING</span><small>MEDIA LINK</small>
+              </a>
+            </div>
+          </section>
+        </aside>
+
+        <section class="center-column" aria-label="AIコアとチャット">
+          <section class="core-stage" aria-label="J.A.R.V.I.S. AIコア">
+            <div class="stage-readout stage-readout-left"><span>REACTOR STATUS</span><strong id="reactor-status">NOMINAL</strong></div>
+            <div class="stage-readout stage-readout-right"><span>POWER OUTPUT</span><strong>3.7 <small>GW</small></strong></div>
+            <div class="core-wrap" id="core" aria-hidden="true">
+              <div class="core-grid"></div>
+              <div class="core-ring ring-outer"></div>
+              <div class="core-ring ring-ticks"></div>
+              <div class="core-ring ring-orbit ring-orbit-a"></div>
+              <div class="core-ring ring-orbit ring-orbit-b"></div>
+              <div class="core-ring ring-inner"></div>
+              <div class="core-spokes"></div>
+              <div class="core-halo"></div>
+              <div class="core-disc"><span class="core-glyph">J</span></div>
+              <span class="core-crosshair crosshair-top"></span>
+              <span class="core-crosshair crosshair-bottom"></span>
+            </div>
+            <div class="core-ident"><span>MARK LXXXV</span><i></i><span>ARC REACTOR // ACTIVE</span></div>
+            <p class="core-caption" id="core-caption">システムは正常です。ご用件をどうぞ。</p>
+          </section>
+
+          <section class="conversation panel" aria-label="J.A.R.V.I.S. との会話">
+            <div class="conversation-heading">
+              <div class="conversation-title">
+                <span class="channel-icon" aria-hidden="true">⌁</span>
+                <div><p class="eyebrow">SECURE CHANNEL <span>/ 01</span></p><h1>J.A.R.V.I.S. <small>ASSISTANT LINK</small></h1></div>
+              </div>
+              <button class="clear-button" id="clear-chat" type="button" title="会話をクリア"><span>RESET</span><b aria-hidden="true">↻</b></button>
+            </div>
+
+            <div class="messages" id="messages" aria-live="polite" aria-relevant="additions text">
+              <article class="message assistant-message">
+                <span class="message-avatar" aria-hidden="true">J</span>
+                <div class="message-content">
+                  <span class="message-sender">J.A.R.V.I.S. <time>ONLINE</time></span>
+                  <p>お帰りなさいませ、伊吹様。システムは正常に稼働しています。ご用件をどうぞ。</p>
+                </div>
+              </article>
+            </div>
+
+            <form class="composer" id="chat-form">
+              <label class="sr-only" for="prompt">メッセージ</label>
+              <div class="entry-row">
+                <span class="input-prompt" aria-hidden="true">›</span>
+                <textarea id="prompt" name="prompt" rows="1" maxlength="4000" placeholder="コマンドまたはメッセージを入力..." required></textarea>
+                <div class="voice-controls">
+                  <button class="voice-control speaker-control" id="voice-output" type="button" aria-label="音声読み上げをオフにする" aria-pressed="true" title="音声読み上げ ON">
+                    <span class="control-icon" aria-hidden="true"><svg viewBox="0 0 24 24"><path d="M4 10v4h4l5 4V6l-5 4z"/><path d="M16 9a5 5 0 0 1 0 6m2-9a9 9 0 0 1 0 12"/></svg></span><span class="control-label">VOICE ON</span>
+                  </button>
+                  <button class="voice-control voice-input" id="voice-input" type="button" aria-label="音声入力を開始" aria-pressed="false" title="音声入力">
+                    <span class="control-icon" aria-hidden="true"><svg viewBox="0 0 24 24"><rect x="9" y="2" width="6" height="13" rx="3"/><path d="M5 11a7 7 0 0 0 14 0m-7 7v4m-4 0h8"/></svg></span><span class="control-label" id="mic-label">MIC</span>
+                  </button>
+                  <button class="send-button" id="send-button" type="submit" aria-label="テキストを送信">
+                    <span>TRANSMIT</span><b aria-hidden="true">↗</b>
+                  </button>
+                </div>
+              </div>
+              <div class="composer-meta">
+                <p class="voice-status" id="voice-status" data-state="ready" aria-live="polite">VOICE LINK // READY</p>
+                <p class="composer-hint">ENTER TRANSMIT <span>//</span> SHIFT + ENTER NEW LINE</p>
+              </div>
+            </form>
+          </section>
         </section>
+
+        <aside class="side-column right-column" aria-label="環境情報とクロック">
+          <section class="panel clock-panel">
+            <div class="panel-heading"><span>GLOBAL CLOCK</span><span class="panel-code">LOCAL TIME</span></div>
+            <div class="digital-clock" id="digital-clock" aria-label="現在時刻">--:--:--</div>
+            <div class="clock-sub"><span id="clock-date">---- / -- / --</span><span class="clock-live"><i></i> LIVE</span></div>
+            <div class="clock-ticks" aria-hidden="true"></div>
+          </section>
+
+          <section class="panel weather-panel">
+            <div class="panel-heading"><span>ATMOSPHERIC SCAN</span><span class="panel-code">KUSHIRO // LIVE</span></div>
+            <div class="weather-main">
+              <div class="weather-icon" aria-hidden="true"><span class="weather-sun"></span><span class="weather-cloud"></span></div>
+              <div class="weather-reading"><strong><span id="weather-current">--</span><i>°</i></strong><span id="weather-description">CONNECTING...</span></div>
+            </div>
+            <div class="weather-details">
+              <div><span>WIND</span><b><span id="weather-wind">--</span><small> KM/H</small></b></div>
+              <div><span>HIGH</span><b><span id="weather-high">--</span><small>°C</small></b></div>
+              <div><span>LOW</span><b><span id="weather-low">--</span><small>°C</small></b></div>
+            </div>
+            <div class="weather-location"><span>HOKKAIDO // KUSHIRO</span><span id="weather-updated">DATA // --:--</span></div>
+            <div class="weather-error" id="weather-error" role="status" hidden></div>
+          </section>
+
+          <section class="panel memory-bank-panel" aria-label="長期記憶バンク">
+            <div class="panel-heading"><span>MEMORY BANK</span><span class="panel-code">PERSISTENT</span></div>
+            <div class="memory-bank-content">
+              <div class="memory-bank-count"><strong id="memory-count">--</strong><span>FACTS</span></div>
+              <div class="memory-bank-info"><span id="memory-status">CONNECTING...</span><span id="session-status">SESSION // 0 / 40</span></div>
+              <button class="memory-open-button" id="open-memory" type="button" aria-haspopup="dialog">ACCESS <b aria-hidden="true">↗</b></button>
+            </div>
+          </section>
+
+          <section class="panel audio-panel">
+            <div class="panel-heading"><span>AUDIO SPECTRUM</span><span class="panel-code">VIS / 07</span></div>
+            <div class="spectrum" id="spectrum" aria-hidden="true"></div>
+            <div class="audio-readout"><span>AMBIENT FREQUENCY</span><b>● STANDBY</b></div>
+          </section>
+
+          <section class="stark-panel" aria-label="Stark Industries">
+            <div class="stark-emblem" aria-hidden="true"><span></span></div>
+            <div><strong>STARK</strong><span>INDUSTRIES</span></div>
+            <small>ENGINEERING TOMORROW</small>
+          </section>
+
+          <div class="right-footnote"><span>HUD BUILD 08.24.11</span><span>SECURE // AES-256</span></div>
+        </aside>
       </main>
-      <footer class="footer"><span>ENCRYPTED SESSION</span><span>POWERED BY GITHUB MODELS</span></footer>
+      <dialog class="memory-dialog" id="memory-dialog" aria-labelledby="memory-dialog-title">
+        <section class="memory-dialog-panel">
+          <div class="memory-dialog-heading">
+            <div><p class="eyebrow">LONG-TERM STORAGE <span>// LOCAL</span></p><h2 id="memory-dialog-title">MEMORY BANK <small id="memory-dialog-count">0 FACTS</small></h2></div>
+            <button class="clear-button" id="close-memory" type="button" aria-label="閉じる">CLOSE <b aria-hidden="true">×</b></button>
+          </div>
+          <p class="memory-dialog-status" id="memory-dialog-status" aria-live="polite">記憶データを読み込んでいます...</p>
+          <ul class="memory-list" id="memory-list"></ul>
+          <div class="memory-dialog-actions">
+            <button class="erase-memory-button" id="clear-memory" type="button">ERASE ALL MEMORY</button>
+            <span>MEMORY FILE // ENCRYPTION NOT ENABLED</span>
+          </div>
+        </section>
+      </dialog>
+      <footer class="footer"><span><i></i> ENCRYPTED SESSION</span><span>STARK INDUSTRIES <b>×</b> J.A.R.V.I.S.</span><span>ALL SYSTEMS NOMINAL</span></footer>
     </div>
+    <script src="https://cdn.jsdelivr.net/npm/marked@15.0.7/marked.min.js" integrity="sha384-H+hy9ULve6xfxRkWIh/YOtvDdpXgV2fmAGQkIDTxIgZwNoaoBal14Di2YTMR6MzR" crossorigin="anonymous" defer></script>
+    <script src="https://cdn.jsdelivr.net/npm/dompurify@3.2.6/dist/purify.min.js" integrity="sha384-JEyTNhjM6R1ElGoJns4U2Ln4ofPcqzSsynQkmEc/KGy6336qAZl70tDLufbkla+3" crossorigin="anonymous" defer></script>
     <script src="/static/app.js" defer></script>
   </body>
 </html>
