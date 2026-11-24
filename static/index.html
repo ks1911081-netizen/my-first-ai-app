@@ -1,0 +1,66 @@
+<!doctype html>
+<html lang="ja">
+  <head>
+    <meta charset="utf-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1">
+    <meta name="theme-color" content="#050a12">
+    <meta name="description" content="ネオンブルーのAIアシスタント">
+    <title>AETHER — AIアシスタント</title>
+    <link rel="stylesheet" href="/static/styles.css">
+  </head>
+  <body>
+    <div class="app-shell">
+      <header class="topbar">
+        <a class="brand" href="/" aria-label="AETHER ホーム">
+          <span class="brand-mark" aria-hidden="true">A</span>
+          <span>AETHER<span class="brand-sub">PERSONAL AI</span></span>
+        </a>
+        <div class="system-status"><span class="status-dot"></span><span id="connection-status">SYSTEM ONLINE</span></div>
+      </header>
+
+      <main class="main-layout">
+        <section class="core-section" aria-label="AIコア">
+          <div class="core-wrap" id="core" aria-hidden="true">
+            <div class="orbit orbit-one"></div>
+            <div class="orbit orbit-two"></div>
+            <div class="core-halo"></div>
+            <div class="core-disc"><span class="core-glyph">A</span></div>
+          </div>
+          <p class="core-label">AETHER <span>INTELLIGENCE CORE</span></p>
+          <p class="core-caption" id="core-caption">いつでもお手伝いいたします、サー。</p>
+        </section>
+
+        <section class="conversation" aria-label="会話">
+          <div class="conversation-heading">
+            <div>
+              <p class="eyebrow">SECURE CHANNEL <span> / 01</span></p>
+              <h1>アシスタント</h1>
+            </div>
+            <button class="clear-button" id="clear-chat" type="button" title="会話をクリア">クリア <span aria-hidden="true">↻</span></button>
+          </div>
+
+          <div class="messages" id="messages" aria-live="polite" aria-relevant="additions text">
+            <article class="message assistant-message">
+              <span class="message-avatar" aria-hidden="true">A</span>
+              <div class="message-content">
+                <span class="message-sender">AETHER <time>NOW</time></span>
+                <p>お帰りなさいませ、サー。ご用件をどうぞ。調査でもアイデア出しでも、お手伝いいたします。</p>
+              </div>
+            </article>
+          </div>
+
+          <form class="composer" id="chat-form">
+            <label class="sr-only" for="prompt">メッセージ</label>
+            <textarea id="prompt" name="prompt" rows="1" maxlength="4000" placeholder="メッセージを入力..." required></textarea>
+            <button class="send-button" id="send-button" type="submit" aria-label="送信">
+              <span>送信</span><span aria-hidden="true">↗</span>
+            </button>
+            <p class="composer-hint">ENTER で送信 ・ SHIFT + ENTER で改行</p>
+          </form>
+        </section>
+      </main>
+      <footer class="footer"><span>ENCRYPTED SESSION</span><span>POWERED BY GITHUB MODELS</span></footer>
+    </div>
+    <script src="/static/app.js" defer></script>
+  </body>
+</html>
