@@ -118,6 +118,24 @@ const holoCanvas = document.querySelector("#holo-canvas");
 const holoModelSelect = document.querySelector("#holo-model");
 const holoExplodeButton = document.querySelector("#holo-explode");
 const holoStatus = document.querySelector("#holo-status");
+const ideaOpenButton = document.querySelector("#idea-open");
+const ideaDialog = document.querySelector("#idea-dialog");
+const ideaCloseButton = document.querySelector("#idea-close");
+const ideaForm = document.querySelector("#idea-form");
+const ideaTopicInput = document.querySelector("#idea-topic");
+const ideaMapCenter = document.querySelector("#idea-map-center");
+const ideaMapNodes = document.querySelector("#idea-map-nodes");
+const ideaStatus = document.querySelector("#idea-status");
+const veronicaDrop = document.querySelector("#veronica-drop");
+const chronoTrack = document.querySelector("#chrono-track");
+const chronoNow = document.querySelector("#chrono-now");
+const chronoDate = document.querySelector("#chrono-date");
+const chronoCurrentMarker = document.querySelector("#chrono-current-marker");
+const chronoEvents = document.querySelector("#chrono-events");
+const chronoForm = document.querySelector("#chrono-form");
+const chronoEventTime = document.querySelector("#chrono-event-time");
+const chronoEventTitle = document.querySelector("#chrono-event-title");
+const chronoList = document.querySelector("#chrono-list");
 const cipherDialog = document.querySelector("#cipher-dialog");
 const cipherOpenButton = document.querySelector("#cipher-open");
 const cipherCloseButton = document.querySelector("#cipher-close");
@@ -130,6 +148,7 @@ const cipherStatus = document.querySelector("#cipher-status");
 const HISTORY_STORAGE_KEY = "jarvis.conversation.v1";
 const MEMORY_STORAGE_KEY = "jarvis.long-term-memory.v1";
 const HOLO_NOTES_STORAGE_KEY = "jarvis.holo-notes.v1";
+const CHRONO_EVENTS_STORAGE_KEY = "jarvis.chrono-events.v1";
 const MAX_HISTORY_MESSAGES = 40;
 const MAX_MEMORY_ITEMS = 80;
 const WEATHER_REFRESH_INTERVAL = 5 * 60 * 1000;
@@ -219,6 +238,12 @@ let housePartyTimeout = null;
 let housePartyPending = false;
 let globalRadarFrame = null;
 let holoAnimationFrame = null;
+let holoRenderer = null;
+let holoScene = null;
+let holoCamera = null;
+let holoModelGroup = null;
+let holoModelParts = [];
+let holoResizeObserver = null;
 let holoRotationX = -0.18;
 let holoRotationY = 0.36;
 let holoGestureScale = 1;
@@ -254,6 +279,11 @@ let holoNotes = [];
 let holoNoteDrag = null;
 let holoNoteZIndex = 10;
 let holoNotesSaveTimer = null;
+let chronoEventsData = [];
+let chronoEventCounter = 0;
+let chronoDisplayedDay = null;
+let veronicaDropTimer = null;
+let ideaNodeDrag = null;
 
 function trimHistory() {
   while (history.length > MAX_HISTORY_MESSAGES) history.shift();
@@ -964,6 +994,21 @@ function playSfx(sound, allowActivation = false) {
       playFmTone(context, 520, 460, 72, 35, now, 0.48, 0.085, 2100, "triangle");
       playFmTone(context, 392, 330, 55, 24, now + 0.52, 0.54, 0.06, 1700);
       playNoise(context, now + 0.02, 0.06, 0.016, 1150);
+    } else if (sound === "orbital-drop") {
+      playFmTone(context, 92, 48, 34, 28, now, 1.15, 0.13, 420, "sawtooth");
+      playFmTone(context, 740, 128, 62, 150, now + 0.42, 0.58, 0.085, 2100, "triangle");
+      playNoise(context, now + 0.83, 0.34, 0.085, 1100);
+      playFmTone(context, 196, 74, 48, 32, now + 1.12, 0.62, 0.12, 680, "square");
+    } else if (sound === "timeline-alert") {
+      playFmTone(context, 880, 660, 1320, 84, now, 0.32, 0.06, 2800, "triangle");
+      playFmTone(context, 1174.66, 880, 1760, 112, now + 0.22, 0.36, 0.055, 3400);
+    } else if (sound === "synthesize") {
+      playFmTone(context, 220, 440, 62, 170, now, 0.42, 0.075, 1600, "sawtooth");
+      for (let index = 0; index < 6; index += 1) {
+        const startAt = now + 0.25 + index * 0.13;
+        const frequency = 520 + index * 137;
+        playFmTone(context, frequency, frequency * 1.22, 48, 90, startAt, 0.3, 0.038, 3600, "triangle");
+      }
     } else if (sound === "lock") {
       playFmTone(context, 780, 110, 54, 22, now, 0.38, 0.09, 1200, "sawtooth");
       playFmTone(context, 980, 620, 1470, 110, now + 0.14, 0.22, 0.035, 3100, "square");
@@ -1210,7 +1255,7 @@ function projectHoloPoint(point, center, explode, rotationX, rotationY, scale, w
   };
 }
 
-function drawHoloProjector() {
+function drawHoloProjectorLegacy() {
   if (!holoDialog.open) {
     holoAnimationFrame = null;
     return;
@@ -1292,20 +1337,20 @@ function drawHoloProjector() {
   context.fillStyle = palette.bright;
   context.font = "8px monospace";
   context.fillText(holoExploded ? "ASSEMBLY // DISPERSED" : "ASSEMBLY // LOCKED", 12, height - 12);
-  holoAnimationFrame = reduceMotion ? null : requestAnimationFrame(drawHoloProjector);
+  holoAnimationFrame = reduceMotion ? null : requestAnimationFrame(drawHoloProjectorLegacy);
 }
 
-function requestHoloFrame() {
-  if (holoAnimationFrame === null) holoAnimationFrame = requestAnimationFrame(drawHoloProjector);
+function requestHoloFrameLegacy() {
+  if (holoAnimationFrame === null) holoAnimationFrame = requestAnimationFrame(drawHoloProjectorLegacy);
 }
 
-function openHoloProjector() {
+function openHoloProjectorLegacy() {
   if (!holoDialog.open) holoDialog.showModal();
   holoStatus.textContent = "DRAG TO ROTATE // 360° CONTROL";
-  requestHoloFrame();
+  requestHoloFrameLegacy();
 }
 
-function closeHoloProjector() {
+function closeHoloProjectorLegacy() {
   if (holoAnimationFrame !== null) cancelAnimationFrame(holoAnimationFrame);
   holoAnimationFrame = null;
 }
@@ -1316,6 +1361,412 @@ function updateHoloExplodeButton() {
   holoStatus.textContent = holoExploded
     ? "COMPONENTS DISPERSED // DRAG TO ROTATE"
     : "DRAG TO ROTATE // 360° CONTROL";
+}
+
+function openIdeaSynthesizer(topic = "") {
+  [simulationDialog, sentryDialog, cipherDialog, memoryDialog, holoDialog].forEach((dialog) => {
+    if (dialog.open) dialog.close();
+  });
+  if (!ideaDialog.open) ideaDialog.showModal();
+  if (topic) ideaTopicInput.value = topic;
+  ideaTopicInput.focus();
+}
+
+function parseSynthesizedIdeas(reply) {
+  const jsonMatch = reply.match(/\[[\s\S]*\]/u);
+  if (jsonMatch) {
+    try {
+      const parsed = JSON.parse(jsonMatch[0]);
+      if (Array.isArray(parsed)) {
+        return parsed
+          .filter((item) => item && typeof item.title === "string" && typeof item.detail === "string")
+          .slice(0, 6);
+      }
+    } catch (error) {
+      console.warn("IDEA SYNTHESIZER response was not valid JSON; trying the numbered format.", error);
+    }
+  }
+  try {
+    const objectEntries = [...reply.matchAll(/"title"\s*:\s*"((?:\\.|[^"\\])*)"\s*,\s*"detail"\s*:\s*"((?:\\.|[^"\\])*)"/gu)]
+      .slice(0, 6)
+      .map((match) => ({
+        title: JSON.parse(`"${match[1]}"`),
+        detail: JSON.parse(`"${match[2]}"`),
+      }));
+    if (objectEntries.length) return objectEntries;
+  } catch (error) {
+    console.warn("IDEA SYNTHESIZER response contains malformed JSON fields.", error);
+  }
+  return reply.split(/\r?\n/u)
+    .map((line) => line.match(/^\s*(?:\*\*)?(?:IDEA\s*)?([1-6])[.)、:：-]\s*(.+?)(?:\*\*)?\s*[-—–:：]\s*(.+)$/iu))
+    .filter(Boolean)
+    .slice(0, 6)
+    .map((match) => ({ title: match[2].replace(/\*\*/gu, "").trim(), detail: match[3].replace(/\*\*/gu, "").trim() }));
+}
+
+function updateIdeaNodeLinks() {
+  const svg = ideaMapNodes.querySelector(".idea-map-links");
+  if (!svg) return;
+  svg.replaceChildren();
+  ideaMapNodes.querySelectorAll(".idea-node").forEach((node) => {
+    const line = document.createElementNS("http://www.w3.org/2000/svg", "line");
+    const x = Number.parseFloat(node.style.left);
+    const y = Number.parseFloat(node.style.top);
+    line.setAttribute("x1", "50");
+    line.setAttribute("y1", "50");
+    line.setAttribute("x2", String(x));
+    line.setAttribute("y2", String(y));
+    svg.append(line);
+  });
+}
+
+function renderIdeaMap(topic, reply) {
+  const ideas = parseSynthesizedIdeas(reply);
+  const positions = [
+    [50, 15], [79, 32], [79, 68], [50, 85], [21, 68], [21, 32],
+  ];
+  ideaMapCenter.textContent = topic;
+  ideaMapNodes.replaceChildren();
+  const links = document.createElementNS("http://www.w3.org/2000/svg", "svg");
+  links.classList.add("idea-map-links");
+  links.setAttribute("viewBox", "0 0 100 100");
+  links.setAttribute("preserveAspectRatio", "none");
+  links.setAttribute("aria-hidden", "true");
+  ideaMapNodes.append(links);
+  ideas.forEach((idea, index) => {
+    const node = document.createElement("article");
+    node.className = "idea-node";
+    node.style.left = `${positions[index][0]}%`;
+    node.style.top = `${positions[index][1]}%`;
+    node.dataset.nodeIndex = String(index);
+    const title = document.createElement("button");
+    title.type = "button";
+    title.className = "idea-node-title";
+    title.textContent = `${String(index + 1).padStart(2, "0")} // ${idea.title}`;
+    title.setAttribute("aria-expanded", "false");
+    const detail = document.createElement("p");
+    detail.className = "idea-node-detail";
+    detail.textContent = idea.detail;
+    detail.hidden = true;
+    title.addEventListener("click", () => {
+      detail.hidden = !detail.hidden;
+      title.setAttribute("aria-expanded", String(!detail.hidden));
+      node.classList.toggle("is-expanded", !detail.hidden);
+    });
+    node.append(title, detail);
+    node.addEventListener("pointerdown", (event) => {
+      if (event.target.closest("button")) return;
+      ideaNodeDrag = {
+        id: event.pointerId,
+        node,
+        x: event.clientX,
+        y: event.clientY,
+        left: Number.parseFloat(node.style.left),
+        top: Number.parseFloat(node.style.top),
+      };
+      node.setPointerCapture(event.pointerId);
+    });
+    node.addEventListener("pointermove", (event) => {
+      if (!ideaNodeDrag || ideaNodeDrag.node !== node || ideaNodeDrag.id !== event.pointerId) return;
+      const bounds = ideaMapNodes.getBoundingClientRect();
+      const nextX = ideaNodeDrag.left + (event.clientX - ideaNodeDrag.x) / bounds.width * 100;
+      const nextY = ideaNodeDrag.top + (event.clientY - ideaNodeDrag.y) / bounds.height * 100;
+      node.style.left = `${Math.max(9, Math.min(91, nextX))}%`;
+      node.style.top = `${Math.max(10, Math.min(90, nextY))}%`;
+      updateIdeaNodeLinks();
+    });
+    ["pointerup", "pointercancel", "lostpointercapture"].forEach((name) => {
+      node.addEventListener(name, () => {
+        if (ideaNodeDrag?.node === node) ideaNodeDrag = null;
+      });
+    });
+    ideaMapNodes.append(node);
+  });
+  updateIdeaNodeLinks();
+  ideaStatus.textContent = ideas.length === 6
+    ? "SYNTHESIS COMPLETE // 6 NODES LOCKED // DRAG TO REPOSITION"
+    : `PARTIAL SYNTHESIS // ${ideas.length}/6 NODES PARSED // REVIEW AI REPORT IN CHAT`;
+}
+
+function runIdeaSynthesis(topic, sourceText, voice = false) {
+  const cleanTopic = topic.trim();
+  if (!cleanTopic || sendButton.disabled) return;
+  openIdeaSynthesizer(cleanTopic);
+  ideaStatus.textContent = "SYNTHESIS IN PROGRESS // MAPPING RELATED CONCEPTS";
+  ideaMapCenter.textContent = "SCANNING...";
+  ideaMapNodes.replaceChildren();
+  playSfx("synthesize", true);
+  appendSystemLog("IDEA SYNTHESIZER // CONCEPT MAPPING");
+  const requestText =
+    `テーマ「${cleanTopic}」について、具体的で実行可能な関連アイデアをちょうど6個生成してください。` +
+    "各案は互いに重複を避け、短いタイトルと具体的な説明（1〜2文）を含めてください。" +
+    "回答形式はJSON配列のみとし、各要素は {\"title\":\"アイデア名\",\"detail\":\"具体案\"} としてください。" +
+    "専門用語を使う場合は分かりやすく説明し、安全で合法的な提案にしてください。";
+  void sendMessage(sourceText, {
+    voice,
+    displayText: `SYNTHESIZE // ${cleanTopic}`,
+    requestText,
+    onReply: (reply) => renderIdeaMap(cleanTopic, reply),
+  });
+}
+
+function setHoloModel(modelName) {
+  if (!["reactor", "crystal", "helmet", "dna"].includes(modelName)) return;
+  holoModelSelect.value = modelName;
+  if (holoRenderer) {
+    createHoloModel(modelName);
+    updateHoloTheme();
+  }
+  const label = {
+    reactor: "ARC REACTOR",
+    crystal: "GEO CRYSTAL",
+    helmet: "HELMET MK-III",
+    dna: "HELIX DNA",
+  }[modelName];
+  holoStatus.textContent = `${label} // 3D PROJECTION LOCKED`;
+  requestHoloFrame();
+}
+
+function holoPalette() {
+  return hudMode === "mark-iii"
+    ? { primary: 0xffb700, secondary: 0xff3b32 }
+    : { primary: 0x00f3ff, secondary: 0x8bffff };
+}
+
+function createHoloLinePart(geometry, position, accent = false, explosionVector = null) {
+  const THREE = window.THREE;
+  const edgeGeometry = new THREE.EdgesGeometry(geometry, 1);
+  geometry.dispose();
+  const material = new THREE.LineBasicMaterial({
+    color: accent ? holoPalette().secondary : holoPalette().primary,
+    transparent: true,
+    opacity: accent ? 0.82 : 0.66,
+    blending: THREE.AdditiveBlending,
+    depthWrite: false,
+  });
+  const lines = new THREE.LineSegments(edgeGeometry, material);
+  const basePosition = new THREE.Vector3(...position);
+  const direction = explosionVector ? new THREE.Vector3(...explosionVector) : basePosition.clone();
+  if (direction.lengthSq() < 0.01) direction.set(0, 1, 0);
+  direction.normalize();
+  lines.position.copy(basePosition);
+  lines.userData.basePosition = basePosition;
+  lines.userData.explosionDirection = direction;
+  lines.userData.accent = accent;
+  holoModelGroup.add(lines);
+  holoModelParts.push(lines);
+  return lines;
+}
+
+function createHoloModel(modelName) {
+  const THREE = window.THREE;
+  if (!THREE || !holoModelGroup) return;
+  holoModelParts.forEach((part) => {
+    part.geometry.dispose();
+    part.material.dispose();
+  });
+  holoModelParts = [];
+  holoModelGroup.clear();
+
+  if (modelName === "reactor") {
+    const containment = createHoloLinePart(new THREE.TorusGeometry(0.82, 0.018, 6, 96), [0, 0, 0], false, [0, 0, 1]);
+    containment.userData.spinAxis = "z";
+    containment.userData.spinRate = 0.007;
+    const stabilizer = createHoloLinePart(new THREE.TorusGeometry(0.66, 0.014, 6, 96), [0, 0, 0], true, [0, 1, 0]);
+    stabilizer.rotation.x = Math.PI / 2;
+    stabilizer.userData.spinAxis = "x";
+    stabilizer.userData.spinRate = -0.011;
+    const field = createHoloLinePart(new THREE.TorusGeometry(0.5, 0.012, 6, 96), [0, 0, 0], false, [1, 0, 0]);
+    field.rotation.y = Math.PI / 2;
+    field.userData.spinAxis = "y";
+    field.userData.spinRate = 0.015;
+    createHoloLinePart(new THREE.CylinderGeometry(0.3, 0.38, 0.62, 16, 3, true), [0, 0, 0], true);
+    createHoloLinePart(new THREE.IcosahedronGeometry(0.3, 1), [0, 0, 0]);
+    for (let index = 0; index < 8; index += 1) {
+      const angle = index * Math.PI / 4;
+      const x = Math.cos(angle) * 0.72;
+      const y = Math.sin(angle) * 0.72;
+      createHoloLinePart(
+        new THREE.CylinderGeometry(0.035, 0.045, 0.25, 8, 1, true),
+        [x, y, 0],
+        index % 2 === 0,
+        [x * 1.8, y * 1.8, 0],
+      );
+    }
+  } else if (modelName === "crystal") {
+    const outer = createHoloLinePart(new THREE.IcosahedronGeometry(0.83, 1), [0, 0, 0]);
+    outer.rotation.set(0.18, 0.24, 0.1);
+    const inner = createHoloLinePart(new THREE.IcosahedronGeometry(0.52, 1), [0, 0, 0], true);
+    inner.rotation.set(Math.PI / 3, 0, Math.PI / 5);
+    const orbitOne = createHoloLinePart(new THREE.TorusGeometry(1.05, 0.012, 5, 120), [0, 0, 0], true, [0, 1, 0]);
+    orbitOne.rotation.set(0.9, 0.2, 0);
+    orbitOne.userData.spinAxis = "z";
+    orbitOne.userData.spinRate = 0.006;
+    const orbitTwo = createHoloLinePart(new THREE.TorusGeometry(1.05, 0.01, 5, 120), [0, 0, 0], false, [1, 0, 0]);
+    orbitTwo.rotation.set(0.25, 1.05, 0.4);
+    orbitTwo.userData.spinAxis = "y";
+    orbitTwo.userData.spinRate = -0.009;
+  } else if (modelName === "helmet") {
+    const shell = createHoloLinePart(new THREE.IcosahedronGeometry(0.8, 2), [0, 0.08, 0], false, [0, 0.9, -0.1]);
+    shell.scale.set(0.82, 1.12, 0.78);
+    const faceplate = createHoloLinePart(new THREE.IcosahedronGeometry(0.53, 1), [0, -0.12, 0.48], true, [0, -0.1, 1.2]);
+    faceplate.scale.set(1.06, 0.88, 0.5);
+    createHoloLinePart(new THREE.BoxGeometry(0.7, 0.09, 0.08), [0, 0.18, 0.68], true, [0, 0.25, 0.8]);
+    for (const side of [-1, 1]) {
+      createHoloLinePart(new THREE.TorusGeometry(0.105, 0.012, 5, 24), [side * 0.28, 0.16, 0.67], true, [side * 0.8, 0, 0.5]);
+      createHoloLinePart(new THREE.CylinderGeometry(0.16, 0.11, 0.24, 8, 2, true), [side * 0.68, 0.04, 0], false, [side * 1.5, 0, 0]);
+    }
+  } else {
+    const strandPoints = [[], []];
+    const segments = 144;
+    const turns = 2.4;
+    for (let index = 0; index <= segments; index += 1) {
+      const t = index / segments;
+      const angle = t * Math.PI * 2 * turns;
+      for (let strand = 0; strand < 2; strand += 1) {
+        const phase = angle + strand * Math.PI;
+        strandPoints[strand].push(new THREE.Vector3(
+          Math.cos(phase) * 0.48,
+          (t - 0.5) * 2.2,
+          Math.sin(phase) * 0.48,
+        ));
+      }
+    }
+    strandPoints.forEach((points, index) => {
+      const geometry = new THREE.BufferGeometry().setFromPoints(points);
+      const line = new THREE.Line(geometry, new THREE.LineBasicMaterial({
+        color: index ? holoPalette().secondary : holoPalette().primary,
+        transparent: true,
+        opacity: 0.86,
+        blending: THREE.AdditiveBlending,
+      }));
+      line.userData.basePosition = new THREE.Vector3();
+      line.userData.explosionDirection = new THREE.Vector3(index ? 1 : -1, 0, 0);
+      line.userData.accent = Boolean(index);
+      holoModelGroup.add(line);
+      holoModelParts.push(line);
+    });
+    for (let index = 0; index <= 36; index += 1) {
+      const pointIndex = Math.round(index / 36 * segments);
+      const geometry = new THREE.BufferGeometry().setFromPoints([
+        strandPoints[0][pointIndex],
+        strandPoints[1][pointIndex],
+      ]);
+      const rung = new THREE.Line(geometry, new THREE.LineBasicMaterial({
+        color: holoPalette().primary,
+        transparent: true,
+        opacity: 0.48,
+        blending: THREE.AdditiveBlending,
+      }));
+      rung.userData.basePosition = new THREE.Vector3();
+      rung.userData.explosionDirection = new THREE.Vector3(0, Math.sin(index * 0.7), Math.cos(index * 0.7));
+      rung.userData.accent = false;
+      holoModelGroup.add(rung);
+      holoModelParts.push(rung);
+    }
+  }
+}
+
+function resizeHoloRenderer() {
+  if (!holoRenderer || !holoCamera) return;
+  const bounds = holoCanvas.getBoundingClientRect();
+  if (!bounds.width || !bounds.height) return;
+  holoRenderer.setPixelRatio(Math.min(window.devicePixelRatio || 1, 2));
+  holoRenderer.setSize(bounds.width, bounds.height, false);
+  holoCamera.aspect = bounds.width / bounds.height;
+  holoCamera.updateProjectionMatrix();
+}
+
+function updateHoloTheme() {
+  if (!holoScene || !window.THREE) return;
+  const palette = holoPalette();
+  holoScene.background = null;
+  holoModelParts.forEach((part) => {
+    part.material.color.setHex(part.userData.accent ? palette.secondary : palette.primary);
+  });
+}
+
+function drawHoloProjector() {
+  if (!holoDialog.open || !holoRenderer || !holoModelGroup) {
+    holoAnimationFrame = null;
+    return;
+  }
+  const targetExplode = holoExploded ? 1 : 0;
+  if (window.matchMedia("(prefers-reduced-motion: reduce)").matches) {
+    holoExplodeProgress = targetExplode;
+  } else {
+    holoExplodeProgress += (targetExplode - holoExplodeProgress) * 0.09;
+    if (Math.abs(holoExplodeProgress - targetExplode) < 0.002) holoExplodeProgress = targetExplode;
+  }
+  holoModelParts.forEach((part) => {
+    const { basePosition, explosionDirection } = part.userData;
+    part.position.copy(basePosition).addScaledVector(explosionDirection, holoExplodeProgress * 0.72);
+    if (part.userData.spinAxis) part.rotation[part.userData.spinAxis] += part.userData.spinRate;
+  });
+  holoModelGroup.rotation.x += (holoRotationX - holoModelGroup.rotation.x) * 0.18;
+  holoModelGroup.rotation.y += (holoRotationY - holoModelGroup.rotation.y) * 0.18 + 0.0015;
+  holoModelGroup.scale.setScalar(holoGestureScale);
+  holoCamera.position.z = 4.1 / holoGestureScale;
+  holoRenderer.render(holoScene, holoCamera);
+  holoAnimationFrame = window.matchMedia("(prefers-reduced-motion: reduce)").matches
+    ? null
+    : requestAnimationFrame(drawHoloProjector);
+}
+
+function requestHoloFrame() {
+  if (holoAnimationFrame === null && holoDialog.open) holoAnimationFrame = requestAnimationFrame(drawHoloProjector);
+}
+
+function initializeHoloRenderer() {
+  if (holoRenderer) {
+    resizeHoloRenderer();
+    return true;
+  }
+  const THREE = window.THREE;
+  if (!THREE?.WebGLRenderer) {
+    console.error("Three.js failed to load; the 3D hologram projector is unavailable.");
+    holoStatus.textContent = "THREE.JS UNAVAILABLE // CHECK CDN CONNECTION";
+    return false;
+  }
+  try {
+    holoRenderer = new THREE.WebGLRenderer({ alpha: true, antialias: true });
+    holoRenderer.setPixelRatio(Math.min(window.devicePixelRatio || 1, 2));
+    holoCanvas.replaceChildren(holoRenderer.domElement);
+    holoScene = new THREE.Scene();
+    holoCamera = new THREE.PerspectiveCamera(38, 1, 0.1, 100);
+    holoCamera.position.set(0, 0, 4.1);
+    holoModelGroup = new THREE.Group();
+    holoScene.add(holoModelGroup);
+    holoResizeObserver = new ResizeObserver(resizeHoloRenderer);
+    holoResizeObserver.observe(holoCanvas);
+    createHoloModel(holoModelSelect.value);
+    updateHoloTheme();
+    resizeHoloRenderer();
+    return true;
+  } catch (error) {
+    console.error("Three.js hologram renderer initialization failed.", error);
+    holoStatus.textContent = "3D RENDERER INITIALIZATION FAILED";
+    holoRenderer?.dispose();
+    holoRenderer = null;
+    holoCanvas.replaceChildren();
+    return false;
+  }
+}
+
+function openHoloProjector() {
+  [simulationDialog, sentryDialog, cipherDialog, memoryDialog, ideaDialog].forEach((dialog) => {
+    if (dialog.open) dialog.close();
+  });
+  if (!holoDialog.open) holoDialog.showModal();
+  if (!initializeHoloRenderer()) return false;
+  holoStatus.textContent = "DRAG TO ROTATE // SCROLL TO ZOOM // AIR GESTURE READY";
+  requestHoloFrame();
+  return true;
+}
+
+function closeHoloProjector() {
+  if (holoAnimationFrame !== null) cancelAnimationFrame(holoAnimationFrame);
+  holoAnimationFrame = null;
 }
 
 function updateGlobalRadar(time) {
@@ -2057,6 +2508,7 @@ function setHudMode(mode, playTransformSound = true) {
   clearTimeout(modeTransitionCleanupTimer);
   const version = ++modeTransitionVersion;
   hudMode = mode;
+  updateHoloTheme();
   appendSystemLog(`HUD MODE // ${mode.toUpperCase()}`);
   if (mode === "standard") {
     pauseMissionTimer();
@@ -2777,6 +3229,7 @@ function updateClock() {
     `${String(hours).padStart(2, "0")}:${String(Math.floor(elapsedSeconds / 60) % 60).padStart(2, "0")}:` +
     String(elapsedSeconds % 60).padStart(2, "0");
   updateTelemetryTicker();
+  updateChronoClock(now);
 
   if (dateKey !== updateClock.lastDateKey) {
     updateClock.lastDateKey = dateKey;
@@ -2912,6 +3365,181 @@ function updateFlightTelemetry() {
   flightMach.textContent = `MACH ${mach.toFixed(2)}`;
   flightAltitude.textContent = `${(Math.round(altitude / 100) * 100).toLocaleString("en-US")} FT`;
   flightTemperature.textContent = `${Math.round(temperature)}°C`;
+}
+
+function localDateKey(date = new Date()) {
+  return `${date.getFullYear()}-${String(date.getMonth() + 1).padStart(2, "0")}-${String(date.getDate()).padStart(2, "0")}`;
+}
+
+function saveChronoEvents() {
+  try {
+    window.localStorage.setItem(CHRONO_EVENTS_STORAGE_KEY, JSON.stringify(chronoEventsData));
+    return true;
+  } catch (error) {
+    console.error("CHRONO TIMELINE schedules could not be saved.", error);
+    appendSystemLog("CHRONO TIMELINE // STORAGE WRITE FAILED");
+    chronoDate.textContent = "SAVE ERROR";
+    return false;
+  }
+}
+
+function restoreChronoEvents() {
+  try {
+    const stored = window.localStorage.getItem(CHRONO_EVENTS_STORAGE_KEY);
+    if (!stored) return;
+    const parsed = JSON.parse(stored);
+    if (!Array.isArray(parsed)) throw new TypeError("Saved timeline data is not an array.");
+    chronoEventsData = parsed.filter((item) =>
+      item &&
+      typeof item.id === "string" &&
+      typeof item.title === "string" &&
+      /^\d{2}:\d{2}$/u.test(item.time) &&
+      /^\d{4}-\d{2}-\d{2}$/u.test(item.day) &&
+      Number.isFinite(item.createdAt));
+  } catch (error) {
+    console.error("CHRONO TIMELINE schedules could not be restored.", error);
+    appendSystemLog("CHRONO TIMELINE // STORED DATA INVALID");
+  }
+}
+
+function createChronoEvent(time, title, day = localDateKey(), createdAt = Date.now()) {
+  const [hours, minutes] = time.split(":").map(Number);
+  if (!Number.isInteger(hours) || hours < 0 || hours > 23 || !Number.isInteger(minutes) || minutes < 0 || minutes > 59) {
+    return null;
+  }
+  const event = {
+    id: `${Date.now().toString(36)}-${(++chronoEventCounter).toString(36)}`,
+    day,
+    time: `${String(hours).padStart(2, "0")}:${String(minutes).padStart(2, "0")}`,
+    title: title.trim().slice(0, 80),
+    createdAt,
+    notifiedDate: null,
+  };
+  if (!event.title) return null;
+  chronoEventsData.push(event);
+  chronoEventsData = chronoEventsData.slice(-200);
+  saveChronoEvents();
+  renderChronoTimeline();
+  return event;
+}
+
+function removeChronoEvent(id) {
+  chronoEventsData = chronoEventsData.filter((event) => event.id !== id);
+  saveChronoEvents();
+  renderChronoTimeline();
+}
+
+function renderChronoTimeline() {
+  const now = new Date();
+  const day = localDateKey(now);
+  const minutesNow = now.getHours() * 60 + now.getMinutes();
+  chronoDisplayedDay = day;
+  updateChronoClock(now);
+  chronoEvents.replaceChildren();
+  chronoList.replaceChildren();
+  const todaysEvents = chronoEventsData
+    .filter((event) => event.day === day)
+    .sort((first, second) => first.time.localeCompare(second.time));
+  todaysEvents.forEach((event) => {
+    const eventMinutes = Number(event.time.slice(0, 2)) * 60 + Number(event.time.slice(3, 5));
+    const marker = document.createElement("i");
+    marker.className = `chrono-event-marker${eventMinutes <= minutesNow ? " is-past" : ""}`;
+    marker.style.left = `${eventMinutes / 1440 * 100}%`;
+    marker.setAttribute("aria-hidden", "true");
+    chronoEvents.append(marker);
+    const row = document.createElement("div");
+    row.className = `chrono-event-row${eventMinutes <= minutesNow ? " is-past" : ""}`;
+    const label = document.createElement("span");
+    label.textContent = `${event.time} // ${event.title}`;
+    const remove = document.createElement("button");
+    remove.type = "button";
+    remove.textContent = "×";
+    remove.setAttribute("aria-label", `${event.time} ${event.title}を削除`);
+    remove.addEventListener("click", () => removeChronoEvent(event.id));
+    row.append(label, remove);
+    chronoList.append(row);
+  });
+  if (!todaysEvents.length) {
+    const empty = document.createElement("span");
+    empty.className = "chrono-empty";
+    empty.textContent = "NO SCHEDULED EVENTS";
+    chronoList.append(empty);
+  }
+}
+
+function updateChronoClock(now = new Date()) {
+  const day = localDateKey(now);
+  if (chronoDisplayedDay !== null && day !== chronoDisplayedDay) {
+    renderChronoTimeline();
+    return;
+  }
+  const minutesNow = now.getHours() * 60 + now.getMinutes();
+  chronoNow.textContent = `${String(now.getHours()).padStart(2, "0")}:${String(now.getMinutes()).padStart(2, "0")}`;
+  if (chronoDate.textContent !== "SAVE ERROR") {
+    chronoDate.textContent = new Intl.DateTimeFormat("ja-JP", { month: "2-digit", day: "2-digit", weekday: "short" }).format(now);
+  }
+  chronoCurrentMarker.style.left = `${minutesNow / 1440 * 100}%`;
+  chronoTrack.setAttribute("aria-valuenow", String(minutesNow));
+  chronoTrack.setAttribute("aria-valuetext", `${chronoNow.textContent} ${chronoDate.textContent}`);
+  if (!chronoEventTime.value && document.activeElement !== chronoEventTime) {
+    chronoEventTime.value = `${String(now.getHours()).padStart(2, "0")}:${String(now.getMinutes()).padStart(2, "0")}`;
+  }
+  checkChronoNotifications(now, chronoEventsData.filter((event) => event.day === day), minutesNow);
+}
+
+function checkChronoNotifications(now, events, minutesNow) {
+  const today = localDateKey(now);
+  events.forEach((event) => {
+    const scheduledMinutes = Number(event.time.slice(0, 2)) * 60 + Number(event.time.slice(3, 5));
+    const scheduledAt = new Date(now.getFullYear(), now.getMonth(), now.getDate(), Math.floor(scheduledMinutes / 60), scheduledMinutes % 60).getTime();
+    if (minutesNow < scheduledMinutes || event.notifiedDate === today || event.createdAt > scheduledAt) return;
+    event.notifiedDate = today;
+    saveChronoEvents();
+    const announcement = `伊吹様、${event.title}のお時間となりました`;
+    playSfx("timeline-alert", true);
+    addMessage("assistant", announcement);
+    history.push({ role: "assistant", content: announcement });
+    trimHistory();
+    persistHistory();
+    appendSystemLog(`CHRONO ALERT // ${event.time}`);
+    if (voiceOutputEnabled) void speakReply(announcement);
+  });
+}
+
+function parseChronoCommand(text) {
+  const normalized = text.normalize("NFKC").trim();
+  const match = normalized.match(/(\d{1,2})\s*時(?:\s*(\d{1,2})\s*分)?\s*に\s*(.+?)\s*(?:の予定)?(?:を)?\s*(?:追加|登録|入れて|設定)(?:して|してください)?[。.!！]?$/u);
+  if (!match) return null;
+  const hours = Number(match[1]);
+  const minutes = Number(match[2] || 0);
+  if (hours > 23 || minutes > 59) return null;
+  const title = match[3].replace(/(?:の予定|予定|を)$/u, "").trim();
+  if (!title) return null;
+  return { time: `${String(hours).padStart(2, "0")}:${String(minutes).padStart(2, "0")}`, title };
+}
+
+function addChronoCommand(text, voice) {
+  const requested = parseChronoCommand(text);
+  if (!requested) return false;
+  const event = createChronoEvent(requested.time, requested.title);
+  if (!event) return false;
+  const confirmation = `${event.time}に「${event.title}」の予定を登録しました、伊吹様。`;
+  addMessage("user", text);
+  addMessage("assistant", confirmation);
+  history.push({ role: "user", content: text }, { role: "assistant", content: confirmation });
+  trimHistory();
+  persistHistory();
+  appendSystemLog(`CHRONO EVENT // ${event.time} SCHEDULED`);
+  if (voice && voiceOutputEnabled) void speakReply(confirmation);
+  return true;
+}
+
+function setChronoTimeFromPointer(event) {
+  const bounds = chronoTrack.getBoundingClientRect();
+  if (!bounds.width) return;
+  const minutes = Math.max(0, Math.min(1439, Math.round((event.clientX - bounds.left) / bounds.width * 1440)));
+  chronoEventTime.value = `${String(Math.floor(minutes / 60)).padStart(2, "0")}:${String(minutes % 60).padStart(2, "0")}`;
+  chronoEventTitle.focus();
 }
 
 function updateTargetLockReadouts() {
@@ -3268,6 +3896,93 @@ function runSimulation(target, sourceText, voice = false) {
   });
 }
 
+function getIdeaSynthesisTarget(text) {
+  const normalized = text.normalize("NFKC");
+  if (!/(?:アイデア合成|合成して|アイデアを.*(?:考えて|出して)|新元素|idea synth|synthesize)/iu.test(normalized)) return null;
+  const target = normalized
+    .replace(/(?:アイデアを)?(?:合成して|合成|考えて|出して|提案して|synthesize(?:\s+ideas)?|idea\s+synthesizer)/giu, "")
+    .replace(/(?:の)?(?:アイデア|案)$/u, "")
+    .replace(/(?:の|を|について)$/u, "")
+    .replace(/[「」『』【】]/gu, "")
+    .replace(/^[\s、。，:：]+|[\s、。，:：]+$/gu, "");
+  return target || "新しいアイデア";
+}
+
+function getVeronicaTarget(text) {
+  const normalized = text.normalize("NFKC");
+  if (!/(?:ベロニカ|veronica|徹底調査)/iu.test(normalized)) return null;
+  const target = normalized
+    .replace(/ベロニカ(?:・)?(?:プロトコル)?(?:を)?(?:展開(?:して)?)?/giu, "")
+    .replace(/veronica(?:\s+protocol)?(?:\s+deploy(?:ed)?)?/giu, "")
+    .replace(/徹底調査(?:して|を)?/gu, "")
+    .replace(/(?:について|を|の|調べて|調査して|レポートして)/gu, " ")
+    .replace(/^[\s、。，:：でを]+|[\s、。，:：]+$/gu, "");
+  return target || "入力されたテーマ";
+}
+
+function triggerVeronicaProtocol(target, sourceText, voice = false) {
+  clearTimeout(veronicaDropTimer);
+  veronicaDrop.hidden = false;
+  veronicaDrop.classList.remove("is-active");
+  void veronicaDrop.offsetWidth;
+  veronicaDrop.classList.add("is-active");
+  playSfx("orbital-drop", true);
+  appendSystemLog("VERONICA PROTOCOL // ORBITAL DROP");
+  veronicaDropTimer = setTimeout(() => {
+    veronicaDrop.classList.remove("is-active");
+    veronicaDrop.hidden = true;
+  }, 3600);
+  const requestText =
+    `VERONICA PROTOCOL // 対象「${target}」について、十分な根拠と不確実性を明示して、通常より詳細な調査レポートを作成してください。\n` +
+    `必ず次の3部構成で回答してください。\n` +
+    `① 概要：対象の背景・現状・重要性。\n` +
+    `② 深掘りポイント3選：それぞれ根拠、具体例、注意点を含める。\n` +
+    `③ 実践アクション：優先順位のある具体的な次の行動。\n` +
+    `確認できない事実は断定せず、必要に応じて検索を行ってください。危険または違法な内容は安全な代替案に切り替えてください。`;
+  void sendMessage(sourceText, {
+    voice,
+    displayText: `VERONICA DEPLOYED // ${target}`,
+    requestText,
+  });
+}
+
+function getHoloCommand(text) {
+  const normalized = text.normalize("NFKC").toLowerCase();
+  const holoContext = /(?:立体図形|ホログラム|投影|アークリアクター|dna|二重らせん|分子構造|geo crystal|結晶体|イコサヘドロン|helmet|ヘルメット|arc reactor)/iu.test(normalized);
+  const selection = [
+    { pattern: /(?:dna|二重らせん|分子構造)/iu, model: "dna" },
+    { pattern: /(?:geo crystal|結晶体|イコサヘドロン)/iu, model: "crystal" },
+    { pattern: /(?:helmet|ヘルメット)/iu, model: "helmet" },
+    { pattern: /(?:arc reactor|アークリアクター)/iu, model: "reactor" },
+  ].find(({ pattern }) => pattern.test(normalized));
+  const explode = /(?:分解して|分解表示|explode|展開して)/iu.test(normalized) &&
+    (holoContext || /^(?:分解して|分解表示|explode)$/iu.test(normalized.trim()));
+  const open = /(?:立体図形を出して|ホログラム投影|立体ホログラム|投影して|project hologram|3d hologram)/iu.test(normalized);
+  if (!selection && !explode && !open) return null;
+  return { model: selection?.model || null, explode, open: open || Boolean(selection) };
+}
+
+function runHoloCommand(command, voice = false, sourceText = "") {
+  if (!openHoloProjector()) return;
+  if (command.model) setHoloModel(command.model);
+  if (command.explode !== holoExploded) {
+    holoExploded = command.explode;
+    updateHoloExplodeButton();
+    requestHoloFrame();
+  }
+  const response = "立体ホログラムを投影いたしました、伊吹様。";
+  if (sourceText) {
+    addMessage("user", sourceText);
+    history.push({ role: "user", content: sourceText });
+  }
+  addMessage("assistant", response);
+  history.push({ role: "assistant", content: response });
+  trimHistory();
+  persistHistory();
+  if (voice && voiceOutputEnabled) void speakReply(response);
+  appendSystemLog(`HOLOGRAM // ${holoModelSelect.selectedOptions[0].textContent}`);
+}
+
 function submitUserInput(
   text,
   {
@@ -3307,10 +4022,26 @@ function submitUserInput(
     triggerCleanSlateProtocol(text, voice);
     return;
   }
+  if (detectCommands && addChronoCommand(text, voice)) return;
   const airGestureCommand = detectCommands ? detectAirGestureCommand(text) : null;
   if (airGestureCommand !== null) {
     if (airGestureCommand) requestAirGestureStart();
     else stopAirGestureMode();
+    return;
+  }
+  const veronicaTarget = detectCommands ? getVeronicaTarget(text) : null;
+  if (veronicaTarget) {
+    triggerVeronicaProtocol(veronicaTarget, text, voice);
+    return;
+  }
+  const holoCommand = detectCommands ? getHoloCommand(text) : null;
+  if (holoCommand) {
+    runHoloCommand(holoCommand, voice, text);
+    return;
+  }
+  const ideaTarget = detectCommands ? getIdeaSynthesisTarget(text) : null;
+  if (ideaTarget) {
+    runIdeaSynthesis(ideaTarget, text, voice);
     return;
   }
   const simulationTarget = detectCommands ? getSimulationTarget(text) : null;
@@ -3961,6 +4692,7 @@ function stopAirGestureMode() {
   holoGestureScale = 1;
   holoExploded = false;
   updateHoloExplodeButton();
+  requestHoloFrame();
   drawGestureSkeleton(null);
   setAirGestureIndicator(false, "HAND TRACKING: OFFLINE");
   airGestureHud.hidden = true;
@@ -3999,6 +4731,7 @@ async function sendMessage(
     requestText = text,
     includeISSContext = false,
     simulationTarget = null,
+    onReply = null,
   } = {},
 ) {
   if (!text || sendButton.disabled) return;
@@ -4077,6 +4810,7 @@ async function sendMessage(
     persistHistory();
     addMessage("assistant", data.reply, { scroll: "start" });
     if (simulationTarget) renderSimulationResult(simulationTarget, data.reply);
+    if (onReply) onReply(data.reply);
     playSfx("ready");
     if (searchMetadata) addSearchReceipt(searchMetadata);
     if (launcherAction) addProtocolReceipt(launcherAction, launcherOpened);
@@ -4192,10 +4926,7 @@ document.addEventListener("pointermove", (event) => {
 holoOpenButton.addEventListener("click", openHoloProjector);
 holoCloseButton.addEventListener("click", () => holoDialog.close());
 holoDialog.addEventListener("close", closeHoloProjector);
-holoModelSelect.addEventListener("change", () => {
-  holoStatus.textContent = `${holoModelSelect.value === "reactor" ? "ARC REACTOR" : "HELMET ASSEMBLY"} // DRAG TO ROTATE`;
-  requestHoloFrame();
-});
+holoModelSelect.addEventListener("change", () => setHoloModel(holoModelSelect.value));
 holoExplodeButton.addEventListener("click", () => {
   holoExploded = !holoExploded;
   updateHoloExplodeButton();
@@ -4213,10 +4944,42 @@ holoCanvas.addEventListener("pointermove", (event) => {
   holoPointer.y = event.clientY;
   requestHoloFrame();
 });
+holoCanvas.addEventListener("wheel", (event) => {
+  event.preventDefault();
+  holoGestureScale = Math.max(0.65, Math.min(1.65, holoGestureScale * Math.exp(-event.deltaY * 0.001)));
+  requestHoloFrame();
+}, { passive: false });
 ["pointerup", "pointercancel", "lostpointercapture"].forEach((eventName) => {
   holoCanvas.addEventListener(eventName, () => {
     holoPointer = null;
   });
+});
+ideaOpenButton.addEventListener("click", () => openIdeaSynthesizer());
+ideaCloseButton.addEventListener("click", () => ideaDialog.close());
+ideaForm.addEventListener("submit", (event) => {
+  event.preventDefault();
+  const topic = ideaTopicInput.value.trim();
+  if (!topic) return;
+  runIdeaSynthesis(topic, `テーマ「${topic}」について関連アイデアを合成してください`);
+});
+chronoForm.addEventListener("submit", (event) => {
+  event.preventDefault();
+  const scheduled = createChronoEvent(chronoEventTime.value, chronoEventTitle.value);
+  if (!scheduled) {
+    chronoDate.textContent = "INVALID SCHEDULE";
+    return;
+  }
+  chronoEventTitle.value = "";
+  appendSystemLog(`CHRONO EVENT // ${scheduled.time} SCHEDULED`);
+});
+chronoTrack.addEventListener("pointerdown", (event) => setChronoTimeFromPointer(event));
+chronoTrack.addEventListener("keydown", (event) => {
+  if (!["ArrowLeft", "ArrowRight"].includes(event.key)) return;
+  event.preventDefault();
+  const current = Number(chronoTrack.getAttribute("aria-valuenow")) || 0;
+  const next = Math.max(0, Math.min(1439, current + (event.key === "ArrowRight" ? 15 : -15)));
+  chronoEventTime.value = `${String(Math.floor(next / 60)).padStart(2, "0")}:${String(next % 60).padStart(2, "0")}`;
+  chronoEventTitle.focus();
 });
 cipherOpenButton.addEventListener("click", () => {
   if (!cipherDialog.open) cipherDialog.showModal();
@@ -4331,6 +5094,16 @@ window.addEventListener("pagehide", () => {
   cleanSlatePending = false;
   cleanSlateOverlay.hidden = true;
   setCleanSlateControlsLocked(false);
+  clearTimeout(veronicaDropTimer);
+  veronicaDropTimer = null;
+  closeHoloProjector();
+  holoResizeObserver?.disconnect();
+  holoModelParts.forEach((part) => {
+    part.geometry.dispose();
+    part.material.dispose();
+  });
+  holoRenderer?.dispose();
+  holoRenderer = null;
   stopAirGestureMode();
   stopOpticalSensor();
   stopAmbientCore();
@@ -4364,7 +5137,9 @@ document.addEventListener("visibilitychange", () => {
 restoreHistory();
 restoreMemories();
 restoreHoloNotes();
+restoreChronoEvents();
 systemLogReady = true;
+renderChronoTimeline();
 appendSystemLog("NEURAL LINK: ACTIVE");
 appendSystemLog("BIOMETRIC SESSION: VERIFIED");
 updateVoiceStandbyButton();
