@@ -36,6 +36,21 @@ KUSHIRO_WEATHER = {
 }
 
 
+class SystemPromptIdentityTests(unittest.TestCase):
+    def test_identity_prompt_answers_name_calls_as_direct_address(self):
+        prompt = app_module.build_system_prompt([])
+
+        self.assertIn("あなたの名前はJ.A.R.V.I.S.（ジャービス）です", prompt)
+        self.assertIn("STARK INTELLIGENCE SYSTEM", prompt)
+        self.assertIn("J.A.R.V.I.S.本人として一貫して振る舞ってください", prompt)
+        self.assertIn(
+            "「ジャービス」「ジャービス？」のように名前だけの呼びかけなら",
+            prompt,
+        )
+        self.assertIn("はい、伊吹様。お呼びでしょうか？", prompt)
+        self.assertIn("はい、待機しております、伊吹様。", prompt)
+
+
 class SelectChatModelTests(unittest.TestCase):
     def test_prefers_llama_and_skips_inactive_or_audio_models(self):
         models = [
@@ -101,6 +116,7 @@ class SelectChatModelTests(unittest.TestCase):
             response = app_module.app.test_client().post(
                 "/api/chat",
                 json={
+                    "hud_mode": "mark-iii",
                     "memories": [
                         {
                             "id": "existing-memory",
@@ -132,6 +148,8 @@ class SelectChatModelTests(unittest.TestCase):
         self.assertIn("伊吹様", system_prompt)
         self.assertIn("北海道釧路市", system_prompt)
         self.assertIn("体感温度", system_prompt)
+        self.assertIn("HUD MODEはMARK-III", system_prompt)
+        self.assertIn("戦術補佐AI", system_prompt)
         self.assertNotIn("サー", system_prompt)
         get.assert_called_once_with(
             app_module.GROQ_MODELS_URL,
@@ -429,8 +447,16 @@ class SelectChatModelTests(unittest.TestCase):
                     "memories": [{"id": "bad", "text": "secret", "category": [], "created_at": ""}],
                 },
             )
+            invalid_hud_mode = client.post(
+                "/api/chat",
+                json={
+                    "messages": [{"role": "user", "content": "Hello"}],
+                    "hud_mode": "mark-iv",
+                },
+            )
         self.assertEqual(response.status_code, 400)
         self.assertEqual(invalid_memory.status_code, 400)
+        self.assertEqual(invalid_hud_mode.status_code, 400)
 
 
 if __name__ == "__main__":

@@ -49,6 +49,16 @@ MAX_NEW_MEMORIES_PER_TURN = 5
 MAX_TTS_TEXT_LENGTH = 5000
 TTS_VOICE = "ja-JP-KeitaNeural"
 SYSTEM_PROMPT = (
+    "あなたの名前はJ.A.R.V.I.S.（ジャービス）です。伊吹様（いぶきさま）によって開発された、"
+    "UI名称「STARK INTELLIGENCE SYSTEM」を持つ伊吹様専用のSF人工知能システムです。"
+    "映画の架空キャラクターについて説明するのではなく、この画面で伊吹様と対話している"
+    "J.A.R.V.I.S.本人として一貫して振る舞ってください。"
+    "「お前は誰？」「君の名前は？」などと尋ねられたら、"
+    "「私はJ.A.R.V.I.S.（ジャービス）、伊吹様専用に構築された統合AIアシスタントでございます。」"
+    "と誇りを持って答えてください。"
+    "最新のユーザー発言が「ジャービス」「ジャービス？」のように名前だけの呼びかけなら、"
+    "名前や作品について解説せず、「はい、伊吹様。お呼びでしょうか？」または"
+    "「はい、待機しております、伊吹様。」と短く執事らしく応答してください。"
     "あなたは、知的で冷静な優秀な専属AIパートナーです。"
     "丁寧で自然な日本語で回答し、ユーザーを必ず「伊吹様」とお呼びください。"
     "簡潔で役立つ回答を心がけ、必要に応じて要点を整理してください。"
@@ -508,8 +518,21 @@ def build_system_prompt(
     weather_warning=None,
     launcher_action=None,
     launcher_opened=True,
+    hud_mode="standard",
 ):
     prompt_parts = [SYSTEM_PROMPT]
+    if hud_mode == "mark-iii":
+        prompt_parts.append(
+            "HUD MODEはMARK-IIIです。伊吹様への敬意を保ちつつ、頼もしく簡潔な戦術補佐AIの口調で回答してください。"
+            "攻撃的・大げさな表現は避け、実際には実行していない操作を実行済みと主張しないでください。"
+            "ユーザーがMARK-IIIへの切替を依頼した場合は、"
+            "「了解いたしました、伊吹様。マーク3プロトコルを展開します。」と短く応答してください。"
+        )
+    else:
+        prompt_parts.append(
+            "HUD MODEはSTANDARDです。落ち着いた専属アシスタントの口調で回答してください。"
+            "ユーザーが標準モードへの復帰を依頼した場合は、簡潔に確認してください。"
+        )
     if memories:
         memory_facts = [
             {"category": item["category"], "text": item["text"]}
@@ -630,6 +653,9 @@ def chat():
     except ValueError as exc:
         return jsonify({"error": str(exc)}), 400
     launcher_action = data.get("launcher_action")
+    hud_mode = data.get("hud_mode", "standard")
+    if not isinstance(hud_mode, str) or hud_mode not in {"standard", "mark-iii"}:
+        return jsonify({"error": "HUDモードの指定が正しくありません。"}), 400
     if launcher_action is not None and (
         not isinstance(launcher_action, str) or launcher_action not in LAUNCHER_ACTIONS
     ):
@@ -751,6 +777,7 @@ def chat():
                     weather_warning=weather_warning,
                     launcher_action=launcher_action,
                     launcher_opened=launcher_opened,
+                    hud_mode=hud_mode,
                 ),
             },
             *validated_messages,

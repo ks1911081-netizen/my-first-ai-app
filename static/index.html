@@ -22,6 +22,17 @@
         <div class="topbar-readout">
           <span class="top-date" id="top-date">---- / -- / --</span>
           <span class="system-status"><i class="status-dot"></i><span id="connection-status">SYSTEM ONLINE</span></span>
+          <div class="topbar-settings">
+            <button class="hud-mode-toggle" id="hud-mode-toggle" type="button" aria-label="HUD MODE: STANDARD。クリックしてMARK-IIIに切り替え" aria-pressed="false" title="HUD MODEをMARK-IIIに切り替え">
+              <span>HUD MODE:</span><strong id="hud-mode-label">STANDARD</strong>
+            </button>
+            <div class="sfx-controls" aria-label="効果音設定">
+              <button class="sfx-toggle" id="sfx-toggle" type="button" aria-pressed="true" title="効果音をミュート">SFX: ON</button>
+              <label class="sr-only" for="sfx-volume">効果音の音量</label>
+              <input id="sfx-volume" type="range" min="0" max="100" step="1" value="30" aria-label="効果音の音量">
+              <output id="sfx-volume-value" for="sfx-volume">30%</output>
+            </div>
+          </div>
         </div>
       </header>
 
@@ -126,7 +137,12 @@
                 <span class="channel-icon" aria-hidden="true">⌁</span>
                 <div><p class="eyebrow">SECURE CHANNEL <span>/ 01</span></p><h1>J.A.R.V.I.S. <small>ASSISTANT LINK</small></h1></div>
               </div>
-              <button class="clear-button" id="clear-chat" type="button" title="会話をクリア"><span>RESET</span><b aria-hidden="true">↻</b></button>
+              <div class="conversation-actions">
+                <button class="standby-control" id="voice-standby" type="button" aria-label="ウェイクワード待機モードをオンにする" aria-pressed="false" title="ウェイクワード待機モード OFF">
+                  <span class="standby-indicator" aria-hidden="true"></span><span class="standby-title">VOICE STANDBY</span><span class="standby-state" id="standby-label">OFF</span>
+                </button>
+                <button class="clear-button" id="clear-chat" type="button" title="会話をクリア"><span>RESET</span><b aria-hidden="true">↻</b></button>
+              </div>
             </div>
 
             <div class="messages" id="messages" aria-live="polite" aria-relevant="additions text">

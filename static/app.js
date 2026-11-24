@@ -4,6 +4,8 @@ const messagesElement = document.querySelector("#messages");
 const sendButton = document.querySelector("#send-button");
 const microphoneButton = document.querySelector("#voice-input");
 const microphoneLabel = document.querySelector("#mic-label");
+const standbyButton = document.querySelector("#voice-standby");
+const standbyLabel = document.querySelector("#standby-label");
 const speakerButton = document.querySelector("#voice-output");
 const voiceStatus = document.querySelector("#voice-status");
 const clearButton = document.querySelector("#clear-chat");
@@ -21,6 +23,11 @@ const memoryDialogStatus = document.querySelector("#memory-dialog-status");
 const memoryList = document.querySelector("#memory-list");
 const weatherPanel = document.querySelector(".weather-panel");
 const weatherError = document.querySelector("#weather-error");
+const sfxToggle = document.querySelector("#sfx-toggle");
+const sfxVolumeInput = document.querySelector("#sfx-volume");
+const sfxVolumeValue = document.querySelector("#sfx-volume-value");
+const hudModeToggle = document.querySelector("#hud-mode-toggle");
+const hudModeLabel = document.querySelector("#hud-mode-label");
 const HISTORY_STORAGE_KEY = "jarvis.conversation.v1";
 const MEMORY_STORAGE_KEY = "jarvis.long-term-memory.v1";
 const MAX_HISTORY_MESSAGES = 40;
@@ -48,14 +55,31 @@ const markdownTags = [
 ];
 const markdownAttributes = ["align", "class", "colspan", "href", "rowspan", "title"];
 let recognition = null;
+let recognitionMode = null;
 let isListening = false;
 let cancelRecognition = false;
 let isSpeaking = false;
+let voiceStandbyEnabled = false;
+let wakeTransitionPending = false;
+let wakeRemainder = "";
+let wakeCandidate = "";
+let standbyRestartTimer = null;
+let pendingManualStart = false;
+let wakeActivated = false;
 let voiceOutputEnabled = true;
 let activeUtterance = null;
 let activeAudio = null;
 let activeAudioUrl = null;
 let speechRequestId = 0;
+let speechPurpose = "reply";
+let wakeAudioPromise = null;
+let audioContext = null;
+let sfxEnabled = true;
+let sfxVolume = 0.3;
+let processingSfxTimer = null;
+let processingSfxStartTimer = null;
+let sfxMasterGain = null;
+let hudMode = "standard";
 let requestInProgress = false;
 
 function trimHistory() {
@@ -388,6 +412,7 @@ function openProtocolTab(protocol) {
     if (!tab) return false;
     tab.opener = null;
     tab.location.replace(url);
+    playSfx("launch");
     return true;
   } catch (error) {
     console.warn(`Could not open the ${protocol} launcher tab.`, error);
@@ -447,49 +472,297 @@ function clearMemory() {
 }
 
 function syncCoreState() {
+  const activelyListening = isListening && recognitionMode !== "standby";
   core.classList.toggle("is-thinking", requestInProgress);
-  core.classList.toggle("is-listening", isListening);
+  core.classList.toggle("is-listening", activelyListening);
   core.classList.toggle("is-speaking", isSpeaking);
+  core.classList.toggle("is-wake", wakeActivated);
   coreStage.classList.toggle("is-busy", requestInProgress);
-  coreStage.classList.toggle("is-active", isListening || isSpeaking || requestInProgress);
-  reactorStatus.textContent = isListening
-    ? "LISTENING"
-    : isSpeaking
-      ? "SPEAKING"
-      : requestInProgress
-        ? "PROCESSING"
-        : "NOMINAL";
-  coreCaption.textContent = isListening
-    ? "聞き取り中です、伊吹様..."
-    : isSpeaking
-      ? "音声で応答しています、伊吹様..."
-      : requestInProgress
-        ? "応答を生成中です、伊吹様..."
-        : "システムは正常です。ご用件をどうぞ。";
-  connectionStatus.textContent = requestInProgress
-    ? "PROCESSING"
-    : isListening
-      ? "VOICE INPUT"
-      : isSpeaking
-        ? "VOICE OUTPUT"
-        : "SYSTEM ONLINE";
+  coreStage.classList.toggle("is-active", activelyListening || isSpeaking || requestInProgress || wakeActivated);
+  reactorStatus.textContent = wakeActivated
+    ? "WAKE DETECTED"
+    : activelyListening
+      ? "LISTENING"
+      : voiceStandbyEnabled && isListening
+        ? "STANDBY"
+        : isSpeaking
+          ? "SPEAKING"
+          : requestInProgress
+            ? "PROCESSING"
+            : "NOMINAL";
+  coreCaption.textContent = wakeActivated
+    ? "はい。ご用件をどうぞ。"
+    : activelyListening
+      ? "聞き取り中です、伊吹様..."
+      : voiceStandbyEnabled && isListening
+        ? "ウェイクワードを待機しています..."
+        : isSpeaking
+          ? "音声で応答しています、伊吹様..."
+          : requestInProgress
+            ? "応答を生成中です、伊吹様..."
+            : "システムは正常です。ご用件をどうぞ。";
+  connectionStatus.textContent = wakeActivated
+    ? "WAKE WORD"
+    : requestInProgress
+      ? "PROCESSING"
+      : activelyListening
+        ? "VOICE INPUT"
+        : voiceStandbyEnabled && isListening
+          ? "VOICE STANDBY"
+          : isSpeaking
+            ? "VOICE OUTPUT"
+            : "SYSTEM ONLINE";
 }
 
 function setVoiceStatus(message, state = "ready") {
+  const activelyListening = isListening && recognitionMode !== "standby";
   voiceStatus.textContent = message;
   voiceStatus.dataset.state = state;
-  microphoneButton.classList.toggle("is-listening", state === "listening");
-  microphoneButton.setAttribute("aria-pressed", String(isListening));
+  microphoneButton.classList.toggle("is-listening", activelyListening);
+  microphoneButton.setAttribute("aria-pressed", String(activelyListening));
   microphoneButton.setAttribute(
     "aria-label",
-    isListening ? "音声入力をキャンセル" : "音声入力を開始",
+    activelyListening ? "音声入力をキャンセル" : "音声入力を開始",
   );
-  microphoneLabel.textContent = isListening ? "STOP" : "MIC";
+  microphoneLabel.textContent = activelyListening ? "STOP" : "MIC";
+}
+
+function updateVoiceStandbyButton() {
+  standbyButton.setAttribute("aria-pressed", String(voiceStandbyEnabled));
+  standbyButton.setAttribute(
+    "aria-label",
+    `ウェイクワード待機モードを${voiceStandbyEnabled ? "オフ" : "オン"}にする`,
+  );
+  standbyButton.title = `ウェイクワード待機モード ${voiceStandbyEnabled ? "ON" : "OFF"}`;
+  standbyButton.classList.toggle("is-enabled", voiceStandbyEnabled);
+  standbyLabel.textContent = voiceStandbyEnabled ? "ON" : "OFF";
+}
+
+function scheduleStandbyRecognition() {
+  if (!voiceStandbyEnabled) return;
+  clearTimeout(standbyRestartTimer);
+  standbyRestartTimer = setTimeout(() => {
+    standbyRestartTimer = null;
+    if (voiceStandbyEnabled && !recognition && !requestInProgress && !isSpeaking) {
+      startRecognition("standby");
+    }
+  }, 250);
+}
+
+function getAudioContext(allowActivation = false) {
+  const AudioContextConstructor = window.AudioContext || window.webkitAudioContext;
+  if (!AudioContextConstructor) {
+    return null;
+  }
+  if (!audioContext && !allowActivation) return null;
+  try {
+    audioContext ||= new AudioContextConstructor();
+    if (!sfxMasterGain) {
+      sfxMasterGain = audioContext.createGain();
+      sfxMasterGain.gain.value = sfxEnabled ? sfxVolume : 0;
+      sfxMasterGain.connect(audioContext.destination);
+    }
+    const hasUserActivation = !navigator.userActivation || navigator.userActivation.isActive;
+    if (audioContext.state === "suspended" && allowActivation && hasUserActivation) {
+      void audioContext.resume().catch((error) => {
+        console.error("Web Audio context could not be resumed.", error);
+      });
+    }
+    return audioContext;
+  } catch (error) {
+    console.error("Web Audio context could not be initialized.", error);
+    return null;
+  }
+}
+
+function playTone(context, frequency, endFrequency, startAt, duration, level, type = "sine") {
+  const oscillator = context.createOscillator();
+  const gain = context.createGain();
+  const peak = Math.max(0.0001, level);
+  oscillator.type = type;
+  oscillator.frequency.setValueAtTime(frequency, startAt);
+  if (endFrequency !== frequency) {
+    oscillator.frequency.exponentialRampToValueAtTime(endFrequency, startAt + duration);
+  }
+  gain.gain.setValueAtTime(0.0001, startAt);
+  gain.gain.exponentialRampToValueAtTime(peak, startAt + Math.min(0.012, duration / 3));
+  gain.gain.exponentialRampToValueAtTime(0.0001, startAt + duration);
+  oscillator.connect(gain);
+  gain.connect(sfxMasterGain);
+  oscillator.start(startAt);
+  oscillator.stop(startAt + duration + 0.01);
+}
+
+function playNoise(context, startAt, duration, level, cutoff) {
+  const frameCount = Math.max(1, Math.ceil(context.sampleRate * duration));
+  const buffer = context.createBuffer(1, frameCount, context.sampleRate);
+  const samples = buffer.getChannelData(0);
+  for (let index = 0; index < frameCount; index += 1) {
+    samples[index] = Math.random() * 2 - 1;
+  }
+  const source = context.createBufferSource();
+  const filter = context.createBiquadFilter();
+  const gain = context.createGain();
+  const peak = level;
+  filter.type = "highpass";
+  filter.frequency.setValueAtTime(cutoff, startAt);
+  source.buffer = buffer;
+  gain.gain.setValueAtTime(0.0001, startAt);
+  gain.gain.exponentialRampToValueAtTime(peak, startAt + Math.min(0.006, duration / 3));
+  gain.gain.exponentialRampToValueAtTime(0.0001, startAt + duration);
+  source.connect(filter);
+  filter.connect(gain);
+  gain.connect(sfxMasterGain);
+  source.start(startAt);
+}
+
+function playSfx(sound, allowActivation = false) {
+  if (!sfxEnabled || sfxVolume <= 0) return;
+  const context = getAudioContext(allowActivation);
+  if (!context) return;
+  if (context.state === "suspended" && !allowActivation) return;
+  const now = context.currentTime + 0.005;
+  try {
+    if (sound === "hover") {
+      playTone(context, 2100, 1640, now, 0.035, 0.035);
+    } else if (sound === "click") {
+      playTone(context, 1480, 930, now, 0.075, 0.12, "triangle");
+      playTone(context, 2240, 1760, now, 0.035, 0.045);
+      playNoise(context, now, 0.018, 0.055, 2600);
+    } else if (sound === "transmit") {
+      playTone(context, 370, 1280, now, 0.28, 0.14, "triangle");
+      playTone(context, 740, 1640, now + 0.035, 0.17, 0.07);
+      playNoise(context, now + 0.015, 0.07, 0.045, 1800);
+    } else if (sound === "processing") {
+      playTone(context, 480, 620, now, 0.15, 0.075);
+      playTone(context, 670, 520, now + 0.19, 0.17, 0.055);
+      playTone(context, 500, 640, now + 0.78, 0.15, 0.075);
+      playTone(context, 690, 540, now + 0.97, 0.17, 0.055);
+    } else if (sound === "ready") {
+      playTone(context, 523.25, 523.25, now, 0.34, 0.105);
+      playTone(context, 659.25, 659.25, now + 0.045, 0.32, 0.085);
+      playTone(context, 783.99, 783.99, now + 0.09, 0.3, 0.07);
+    } else if (sound === "launch") {
+      playTone(context, 130, 410, now, 0.48, 0.15, "sawtooth");
+      playTone(context, 820, 190, now + 0.035, 0.42, 0.09, "triangle");
+      playTone(context, 360, 720, now + 0.15, 0.25, 0.055);
+      playNoise(context, now, 0.22, 0.045, 700);
+    } else if (sound === "wake") {
+      playTone(context, 740, 1320, now, 0.19, 0.16);
+      playTone(context, 1320, 1760, now + 0.11, 0.14, 0.075);
+    } else if (sound === "armor-on") {
+      playTone(context, 780, 125, now, 0.62, 0.2, "sawtooth");
+      playTone(context, 1120, 230, now + 0.1, 0.48, 0.105, "triangle");
+      playTone(context, 92, 54, now + 0.43, 0.38, 0.2, "square");
+      playTone(context, 590, 190, now + 0.4, 0.2, 0.13, "triangle");
+      playNoise(context, now + 0.4, 0.16, 0.16, 560);
+    } else if (sound === "armor-off") {
+      playTone(context, 520, 1080, now, 0.32, 0.14, "triangle");
+      playTone(context, 980, 360, now + 0.16, 0.38, 0.09);
+      playTone(context, 170, 72, now + 0.28, 0.3, 0.13, "sawtooth");
+      playNoise(context, now + 0.27, 0.12, 0.11, 900);
+    }
+  } catch (error) {
+    console.error(`The ${sound} sound effect could not be played.`, error);
+  }
+}
+
+function playStartupChime() {
+  playSfx("wake");
+}
+
+function updateSfxButton() {
+  sfxToggle.textContent = `SFX: ${sfxEnabled ? "ON" : "OFF"}`;
+  sfxToggle.setAttribute("aria-pressed", String(sfxEnabled));
+  sfxToggle.title = sfxEnabled ? "効果音をミュート" : "効果音のミュートを解除";
+}
+
+function updateSfxGain() {
+  if (!sfxMasterGain || !audioContext) return;
+  sfxMasterGain.gain.setTargetAtTime(
+    sfxEnabled ? sfxVolume : 0,
+    audioContext.currentTime,
+    0.02,
+  );
+}
+
+function toggleSfx() {
+  sfxEnabled = !sfxEnabled;
+  updateSfxButton();
+  updateSfxGain();
+  if (sfxEnabled && requestInProgress) {
+    startProcessingSfx();
+  } else if (!sfxEnabled) {
+    stopProcessingSfx();
+  }
+}
+
+function startProcessingSfx() {
+  if (!sfxEnabled || processingSfxTimer || processingSfxStartTimer) return;
+  processingSfxStartTimer = setTimeout(() => {
+    processingSfxStartTimer = null;
+    if (!requestInProgress || !sfxEnabled) return;
+    playSfx("processing");
+    processingSfxTimer = setInterval(() => playSfx("processing"), 1800);
+  }, 500);
+}
+
+function stopProcessingSfx() {
+  clearTimeout(processingSfxStartTimer);
+  processingSfxStartTimer = null;
+  clearInterval(processingSfxTimer);
+  processingSfxTimer = null;
+}
+
+function updateHudModeButton() {
+  const markMode = hudMode === "mark-iii";
+  hudModeLabel.textContent = markMode ? "MARK-III" : "STANDARD";
+  hudModeToggle.classList.toggle("is-mark-iii", markMode);
+  hudModeToggle.setAttribute("aria-pressed", String(markMode));
+  hudModeToggle.setAttribute(
+    "aria-label",
+    `HUD MODE: ${markMode ? "MARK-III" : "STANDARD"}。クリックして${markMode ? "STANDARD" : "MARK-III"}に切り替え`,
+  );
+  hudModeToggle.title = `HUD MODEを${markMode ? "STANDARD" : "MARK-III"}に切り替え`;
+}
+
+function setHudMode(mode, playTransformSound = true) {
+  if (!["standard", "mark-iii"].includes(mode) || mode === hudMode) return;
+  hudMode = mode;
+  document.body.dataset.hudMode = mode;
+  updateHudModeButton();
+  if (playTransformSound) playSfx(mode === "mark-iii" ? "armor-on" : "armor-off");
+  if (requestInProgress || isListening || isSpeaking) {
+    syncCoreState();
+  } else {
+    coreCaption.textContent = mode === "mark-iii"
+      ? "マーク3プロトコルを展開しました。"
+      : "システムは正常です。ご用件をどうぞ。";
+  }
+}
+
+function toggleHudMode() {
+  setHudMode(hudMode === "standard" ? "mark-iii" : "standard");
+}
+
+function detectHudModeCommand(text) {
+  const normalized = text
+    .normalize("NFKC")
+    .replace(/[\s、。，.!！?？\-]/gu, "")
+    .toLowerCase();
+  if (normalized.includes("通常モードに戻して") || normalized.includes("解除して")) {
+    return "standard";
+  }
+  if (/(?:マーク(?:スリー|3|iii)|mark(?:3|iii)|アイアンマンモード|戦闘モード)/u.test(normalized)) {
+    return "mark-iii";
+  }
+  return null;
 }
 
 function stopSpeech() {
   speechRequestId += 1;
   activeUtterance = null;
+  speechPurpose = "reply";
   if ("speechSynthesis" in window) window.speechSynthesis.cancel();
   if (activeAudio) {
     activeAudio.pause();
@@ -508,6 +781,9 @@ function stopSpeech() {
 function speakReplyWithBrowser(text, requestId) {
   if (!("speechSynthesis" in window) || !("SpeechSynthesisUtterance" in window)) {
     setVoiceStatus("このブラウザーは音声読み上げに対応していません", "error");
+    isSpeaking = false;
+    syncCoreState();
+    scheduleStandbyRecognition();
     return;
   }
 
@@ -534,6 +810,7 @@ function speakReplyWithBrowser(text, requestId) {
     isSpeaking = false;
     setVoiceStatus("VOICE LINK // READY");
     syncCoreState();
+    scheduleStandbyRecognition();
   };
   utterance.onerror = (event) => {
     if (speechRequestId !== requestId || activeUtterance !== utterance) return;
@@ -546,12 +823,14 @@ function speakReplyWithBrowser(text, requestId) {
       event.error === "canceled" || event.error === "interrupted" ? "ready" : "error",
     );
     syncCoreState();
+    scheduleStandbyRecognition();
   };
   window.speechSynthesis.speak(utterance);
 }
 
 function finishAudioPlayback(audio, requestId, error = null) {
   if (speechRequestId !== requestId || activeAudio !== audio) return;
+  const completedPurpose = speechPurpose;
   activeAudio = null;
   audio.removeAttribute("src");
   audio.load();
@@ -560,14 +839,123 @@ function finishAudioPlayback(audio, requestId, error = null) {
     activeAudioUrl = null;
   }
   isSpeaking = false;
+  speechPurpose = "reply";
+  if (completedPurpose === "wake-ack" && error) {
+    setVoiceStatus("NEURAL VOICE OFFLINE // BROWSER FALLBACK", "speaking");
+    speakWakeAcknowledgementWithBrowser(requestId);
+    return;
+  }
   setVoiceStatus(error ? "音声の再生に失敗しました" : "VOICE LINK // READY", error ? "error" : "ready");
   syncCoreState();
+  if (completedPurpose === "wake-ack" && voiceStandbyEnabled) {
+    wakeActivated = false;
+    startRecognition("command");
+  } else {
+    scheduleStandbyRecognition();
+  }
+}
+
+function preloadWakeAcknowledgement() {
+  wakeAudioPromise = fetch("/api/tts", {
+    method: "POST",
+    headers: { "Content-Type": "application/json" },
+    body: JSON.stringify({ text: "はい。" }),
+  }).then(async (response) => {
+    if (!response.ok) {
+      const error = await response.json().catch(() => ({}));
+      throw new Error(error.error || `音声APIがHTTP ${response.status}を返しました`);
+    }
+    const audioBlob = await response.blob();
+    if (!audioBlob.size) throw new Error("音声APIから空のデータが返されました");
+    return audioBlob;
+  });
+  wakeAudioPromise.catch((error) => {
+    console.error("Wake acknowledgement audio could not be cached.", error);
+  });
+}
+
+function finishWakeAcknowledgement(requestId) {
+  if (speechRequestId !== requestId) return;
+  activeUtterance = null;
+  isSpeaking = false;
+  wakeActivated = false;
+  setVoiceStatus("VOICE STANDBY // LISTENING", "listening");
+  syncCoreState();
+  if (voiceStandbyEnabled) startRecognition("command");
+}
+
+function speakWakeAcknowledgementWithBrowser(requestId) {
+  if (!("speechSynthesis" in window) || !("SpeechSynthesisUtterance" in window)) {
+    isSpeaking = false;
+    wakeActivated = false;
+    setVoiceStatus("音声読み上げに失敗しました", "error");
+    syncCoreState();
+    if (voiceStandbyEnabled) startRecognition("command");
+    return;
+  }
+  const utterance = new SpeechSynthesisUtterance("はい。");
+  utterance.lang = "ja-JP";
+  utterance.pitch = 0.78;
+  utterance.rate = 0.92;
+  utterance.volume = 1;
+  const japaneseVoice = window.speechSynthesis
+    .getVoices()
+    .find((voice) => voice.lang.toLowerCase().startsWith("ja"));
+  if (japaneseVoice) utterance.voice = japaneseVoice;
+  activeUtterance = utterance;
+  isSpeaking = true;
+  syncCoreState();
+  utterance.onend = () => finishWakeAcknowledgement(requestId);
+  utterance.onerror = () => finishWakeAcknowledgement(requestId);
+  window.speechSynthesis.speak(utterance);
+}
+
+async function playWakeAcknowledgement() {
+  stopSpeech();
+  const requestId = speechRequestId;
+  speechPurpose = "wake-ack";
+  isSpeaking = true;
+  setVoiceStatus("J.A.R.V.I.S. // ACKNOWLEDGING", "speaking");
+  syncCoreState();
+  try {
+    const audioBlob = await wakeAudioPromise;
+    if (speechRequestId !== requestId || !voiceStandbyEnabled) return;
+    const audio = new Audio(URL.createObjectURL(audioBlob));
+    activeAudio = audio;
+    activeAudioUrl = audio.src;
+    audio.onended = () => finishAudioPlayback(audio, requestId);
+    audio.onerror = () =>
+      finishAudioPlayback(audio, requestId, new Error("wake acknowledgement playback failed"));
+    await audio.play();
+    if (speechRequestId !== requestId || activeAudio !== audio) return;
+    setVoiceStatus("J.A.R.V.I.S. // SPEAKING", "speaking");
+  } catch (error) {
+    if (speechRequestId !== requestId || !voiceStandbyEnabled) return;
+    console.error("Cached wake acknowledgement could not be played.", error);
+    if (activeAudio) {
+      activeAudio.onended = null;
+      activeAudio.onerror = null;
+      activeAudio.pause();
+      activeAudio.removeAttribute("src");
+      activeAudio.load();
+      activeAudio = null;
+    }
+    if (activeAudioUrl) {
+      URL.revokeObjectURL(activeAudioUrl);
+      activeAudioUrl = null;
+    }
+    speechPurpose = "reply";
+    setVoiceStatus("NEURAL VOICE OFFLINE // BROWSER FALLBACK", "speaking");
+    speakWakeAcknowledgementWithBrowser(requestId);
+  }
 }
 
 async function speakReply(text) {
   if (!voiceOutputEnabled) return;
   stopSpeech();
   const requestId = speechRequestId;
+  isSpeaking = true;
+  syncCoreState();
   setVoiceStatus("NEURAL VOICE // GENERATING", "speaking");
 
   let response;
@@ -589,7 +977,10 @@ async function speakReply(text) {
     if (speechRequestId !== requestId || !voiceOutputEnabled) return;
     const error = await response.json().catch(() => ({}));
     console.error("Neural TTS returned an error.", error);
+    isSpeaking = false;
+    syncCoreState();
     setVoiceStatus(error.error || `音声APIがHTTP ${response.status}を返しました`, "error");
+    scheduleStandbyRecognition();
     return;
   }
 
@@ -605,7 +996,10 @@ async function speakReply(text) {
   }
   if (speechRequestId !== requestId || !voiceOutputEnabled) return;
   if (!audioBlob.size) {
+    isSpeaking = false;
+    syncCoreState();
     setVoiceStatus("音声APIから空のデータが返されました", "error");
+    scheduleStandbyRecognition();
     return;
   }
 
@@ -640,54 +1034,130 @@ function toggleVoiceOutput() {
   speakerButton.querySelector(".control-label").textContent = voiceOutputEnabled
     ? "VOICE ON"
     : "VOICE OFF";
+  const activelyListening = isListening && recognitionMode !== "standby";
   if (voiceOutputEnabled) {
-    setVoiceStatus(isListening ? "聞き取り中..." : "VOICE LINK // READY", isListening ? "listening" : "ready");
+    setVoiceStatus(
+      activelyListening
+        ? "聞き取り中..."
+        : voiceStandbyEnabled && isListening
+          ? "VOICE STANDBY // ACTIVE"
+          : "VOICE LINK // READY",
+      activelyListening ? "listening" : "ready",
+    );
   } else {
     stopSpeech();
     setVoiceStatus(
-      isListening ? "聞き取り中..." : "VOICE OUTPUT // MUTED",
-      isListening ? "listening" : "muted",
+      activelyListening
+        ? "聞き取り中..."
+        : voiceStandbyEnabled && isListening
+          ? "VOICE STANDBY // ACTIVE"
+          : "VOICE OUTPUT // MUTED",
+      activelyListening ? "listening" : voiceStandbyEnabled && isListening ? "ready" : "muted",
     );
+    scheduleStandbyRecognition();
   }
 }
 
-function toggleVoiceInput() {
-  if (isListening) {
-    cancelRecognition = true;
-    isListening = false;
-    setVoiceStatus("VOICE LINK // CANCELLED");
-    syncCoreState();
-    recognition?.abort();
-    return;
-  }
-  if (recognition) {
-    setVoiceStatus("音声入力を終了しています...", "error");
-    return;
-  }
-  if (sendButton.disabled) return;
-
+function getSpeechRecognitionConstructor() {
   const SpeechRecognition = window.SpeechRecognition || window.webkitSpeechRecognition;
   if (!SpeechRecognition) {
+    return null;
+  }
+  return SpeechRecognition;
+}
+
+function extractWakePhrase(text) {
+  const normalized = text.normalize("NFKC");
+  const match = /ジャービス|じゃーびす|jarvis/iu.exec(normalized);
+  if (!match || match.index === undefined) return null;
+  const before = normalized.slice(0, match.index);
+  const after = normalized.slice(match.index + match[0].length);
+  return {
+    remainder: `${before} ${after}`
+      .replace(/^[\s、。，.!！?？:：\-]+|[\s、。，.!！?？:：\-]+$/gu, "")
+      .trim(),
+  };
+}
+
+function recognitionErrorText(error) {
+  const errors = {
+    "audio-capture": "マイクを検出できません",
+    "no-speech": "音声を検出できませんでした",
+    "not-allowed": "マイクの使用が許可されていません",
+    "service-not-allowed": "音声認識サービスが許可されていません",
+    network: "音声認識サービスに接続できません",
+  };
+  return errors[error] || `音声認識に失敗しました (${error})`;
+}
+
+function startRecognition(mode) {
+  if (recognition || sendButton.disabled || isSpeaking) return;
+  if (mode === "standby" && !voiceStandbyEnabled) return;
+  const SpeechRecognition = getSpeechRecognitionConstructor();
+  if (!SpeechRecognition) {
     setVoiceStatus("このブラウザーは音声認識に対応していません", "error");
+    if (mode === "standby") {
+      voiceStandbyEnabled = false;
+      updateVoiceStandbyButton();
+    }
     return;
   }
 
-  stopSpeech();
   const activeRecognition = new SpeechRecognition();
   let transcript = "";
   let recognitionError = "";
+  let recognitionErrorCode = "";
+  let wakeTimerForSession = null;
+  let wakeCandidateForSession = "";
+  let wakeCandidateIsFinal = false;
+  let finalizedWakeRemainder = null;
   cancelRecognition = false;
   recognition = activeRecognition;
+  recognitionMode = mode;
   isListening = true;
-  setVoiceStatus("聞き取り中...", "listening");
+  setVoiceStatus(
+    mode === "standby" ? "VOICE STANDBY // ACTIVE" : "聞き取り中...",
+    mode === "standby" ? "ready" : "listening",
+  );
   syncCoreState();
 
   activeRecognition.lang = "ja-JP";
-  activeRecognition.continuous = false;
+  activeRecognition.continuous = mode === "standby";
   activeRecognition.interimResults = true;
   activeRecognition.maxAlternatives = 1;
   activeRecognition.onresult = (event) => {
     if (recognition !== activeRecognition || cancelRecognition) return;
+    if (mode === "standby") {
+      let heard = "";
+      for (let index = 0; index < event.results.length; index += 1) {
+        heard += event.results[index][0].transcript;
+      }
+      const wake = extractWakePhrase(heard);
+      if (!wake) return;
+      wakeCandidateForSession = wake.remainder;
+      const finalized = Array.from(event.results)
+        .filter((result) => result.isFinal)
+        .map((result) => result[0].transcript)
+        .join("");
+      const finalizedWake = extractWakePhrase(finalized);
+      finalizedWakeRemainder = finalizedWake ? finalizedWake.remainder : null;
+      wakeCandidateIsFinal =
+        Boolean(finalizedWake) &&
+        (!wake.remainder || finalizedWake.remainder === wake.remainder);
+      clearTimeout(wakeTimerForSession);
+      const delay = wakeCandidateIsFinal ? 160 : 500;
+      wakeTimerForSession = setTimeout(() => {
+        if (recognition !== activeRecognition || !voiceStandbyEnabled) return;
+        wakeTransitionPending = true;
+        wakeRemainder = wakeCandidateForSession;
+        wakeActivated = true;
+        playStartupChime();
+        syncCoreState();
+        activeRecognition.abort();
+      }, delay);
+      return;
+    }
+
     let interim = "";
     for (let index = event.resultIndex; index < event.results.length; index += 1) {
       const result = event.results[index];
@@ -699,24 +1169,85 @@ function toggleVoiceInput() {
   };
   activeRecognition.onerror = (event) => {
     if (event.error === "aborted") return;
-    const errors = {
-      "audio-capture": "マイクを検出できません",
-      "no-speech": "音声を検出できませんでした",
-      "not-allowed": "マイクの使用が許可されていません",
-      "service-not-allowed": "音声認識サービスが許可されていません",
-      network: "音声認識サービスに接続できません",
-    };
-    recognitionError = errors[event.error] || `音声認識に失敗しました (${event.error})`;
+    recognitionErrorCode = event.error;
+    recognitionError = recognitionErrorText(event.error);
     setVoiceStatus(recognitionError, "error");
   };
   activeRecognition.onend = () => {
     if (recognition !== activeRecognition) return;
+    if (
+      mode === "standby" &&
+      voiceStandbyEnabled &&
+      !wakeTransitionPending &&
+      finalizedWakeRemainder !== null
+    ) {
+      wakeTransitionPending = true;
+      wakeRemainder = wakeCandidateIsFinal
+        ? wakeCandidateForSession
+        : finalizedWakeRemainder;
+      wakeActivated = true;
+      playStartupChime();
+    }
+    clearTimeout(wakeTimerForSession);
+    const endedMode = recognitionMode;
     const shouldSend = isListening && !cancelRecognition && !recognitionError && transcript.trim();
     const wasCancelled = cancelRecognition;
     recognition = null;
+    recognitionMode = null;
     isListening = false;
     cancelRecognition = false;
     syncCoreState();
+
+    if (endedMode === "standby") {
+      if (wakeTransitionPending && voiceStandbyEnabled) {
+        const request = wakeRemainder;
+        wakeTransitionPending = false;
+        wakeRemainder = "";
+        if (request) {
+          wakeActivated = false;
+          setVoiceStatus("音声を送信しています...", "speaking");
+          submitUserInput(request, { voice: true });
+        } else {
+          void playWakeAcknowledgement();
+        }
+      } else if (pendingManualStart) {
+        pendingManualStart = false;
+        startRecognition("manual");
+      } else if (voiceStandbyEnabled) {
+        if (["not-allowed", "service-not-allowed", "audio-capture"].includes(recognitionErrorCode)) {
+          voiceStandbyEnabled = false;
+          updateVoiceStandbyButton();
+          setVoiceStatus(recognitionError, "error");
+        } else {
+          if (recognitionError) setVoiceStatus(recognitionError, "error");
+          scheduleStandbyRecognition();
+        }
+      }
+      return;
+    }
+
+    if (endedMode === "command") {
+      if (shouldSend) {
+        setVoiceStatus("音声を送信しています...", "speaking");
+        submitUserInput(transcript.trim(), { voice: true });
+      } else {
+        if (recognitionError) setVoiceStatus(recognitionError, "error");
+        else if (!wasCancelled) setVoiceStatus("音声を認識できませんでした。もう一度お試しください", "error");
+        if (["not-allowed", "service-not-allowed", "audio-capture"].includes(recognitionErrorCode)) {
+          voiceStandbyEnabled = false;
+          updateVoiceStandbyButton();
+        } else {
+          scheduleStandbyRecognition();
+        }
+      }
+      return;
+    }
+
+    if (voiceStandbyEnabled) {
+      if (pendingManualStart) pendingManualStart = false;
+      scheduleStandbyRecognition();
+      return;
+    }
     if (shouldSend) {
       setVoiceStatus("音声を送信しています...", "speaking");
       submitUserInput(transcript.trim(), { voice: true });
@@ -733,12 +1264,93 @@ function toggleVoiceInput() {
     activeRecognition.start();
   } catch (error) {
     recognition = null;
+    recognitionMode = null;
     isListening = false;
     cancelRecognition = false;
     syncCoreState();
     const detail = error instanceof Error ? error.message : String(error);
     setVoiceStatus(`音声入力を開始できませんでした: ${detail}`, "error");
+    if (mode === "standby") {
+      voiceStandbyEnabled = false;
+      updateVoiceStandbyButton();
+    } else if (mode === "command") {
+      scheduleStandbyRecognition();
+    }
   }
+}
+
+function toggleVoiceStandby() {
+  if (voiceStandbyEnabled) {
+    const shouldStartManual = pendingManualStart;
+    voiceStandbyEnabled = false;
+    wakeTransitionPending = false;
+    wakeRemainder = "";
+    wakeActivated = false;
+    clearTimeout(standbyRestartTimer);
+    updateVoiceStandbyButton();
+    if (recognition && ["standby", "command"].includes(recognitionMode)) {
+      cancelRecognition = true;
+      isListening = false;
+      recognition.abort();
+    }
+    if (speechPurpose === "wake-ack") stopSpeech();
+    syncCoreState();
+    setVoiceStatus("VOICE STANDBY // OFF");
+    if (shouldStartManual && !recognition) {
+      pendingManualStart = false;
+      startRecognition("manual");
+    }
+    return;
+  }
+
+  if (!getSpeechRecognitionConstructor()) {
+    setVoiceStatus("このブラウザーは音声認識に対応していません", "error");
+    return;
+  }
+  voiceStandbyEnabled = true;
+  pendingManualStart = false;
+  updateVoiceStandbyButton();
+  if (recognition) {
+    cancelRecognition = true;
+    isListening = false;
+    recognition.abort();
+  } else {
+    startRecognition("standby");
+  }
+  if (window.AudioContext || window.webkitAudioContext) {
+    try {
+      const AudioContextConstructor = window.AudioContext || window.webkitAudioContext;
+      audioContext ||= new AudioContextConstructor();
+      void audioContext.resume().catch((error) => {
+        console.error("Web Audio context could not be resumed.", error);
+      });
+    } catch (error) {
+      console.error("Web Audio context could not be initialized.", error);
+    }
+  }
+}
+
+function toggleVoiceInput() {
+  if (voiceStandbyEnabled) {
+    pendingManualStart = true;
+    toggleVoiceStandby();
+    return;
+  }
+  if (isListening) {
+    cancelRecognition = true;
+    isListening = false;
+    setVoiceStatus("VOICE LINK // CANCELLED");
+    syncCoreState();
+    recognition?.abort();
+    return;
+  }
+  if (recognition) {
+    setVoiceStatus("音声入力を終了しています...", "error");
+    return;
+  }
+  if (sendButton.disabled) return;
+  stopSpeech();
+  startRecognition("manual");
 }
 
 function updateClock() {
@@ -862,6 +1474,8 @@ function setBusy(busy) {
   sendButton.disabled = busy;
   promptInput.disabled = busy;
   microphoneButton.disabled = busy;
+  if (busy) startProcessingSfx();
+  else stopProcessingSfx();
   syncCoreState();
 }
 
@@ -869,6 +1483,8 @@ function submitUserInput(
   text,
   { voice = false, forcedProtocol = null, displayText = text } = {},
 ) {
+  const requestedHudMode = detectHudModeCommand(text);
+  if (requestedHudMode) setHudMode(requestedHudMode);
   const launcherAction = forcedProtocol || detectProtocol(text);
   const launcherOpened = launcherAction ? openProtocolTab(launcherAction) : true;
   const requestText = launcherAction === "briefing" ? BRIEFING_PROMPT : text;
@@ -892,6 +1508,12 @@ async function sendMessage(
   } = {},
 ) {
   if (!text || sendButton.disabled) return;
+  playSfx("transmit", true);
+  if (voiceStandbyEnabled && recognitionMode === "standby" && recognition) {
+    cancelRecognition = true;
+    isListening = false;
+    recognition.abort();
+  }
   if (!voice && isSpeaking) {
     stopSpeech();
     setVoiceStatus("VOICE LINK // READY");
@@ -921,6 +1543,7 @@ async function sendMessage(
       body: JSON.stringify({
         messages: requestMessages,
         memories: memoryItems,
+        hud_mode: hudMode,
         ...(launcherAction ? { launcher_action: launcherAction, launcher_opened: launcherOpened } : {}),
       }),
     });
@@ -944,6 +1567,7 @@ async function sendMessage(
     trimHistory();
     persistHistory();
     addMessage("assistant", data.reply, { scroll: "start" });
+    playSfx("ready");
     if (searchMetadata) addSearchReceipt(searchMetadata);
     if (launcherAction) addProtocolReceipt(launcherAction, launcherOpened);
     let memoriesSaved = false;
@@ -981,6 +1605,7 @@ async function sendMessage(
     if (voice) setVoiceStatus("VOICE LINK // READY");
   } finally {
     setBusy(false);
+    scheduleStandbyRecognition();
     if (!voice) promptInput.focus();
   }
 }
@@ -989,7 +1614,13 @@ form.addEventListener("submit", (event) => {
   event.preventDefault();
   const text = promptInput.value.trim();
   if (!text || sendButton.disabled) return;
-  if (isListening) toggleVoiceInput();
+  if (voiceStandbyEnabled && recognition) {
+    cancelRecognition = true;
+    isListening = false;
+    recognition.abort();
+  } else if (isListening) {
+    toggleVoiceInput();
+  }
   submitUserInput(text);
 });
 
@@ -1006,7 +1637,30 @@ document.querySelectorAll("[data-protocol]").forEach((button) => {
 });
 
 microphoneButton.addEventListener("click", toggleVoiceInput);
+standbyButton.addEventListener("click", toggleVoiceStandby);
 speakerButton.addEventListener("click", toggleVoiceOutput);
+sfxToggle.addEventListener("click", toggleSfx);
+hudModeToggle.addEventListener("click", toggleHudMode);
+sfxVolumeInput.addEventListener("input", () => {
+  sfxVolume = Number(sfxVolumeInput.value) / 100;
+  sfxVolumeValue.textContent = `${sfxVolumeInput.value}%`;
+  updateSfxGain();
+});
+
+document.addEventListener("pointerover", (event) => {
+  if (event.pointerType && event.pointerType !== "mouse") return;
+  const target = event.target instanceof Element ? event.target.closest("button, .launcher-button") : null;
+  const previous = event.relatedTarget instanceof Element
+    ? event.relatedTarget.closest("button, .launcher-button")
+    : null;
+  if (target && target !== previous && !target.matches(":disabled")) playSfx("hover");
+});
+document.addEventListener("click", (event) => {
+  const target = event.target instanceof Element ? event.target.closest("button, .launcher-button") : null;
+  if (!target || target.matches(":disabled")) return;
+  playSfx("click", true);
+  if (target.matches("a.launcher-button[target='_blank']")) playSfx("launch");
+}, true);
 
 promptInput.addEventListener("input", () => {
   promptInput.style.height = "auto";
@@ -1045,6 +1699,12 @@ document.querySelector("#clear-memory").addEventListener("click", clearMemory);
 
 restoreHistory();
 restoreMemories();
+updateVoiceStandbyButton();
+updateSfxButton();
+document.body.dataset.hudMode = hudMode;
+updateHudModeButton();
+sfxVolumeValue.textContent = `${sfxVolumeInput.value}%`;
+preloadWakeAcknowledgement();
 void refreshWeather();
 updateClock();
 createWaveform(".network-wave", 42);
