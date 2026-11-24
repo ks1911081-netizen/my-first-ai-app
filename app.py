@@ -181,7 +181,7 @@ def fetch_kushiro_weather():
             ),
             "daily": "weather_code,temperature_2m_max,temperature_2m_min",
             "timezone": "Asia/Tokyo",
-            "forecast_days": 1,
+            "forecast_days": 7,
         },
         timeout=10,
     )
@@ -195,6 +195,32 @@ def fetch_kushiro_weather():
     forecast_date = daily["time"][0]
     if not isinstance(current_time, str) or not isinstance(forecast_date, str):
         raise ValueError("Open-Meteoの日時形式が正しくありません")
+
+    forecast = []
+    dates = daily["time"]
+    if not isinstance(dates, list) or not dates:
+        raise ValueError("Open-Meteoの日別予報データの形式が正しくありません")
+    daily_fields = (
+        dates,
+        daily["weather_code"],
+        daily["temperature_2m_max"],
+        daily["temperature_2m_min"],
+    )
+    if any(not isinstance(values, list) or len(values) != len(dates) for values in daily_fields):
+        raise ValueError("Open-Meteoの日別予報データの形式が正しくありません")
+    for date, code, high, low in zip(*daily_fields):
+        if not isinstance(date, str):
+            raise ValueError("Open-Meteoの日付形式が正しくありません")
+        forecast_code = int(_weather_number(code, "daily.weather_code"))
+        forecast.append(
+            {
+                "date": date,
+                "weather_code": forecast_code,
+                "description": WEATHER_DESCRIPTIONS.get(forecast_code, "天候情報"),
+                "high_c": _weather_number(high, "temperature_2m_max"),
+                "low_c": _weather_number(low, "temperature_2m_min"),
+            }
+        )
 
     return {
         "location": "北海道釧路市",
@@ -225,6 +251,7 @@ def fetch_kushiro_weather():
             "high_c": _weather_number(daily["temperature_2m_max"][0], "temperature_2m_max"),
             "low_c": _weather_number(daily["temperature_2m_min"][0], "temperature_2m_min"),
         },
+        "forecast": forecast,
         "fetched_at": datetime.now(ZoneInfo("Asia/Tokyo")).isoformat(timespec="minutes"),
         "source": "Open-Meteo",
     }
@@ -524,6 +551,9 @@ def build_system_prompt(
     if hud_mode == "mark-iii":
         prompt_parts.append(
             "HUD MODEはMARK-IIIです。伊吹様への敬意を保ちつつ、頼もしく簡潔な戦術補佐AIの口調で回答してください。"
+            "前置き・余談・繰り返しを省き、結論や最優先の解決策を最初に示してください。"
+            "原則として要点を3〜5項目以内の短い箇条書きでまとめ、手順は必要な場合だけ番号付きにしてください。"
+            "詳細な背景説明は求められた場合に限り、重要な危険・不確実性・制約は短くても必ず明示してください。"
             "攻撃的・大げさな表現は避け、実際には実行していない操作を実行済みと主張しないでください。"
             "ユーザーがMARK-IIIへの切替を依頼した場合は、"
             "「了解いたしました、伊吹様。マーク3プロトコルを展開します。」と短く応答してください。"
@@ -531,6 +561,7 @@ def build_system_prompt(
     else:
         prompt_parts.append(
             "HUD MODEはSTANDARDです。落ち着いた専属アシスタントの口調で回答してください。"
+            "丁寧で分かりやすい説明を行い、必要に応じて背景・理由・具体的な手順も補足してください。"
             "ユーザーが標準モードへの復帰を依頼した場合は、簡潔に確認してください。"
         )
     if memories:

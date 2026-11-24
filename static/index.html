@@ -8,7 +8,42 @@
     <title>J.A.R.V.I.S. — TACTICAL INTERFACE</title>
     <link rel="stylesheet" href="/static/styles.css">
   </head>
-  <body>
+  <body class="is-booting">
+    <div class="boot-overlay" id="boot-overlay" role="dialog" aria-modal="true" aria-label="システム起動シーケンス">
+      <div class="boot-log boot-log-nw"><span>BIOS CHECK... OK</span></div>
+      <div class="boot-log boot-log-ne"><span>NEURAL NET: ONLINE</span></div>
+      <div class="boot-log boot-log-sw"><span>BIOMETRICS: IBUKI-SAMA VERIFIED</span></div>
+      <div class="boot-log boot-log-se"><span>J.A.R.V.I.S. OS v3.0 READY</span></div>
+      <div class="boot-assembly" aria-hidden="true">
+        <i class="boot-ring boot-ring-a"></i>
+        <i class="boot-ring boot-ring-b"></i>
+        <i class="boot-ring boot-ring-c"></i>
+        <i class="boot-wireframe"></i>
+        <i class="boot-core-flash"></i>
+      </div>
+      <div class="boot-title">SYSTEM INITIALIZATION <span>// SECURE CORE LINK</span></div>
+      <div class="boot-actions">
+        <button id="boot-enable-audio" type="button">ARM AUDIO LINK</button>
+        <button id="boot-skip" type="button">SKIP SEQUENCE ↗</button>
+      </div>
+    </div>
+    <div class="clean-slate-overlay" id="clean-slate-overlay" role="alert" aria-live="assertive" hidden>
+      <canvas id="clean-slate-sparks" aria-hidden="true"></canvas>
+      <div class="clean-slate-warning">
+        <span>/// MEMORY PURGE // SYSTEM REBOOT ///</span>
+        <strong id="clean-slate-message">WARNING: INITIATING CLEAN SLATE PROTOCOL...</strong>
+        <b id="clean-slate-countdown">3</b>
+        <i id="clean-slate-phase">SECURE WIPE // PREPARING</i>
+      </div>
+    </div>
+
+    <div class="mode-transition-overlay" id="mode-transition" aria-hidden="true">
+      <div class="mode-honeycomb"></div>
+      <div class="mode-scan-beam"></div>
+      <div class="mode-reticle"><i></i><i></i><i></i><i></i><span></span></div>
+      <div class="mode-banner" id="mode-banner"></div>
+    </div>
+
     <div class="app-shell">
       <header class="topbar">
         <a class="brand" href="/" aria-label="J.A.R.V.I.S. ホーム">
@@ -22,7 +57,12 @@
         <div class="topbar-readout">
           <span class="top-date" id="top-date">---- / -- / --</span>
           <span class="system-status"><i class="status-dot"></i><span id="connection-status">SYSTEM ONLINE</span></span>
+          <div class="biometric-indicator" aria-label="生体・声紋認証済み">
+            <span>AUTH: IBUKI-SAMA <b>[VERIFIED]</b></span><small>SIMULATED</small>
+            <svg viewBox="0 0 84 16" role="img" aria-label="心拍・声紋モニター"><polyline id="biometric-wave" points="" /></svg>
+          </div>
           <div class="topbar-settings">
+            <button class="system-lock-button" id="system-lock-button" type="button" aria-haspopup="dialog" aria-controls="system-lock-overlay">LOCK</button>
             <button class="hud-mode-toggle" id="hud-mode-toggle" type="button" aria-label="HUD MODE: STANDARD。クリックしてMARK-IIIに切り替え" aria-pressed="false" title="HUD MODEをMARK-IIIに切り替え">
               <span>HUD MODE:</span><strong id="hud-mode-label">STANDARD</strong>
             </button>
@@ -70,7 +110,14 @@
           </section>
 
           <section class="panel power-panel">
-            <div class="panel-heading"><span>AUXILIARY POWER</span><span class="panel-code">PWR / SIM</span></div>
+            <div class="panel-heading"><span>POWER DISTRIBUTION</span><span class="panel-code">PWR / SIM</span></div>
+            <div class="arc-output"><span>ARC REACTOR</span><strong>3.2 <small>GJ/s</small></strong></div>
+            <div class="power-allocation" aria-label="電力配分">
+              <div><span>AI CORE</span><i><b id="power-core-bar" style="--level: 42%"></b></i><strong id="power-core-value">42%</strong></div>
+              <div><span>SENSORS</span><i><b id="power-sensors-bar" style="--level: 25%"></b></i><strong id="power-sensors-value">25%</strong></div>
+              <div><span>NETWORK</span><i><b id="power-network-bar" style="--level: 18%"></b></i><strong id="power-network-value">18%</strong></div>
+              <div><span>AUXILIARY</span><i><b id="power-aux-bar" style="--level: 15%"></b></i><strong id="power-aux-value">15%</strong></div>
+            </div>
             <div class="battery-readout">
               <div class="battery-icon"><span></span></div>
               <div class="battery-copy"><strong>86<span>%</span></strong><small>BACKUP CELL</small></div>
@@ -80,19 +127,88 @@
             <div class="panel-foot"><span>RESERVE CAPACITY</span><span>SIM DATA</span></div>
           </section>
 
+          <section class="panel mission-timer-panel" aria-label="25分集中ミッションタイマー">
+            <div class="target-lock-corners" aria-hidden="true">
+              <span class="target-lock target-lock-a"><b>[LOCKED]</b><small>RANGE <i>024</i>M // PRI 01</small></span>
+              <span class="target-lock target-lock-b"><b>[LOCKED]</b><small>RANGE <i>081</i>M // PRI 02</small></span>
+              <span class="target-lock target-lock-c"><b>[LOCKED]</b><small>RANGE <i>046</i>M // PRI 03</small></span>
+              <span class="target-lock target-lock-d"><b>[LOCKED]</b><small>RANGE <i>112</i>M // PRI 04</small></span>
+            </div>
+            <div class="panel-heading"><span>MISSION TIMER</span><span class="panel-code">FOCUS / 25 MIN</span></div>
+            <div class="mission-timer-readout">
+              <strong id="mission-timer-value" role="timer" aria-live="off">25:00</strong>
+              <span id="mission-timer-status">READY // 25 MIN</span>
+            </div>
+            <div class="mission-timer-controls">
+              <button id="mission-timer-toggle" type="button" aria-pressed="false">START</button>
+              <button id="mission-timer-reset" type="button">RESET</button>
+            </div>
+          </section>
+
+          <section class="panel flight-panel" id="flight-panel" aria-label="MARK-III飛行テレメトリー" hidden>
+            <div class="panel-heading"><span>STRATOSPHERE // FLIGHT DATA</span><span class="panel-code">ARMOR / SIM</span></div>
+            <div class="flight-readouts">
+              <div><span>VELOCITY</span><strong id="flight-mach">MACH 2.10</strong></div>
+              <div><span>ALTITUDE</span><strong id="flight-altitude">35,000 FT</strong></div>
+              <div><span>SURFACE TEMP</span><strong id="flight-temperature">-20°C</strong></div>
+            </div>
+            <div class="flight-track"><i></i></div>
+          </section>
+
           <section class="panel network-panel">
-            <div class="panel-heading"><span>NETWORK UPLINK</span><span class="panel-code">COM / SIM</span></div>
-            <div class="network-meta"><span><i class="live-indicator">●</i> ENCRYPTED</span><span>24.8 <small>MB/S</small></span></div>
-            <div class="waveform network-wave" aria-hidden="true"></div>
-            <div class="panel-foot"><span>LATENCY <b>18 MS</b></span><span>PACKET FLOW</span></div>
+            <div class="panel-heading"><span>NETWORK TRAFFIC</span><span class="panel-code">COM / SIM</span></div>
+            <div class="traffic-meta"><span><i class="live-indicator">●</i> SIM LINK</span><span>LAT <b>18 MS</b></span></div>
+            <div class="traffic-chart" aria-label="リアルタイム通信波形">
+              <span class="traffic-label">↑ TX</span>
+              <svg viewBox="0 0 180 30" preserveAspectRatio="none" aria-hidden="true">
+                <polyline id="traffic-upload" points="" />
+              </svg>
+              <span class="traffic-rate"><b id="traffic-upload-rate">--.-</b> KB/S</span>
+              <span class="traffic-label">↓ RX</span>
+              <svg viewBox="0 0 180 30" preserveAspectRatio="none" aria-hidden="true">
+                <polyline id="traffic-download" points="" />
+              </svg>
+              <span class="traffic-rate"><b id="traffic-download-rate">--.-</b> KB/S</span>
+            </div>
+            <div class="panel-foot"><span>PACKET FLOW</span><span>ENCRYPTED</span></div>
+          </section>
+
+          <section class="panel diagnostics-panel">
+            <div class="panel-heading"><span>SYSTEM DIAGNOSTICS</span><span class="panel-code">SYS / SIM</span></div>
+            <div class="diagnostics-id"><span>SIM NODE ID</span><strong>10.42.08.85</strong></div>
+            <div class="diagnostic-gauges">
+              <div class="diagnostic-gauge" id="diag-core-gauge" style="--level: 32%">
+                <span><b id="diag-core-value">32</b><small>%</small></span>
+                <label>CORE</label>
+              </div>
+              <div class="diagnostic-gauge" id="diag-memory-gauge" style="--level: 58%">
+                <span><b id="diag-memory-value">58</b><small>%</small></span>
+                <label>MEMORY</label>
+              </div>
+              <div class="diagnostic-gauge" id="diag-link-gauge" style="--level: 84%">
+                <span><b id="diag-link-value">84</b><small>%</small></span>
+                <label>LINK</label>
+              </div>
+            </div>
+            <div class="diagnostics-uptime"><span>UPTIME</span><strong id="system-uptime">00:00:00</strong></div>
           </section>
 
           <section class="panel launcher-panel" aria-label="クイックプロトコルとランチャー">
+            <div class="target-lock-corners" aria-hidden="true">
+              <span class="target-lock target-lock-a"><b>[LOCKED]</b><small>RANGE <i>024</i>M // PRI 01</small></span>
+              <span class="target-lock target-lock-b"><b>[LOCKED]</b><small>RANGE <i>081</i>M // PRI 02</small></span>
+              <span class="target-lock target-lock-c"><b>[LOCKED]</b><small>RANGE <i>046</i>M // PRI 03</small></span>
+              <span class="target-lock target-lock-d"><b>[LOCKED]</b><small>RANGE <i>112</i>M // PRI 04</small></span>
+            </div>
             <div class="panel-heading"><span>QUICK PROTOCOLS</span><span class="panel-code">LAUNCHER</span></div>
             <div class="launcher-grid">
               <button class="launcher-button briefing-launcher" type="button" data-protocol="briefing">
                 <svg viewBox="0 0 24 24" aria-hidden="true"><circle cx="12" cy="12" r="8"/><circle cx="12" cy="12" r="3"/><path d="M12 1v4m0 14v4M1 12h4m14 0h4M17.5 6.5 21 3"/></svg>
                 <span>BRIEFING</span><small>DAILY INTEL</small>
+              </button>
+              <button class="launcher-button data-scan-launcher" id="data-scan" type="button" title="クリップボードのテキストを解析">
+                <svg viewBox="0 0 24 24" aria-hidden="true"><path d="M4 4h16v16H4zM8 8h8m-8 4h8m-8 4h5"/><path d="M2 9V2h7m13 13v7h-7"/></svg>
+                <span>DATA SCAN</span><small>CLIPBOARD INTEL</small>
               </button>
               <a class="launcher-button coding-launcher" href="https://github.com/" target="_blank" rel="noopener noreferrer">
                 <svg viewBox="0 0 24 24" aria-hidden="true"><path d="m8 7-5 5 5 5m8-10 5 5-5 5m-3-13-2 16"/></svg>
@@ -107,6 +223,10 @@
                 <span>WATCHING</span><small>MEDIA LINK</small>
               </a>
             </div>
+            <div class="launcher-tools">
+              <button id="simulate-open" type="button">SIMULATE <small>MISSION ANALYSIS</small></button>
+              <button id="holo-note-add" type="button">+ HOLO-NOTE <small>FLOATING MEMO</small></button>
+            </div>
           </section>
         </aside>
 
@@ -114,6 +234,10 @@
           <section class="core-stage" aria-label="J.A.R.V.I.S. AIコア">
             <div class="stage-readout stage-readout-left"><span>REACTOR STATUS</span><strong id="reactor-status">NOMINAL</strong></div>
             <div class="stage-readout stage-readout-right"><span>POWER OUTPUT</span><strong>3.7 <small>GW</small></strong></div>
+            <div class="stage-tools" aria-label="追加システム">
+              <button id="holo-open" type="button" aria-haspopup="dialog" aria-controls="holo-dialog">HOLO-3D</button>
+              <button id="cipher-open" type="button" aria-haspopup="dialog" aria-controls="cipher-dialog">STARK CIPHER</button>
+            </div>
             <div class="core-wrap" id="core" aria-hidden="true">
               <div class="core-grid"></div>
               <div class="core-ring ring-outer"></div>
@@ -127,11 +251,42 @@
               <span class="core-crosshair crosshair-top"></span>
               <span class="core-crosshair crosshair-bottom"></span>
             </div>
+            <section class="optical-window" id="optical-window" aria-label="OPTICAL SENSOR camera feed" hidden>
+              <div class="optical-heading">
+                <span>OPTICAL SENSOR <i>/// LIVE FEED</i></span>
+                <button id="optical-close" type="button" aria-label="カメラを停止して閉じる">×</button>
+              </div>
+              <div class="optical-viewport">
+                <video id="optical-video" autoplay muted playsinline></video>
+                <div class="optical-scanlines" aria-hidden="true"></div>
+                <div class="optical-reticle" aria-hidden="true"><i></i><i></i><span></span></div>
+                <div class="optical-frame" aria-hidden="true"><i></i><i></i><i></i><i></i></div>
+                <div class="optical-readouts" aria-hidden="true">
+                  <span>SIM RANGE <b id="optical-distance">--.- M</b></span>
+                  <span>SIM LOAD <b id="optical-analysis">--%</b></span>
+                </div>
+              </div>
+              <p class="optical-status" id="optical-status" role="status">CAMERA INITIALIZING</p>
+            </section>
+            <section class="air-gesture-hud" id="air-gesture-hud" aria-label="空間ジェスチャートラッキング" hidden>
+              <div class="air-gesture-indicator">
+                <i id="air-gesture-indicator-light"></i>
+                <span id="air-gesture-status" role="status" aria-live="polite">HAND TRACKING: SEARCHING</span>
+              </div>
+              <canvas id="gesture-preview" width="160" height="112" aria-hidden="true"></canvas>
+            </section>
+            <video id="air-gesture-video" class="air-gesture-video" muted playsinline aria-hidden="true"></video>
             <div class="core-ident"><span>MARK LXXXV</span><i></i><span>ARC REACTOR // ACTIVE</span></div>
             <p class="core-caption" id="core-caption">システムは正常です。ご用件をどうぞ。</p>
           </section>
 
           <section class="conversation panel" aria-label="J.A.R.V.I.S. との会話">
+            <div class="target-lock-corners" aria-hidden="true">
+              <span class="target-lock target-lock-a"><b>[LOCKED]</b><small>RANGE <i>024</i>M // PRI 01</small></span>
+              <span class="target-lock target-lock-b"><b>[LOCKED]</b><small>RANGE <i>081</i>M // PRI 02</small></span>
+              <span class="target-lock target-lock-c"><b>[LOCKED]</b><small>RANGE <i>046</i>M // PRI 03</small></span>
+              <span class="target-lock target-lock-d"><b>[LOCKED]</b><small>RANGE <i>112</i>M // PRI 04</small></span>
+            </div>
             <div class="conversation-heading">
               <div class="conversation-title">
                 <span class="channel-icon" aria-hidden="true">⌁</span>
@@ -188,8 +343,20 @@
             <div class="clock-ticks" aria-hidden="true"></div>
           </section>
 
+          <section class="panel radar-panel" aria-label="釧路拠点の衛星軌道レーダー">
+            <div class="panel-heading"><span>GLOBAL RADAR</span><span class="panel-code">ORBIT / LIVE</span></div>
+            <canvas id="global-radar" class="global-radar-canvas" role="img" aria-label="自転する地球儀と釧路基地の位置"></canvas>
+            <div class="radar-readout"><i></i><span id="global-radar-status">KUSHIRO BASE // ACTIVE</span><small>42.98°N / 144.38°E</small></div>
+            <div class="iss-telemetry" aria-label="国際宇宙ステーションの現在位置">
+              <span>ALT <b id="iss-altitude">--.- KM</b></span>
+              <span>VEL <b id="iss-velocity">--.- KM/H</b></span>
+              <span>RANGE <b id="iss-distance">-- KM</b></span>
+              <small id="iss-region">ISS LINK // ACQUIRING TELEMETRY</small>
+            </div>
+          </section>
+
           <section class="panel weather-panel">
-            <div class="panel-heading"><span>ATMOSPHERIC SCAN</span><span class="panel-code">KUSHIRO // LIVE</span></div>
+            <div class="panel-heading"><span>KUSHIRO EXTENDED FORECAST</span><span class="panel-code">7-DAY // LIVE</span></div>
             <div class="weather-main">
               <div class="weather-icon" aria-hidden="true"><span class="weather-sun"></span><span class="weather-cloud"></span></div>
               <div class="weather-reading"><strong><span id="weather-current">--</span><i>°</i></strong><span id="weather-description">CONNECTING...</span></div>
@@ -200,6 +367,9 @@
               <div><span>LOW</span><b><span id="weather-low">--</span><small>°C</small></b></div>
             </div>
             <div class="weather-location"><span>HOKKAIDO // KUSHIRO</span><span id="weather-updated">DATA // --:--</span></div>
+            <div class="forecast-list" id="weather-forecast" aria-label="釧路市の7日間予報">
+              <div class="forecast-placeholder">FORECAST // CONNECTING</div>
+            </div>
             <div class="weather-error" id="weather-error" role="status" hidden></div>
           </section>
 
@@ -215,7 +385,22 @@
           <section class="panel audio-panel">
             <div class="panel-heading"><span>AUDIO SPECTRUM</span><span class="panel-code">VIS / 07</span></div>
             <div class="spectrum" id="spectrum" aria-hidden="true"></div>
-            <div class="audio-readout"><span>AMBIENT FREQUENCY</span><b>● STANDBY</b></div>
+            <div class="audio-readout"><span>AMBIENT FREQUENCY</span><b id="ambient-status">● STANDBY</b></div>
+            <div class="sensor-toggles">
+              <button id="optical-toggle" type="button" aria-pressed="false" title="ブラウザーのカメラをローカル表示します">
+                <span>OPTICAL SENSOR</span><strong id="optical-toggle-state">OFF</strong>
+              </button>
+              <button id="ambient-toggle" type="button" aria-pressed="false">
+                <span>AMBIENT CORE</span><strong id="ambient-toggle-state">OFF</strong>
+              </button>
+              <button id="air-gesture-toggle" type="button" aria-pressed="false">
+                <span>AIR GESTURE</span><strong id="air-gesture-toggle-state">OFF</strong>
+              </button>
+              <button id="sentry-toggle" type="button" aria-pressed="false">
+                <span>SENTRY MODE</span><strong id="sentry-toggle-state">OFF</strong>
+              </button>
+            </div>
+            <div class="sentry-readout" id="sentry-status" role="status">SENTRY: OFFLINE</div>
           </section>
 
           <section class="stark-panel" aria-label="Stark Industries">
@@ -227,6 +412,51 @@
           <div class="right-footnote"><span>HUD BUILD 08.24.11</span><span>SECURE // AES-256</span></div>
         </aside>
       </main>
+      <div class="house-alert" id="house-alert" role="alert" aria-live="assertive" hidden>
+        <div class="house-alert-grid" aria-hidden="true"></div>
+        <div class="house-alert-content">
+          <span>/// EMERGENCY DEPLOYMENT ///</span>
+          <strong>WARNING: HOUSE PARTY PROTOCOL INITIATED - DEPLOYING ALL SUITS</strong>
+          <i>ALL SYSTEMS // RED ALERT</i>
+        </div>
+      </div>
+      <dialog class="feature-dialog holo-dialog" id="holo-dialog" aria-labelledby="holo-title">
+        <section class="feature-dialog-panel">
+          <div class="feature-dialog-heading">
+            <div><p class="eyebrow">HOLOGRAPHIC ENGINEERING <span>// 3D PROJECTION</span></p><h2 id="holo-title">HOLO-PROJECTOR <small>INTERACTIVE WIREFRAME</small></h2></div>
+            <button class="feature-close" id="holo-close" type="button" aria-label="投影機を閉じる">×</button>
+          </div>
+          <div class="holo-controls">
+            <label for="holo-model">PROJECTION</label>
+            <select id="holo-model">
+              <option value="reactor">ARC REACTOR</option>
+              <option value="helmet">HELMET ASSEMBLY</option>
+            </select>
+            <button id="holo-explode" type="button" aria-pressed="false">EXPLODE</button>
+          </div>
+          <canvas id="holo-canvas" class="holo-canvas" role="img" aria-label="ドラッグで回転できる3Dワイヤーフレーム"></canvas>
+          <p class="feature-dialog-status" id="holo-status" aria-live="polite">DRAG TO ROTATE // 360° CONTROL</p>
+        </section>
+      </dialog>
+      <dialog class="feature-dialog cipher-dialog" id="cipher-dialog" aria-labelledby="cipher-title">
+        <section class="feature-dialog-panel">
+          <div class="feature-dialog-heading">
+            <div><p class="eyebrow">LOCAL CRYPTOGRAPHIC MODULE <span>// AES-GCM</span></p><h2 id="cipher-title">STARK CIPHER <small>ENCRYPT / DECRYPT</small></h2></div>
+            <button class="feature-close" id="cipher-close" type="button" aria-label="暗号化パネルを閉じる">×</button>
+          </div>
+          <label class="cipher-label" for="cipher-key">PASSPHRASE <small>同じパスフレーズで復号できます</small></label>
+          <input class="cipher-key" id="cipher-key" type="password" autocomplete="new-password" spellcheck="false" placeholder="パスフレーズを入力">
+          <label class="cipher-label" for="cipher-input">INPUT <small>暗号化する文章、またはSTARK1形式の暗号文</small></label>
+          <textarea class="cipher-textarea" id="cipher-input" rows="4" spellcheck="false" placeholder="テキストを入力または暗号文を貼り付け"></textarea>
+          <div class="cipher-actions">
+            <button id="cipher-encrypt" type="button">ENCRYPT</button>
+            <button id="cipher-decrypt" type="button">DECRYPT</button>
+          </div>
+          <label class="cipher-label" for="cipher-output">OUTPUT</label>
+          <textarea class="cipher-textarea cipher-output" id="cipher-output" rows="4" readonly spellcheck="false" placeholder="結果をここに表示"></textarea>
+          <p class="feature-dialog-status" id="cipher-status" aria-live="polite">PASSPHRASE-BASED // LOCAL ONLY</p>
+        </section>
+      </dialog>
       <dialog class="memory-dialog" id="memory-dialog" aria-labelledby="memory-dialog-title">
         <section class="memory-dialog-panel">
           <div class="memory-dialog-heading">
@@ -241,10 +471,83 @@
           </div>
         </section>
       </dialog>
+      <dialog class="feature-dialog simulation-dialog" id="simulation-dialog" aria-labelledby="simulation-title">
+        <section class="feature-dialog-panel">
+          <div class="feature-dialog-heading">
+            <div><p class="eyebrow">TACTICAL ANALYSIS <span>// SIMULATION PROTOCOL</span></p><h2 id="simulation-title">MISSION SIMULATION <small>SCENARIO MODEL</small></h2></div>
+            <button class="feature-close" id="simulation-close" type="button" aria-label="シミュレーションを閉じる">×</button>
+          </div>
+          <form id="simulation-form" class="simulation-form">
+            <label for="simulation-target">TARGET / 目標</label>
+            <div class="simulation-input-row">
+              <input id="simulation-target" maxlength="500" required placeholder="例：期末試験の勉強計画">
+              <button type="submit" id="simulation-launch">RUN SIMULATION</button>
+            </div>
+          </form>
+          <div class="simulation-result" id="simulation-result" aria-live="polite">
+            <div class="simulation-card simulation-target-card"><span>【TARGET / 目標】</span><strong id="simulation-result-target">AWAITING INPUT</strong></div>
+            <div class="simulation-card simulation-probability-card">
+              <span>【SUCCESS PROBABILITY / 成功確率】</span>
+              <strong id="simulation-probability">--.-%</strong>
+              <div class="simulation-progress" role="progressbar" aria-label="成功確率" aria-valuemin="0" aria-valuemax="99.9" aria-valuenow="0"><i id="simulation-progress-fill"></i></div>
+            </div>
+            <div class="simulation-card"><span>【OPTIMAL STRATEGY / 最適攻略ルート】</span><p id="simulation-strategy">シミュレーションを待機中です。</p></div>
+            <div class="simulation-card"><span>【RISK FACTOR / 注意すべきリスク】</span><p id="simulation-risk">解析開始後に表示します。</p></div>
+            <pre class="simulation-raw" id="simulation-raw" hidden></pre>
+          </div>
+          <p class="feature-dialog-status" id="simulation-status" role="status">READY // ENTER A TARGET</p>
+        </section>
+      </dialog>
+      <dialog class="feature-dialog sentry-dialog" id="sentry-dialog" aria-labelledby="sentry-title">
+        <section class="feature-dialog-panel">
+          <p class="eyebrow">OPERATOR MONITOR <span>// SENTRY MODE</span></p>
+          <h2 id="sentry-title">15 MINUTES NO INPUT DETECTED</h2>
+          <p class="sentry-question">伊吹様、15分間操作反応が途絶えております。システムをスタンバイに移行いたしますか？それとも作業を続行されますか？</p>
+          <div class="sentry-actions">
+            <button id="sentry-continue" type="button">CONTINUE WORK</button>
+            <button id="sentry-standby" type="button">ENTER STANDBY</button>
+          </div>
+        </section>
+      </dialog>
       <footer class="footer"><span><i></i> ENCRYPTED SESSION</span><span>STARK INDUSTRIES <b>×</b> J.A.R.V.I.S.</span><span>ALL SYSTEMS NOMINAL</span></footer>
+    </div>
+    <div class="floating-notes" id="floating-notes" aria-label="フローティングホログラムノート"></div>
+    <div class="target-crosshair" id="target-crosshair" aria-hidden="true">
+      <i class="crosshair-horizontal"></i><i class="crosshair-vertical"></i><b></b><span id="crosshair-coordinates">X:0000 // Y:0000</span>
+    </div>
+    <div class="icing-alert-frame" id="icing-alert-frame" role="status" hidden>
+      <div class="icing-edge icing-edge-top"></div><div class="icing-edge icing-edge-bottom"></div>
+      <div class="icing-banner" id="icing-banner">[CAUTION: ICING PROBLEM / 休憩プロトコル推奨]</div>
+      <button id="icing-dismiss" type="button" aria-label="氷結・休憩警告を閉じる">ACKNOWLEDGE</button>
+    </div>
+    <dialog class="system-lock-overlay" id="system-lock-overlay" aria-labelledby="system-lock-title">
+      <div class="lock-reticle" aria-hidden="true"><i></i><i></i><i></i><i></i></div>
+      <span class="lock-auth-label">BIOMETRIC SECURITY // VERIFIED USER REQUIRED</span>
+      <strong id="system-lock-title">SYSTEM LOCKED</strong>
+      <span>SYSTEM LOCKED - BIOMETRIC AUTH REQUIRED</span>
+      <button id="system-unlock-button" type="button">UNLOCK <small>IBUKI-SAMA</small></button>
+      <small id="system-lock-status" role="status">LOCAL UI LOCK // NOT A SECURITY BOUNDARY</small>
+    </dialog>
+    <div class="sentry-standby-overlay" id="sentry-standby-overlay" role="dialog" aria-modal="true" aria-labelledby="sentry-standby-title" hidden>
+      <span>SENTRY MODE // SYSTEM STANDBY</span>
+      <strong id="sentry-standby-title">OPERATOR SESSION PAUSED</strong>
+      <button id="sentry-resume" type="button">RESUME SYSTEM</button>
+    </div>
+    <aside class="system-log" id="system-log" aria-label="システムログ">
+      <div class="system-log-heading"><span>SYSTEM LOG</span><i>LIVE</i></div>
+      <div class="system-log-lines" id="system-log-lines" aria-live="off"></div>
+    </aside>
+    <div class="global-ticker" id="global-ticker" role="region" aria-live="off" aria-label="リアルタイムシステム情報">
+      <span class="ticker-label">GLOBAL TELEMETRY</span>
+      <div class="ticker-window"><div class="ticker-track">
+        <span class="ticker-content" id="ticker-content">TIME --:--:-- // KUSHIRO --°C // ISS --.- KM/H // SYSTEM NOMINAL //</span>
+        <span class="ticker-content ticker-copy" aria-hidden="true">TIME --:--:-- // KUSHIRO --°C // ISS --.- KM/H // SYSTEM NOMINAL //</span>
+      </div></div>
     </div>
     <script src="https://cdn.jsdelivr.net/npm/marked@15.0.7/marked.min.js" integrity="sha384-H+hy9ULve6xfxRkWIh/YOtvDdpXgV2fmAGQkIDTxIgZwNoaoBal14Di2YTMR6MzR" crossorigin="anonymous" defer></script>
     <script src="https://cdn.jsdelivr.net/npm/dompurify@3.2.6/dist/purify.min.js" integrity="sha384-JEyTNhjM6R1ElGoJns4U2Ln4ofPcqzSsynQkmEc/KGy6336qAZl70tDLufbkla+3" crossorigin="anonymous" defer></script>
+    <script src="https://cdn.jsdelivr.net/npm/@mediapipe/hands@0.4.1675469240/hands.js" crossorigin="anonymous" defer></script>
+    <script src="https://cdn.jsdelivr.net/npm/@mediapipe/camera_utils@0.3.1675466862/camera_utils.js" crossorigin="anonymous" defer></script>
     <script src="/static/app.js" defer></script>
   </body>
 </html>

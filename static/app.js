@@ -23,16 +23,135 @@ const memoryDialogStatus = document.querySelector("#memory-dialog-status");
 const memoryList = document.querySelector("#memory-list");
 const weatherPanel = document.querySelector(".weather-panel");
 const weatherError = document.querySelector("#weather-error");
+const forecastList = document.querySelector("#weather-forecast");
 const sfxToggle = document.querySelector("#sfx-toggle");
 const sfxVolumeInput = document.querySelector("#sfx-volume");
 const sfxVolumeValue = document.querySelector("#sfx-volume-value");
 const hudModeToggle = document.querySelector("#hud-mode-toggle");
 const hudModeLabel = document.querySelector("#hud-mode-label");
+const bootOverlay = document.querySelector("#boot-overlay");
+const bootEnableAudioButton = document.querySelector("#boot-enable-audio");
+const bootSkipButton = document.querySelector("#boot-skip");
+const modeTransitionOverlay = document.querySelector("#mode-transition");
+const modeBanner = document.querySelector("#mode-banner");
+const missionTimerValue = document.querySelector("#mission-timer-value");
+const missionTimerStatus = document.querySelector("#mission-timer-status");
+const missionTimerToggle = document.querySelector("#mission-timer-toggle");
+const missionTimerReset = document.querySelector("#mission-timer-reset");
+const uptimeStartedAt = performance.now();
+const trafficUploadWave = document.querySelector("#traffic-upload");
+const trafficDownloadWave = document.querySelector("#traffic-download");
+const dataScanButton = document.querySelector("#data-scan");
+const opticalToggle = document.querySelector("#optical-toggle");
+const opticalToggleState = document.querySelector("#optical-toggle-state");
+const opticalWindow = document.querySelector("#optical-window");
+const opticalVideo = document.querySelector("#optical-video");
+const opticalStatus = document.querySelector("#optical-status");
+const opticalCloseButton = document.querySelector("#optical-close");
+const opticalDistance = document.querySelector("#optical-distance");
+const opticalAnalysis = document.querySelector("#optical-analysis");
+const ambientToggle = document.querySelector("#ambient-toggle");
+const ambientToggleState = document.querySelector("#ambient-toggle-state");
+const ambientStatus = document.querySelector("#ambient-status");
+const issAltitude = document.querySelector("#iss-altitude");
+const issVelocity = document.querySelector("#iss-velocity");
+const issDistance = document.querySelector("#iss-distance");
+const issRegion = document.querySelector("#iss-region");
+const airGestureToggle = document.querySelector("#air-gesture-toggle");
+const airGestureToggleState = document.querySelector("#air-gesture-toggle-state");
+const airGestureHud = document.querySelector("#air-gesture-hud");
+const airGestureStatus = document.querySelector("#air-gesture-status");
+const airGestureIndicatorLight = document.querySelector("#air-gesture-indicator-light");
+const airGestureVideo = document.querySelector("#air-gesture-video");
+const gesturePreview = document.querySelector("#gesture-preview");
+const cleanSlateOverlay = document.querySelector("#clean-slate-overlay");
+const cleanSlateCanvas = document.querySelector("#clean-slate-sparks");
+const cleanSlateCountdown = document.querySelector("#clean-slate-countdown");
+const cleanSlatePhase = document.querySelector("#clean-slate-phase");
+const houseAlert = document.querySelector("#house-alert");
+const systemLockButton = document.querySelector("#system-lock-button");
+const systemLockOverlay = document.querySelector("#system-lock-overlay");
+const systemUnlockButton = document.querySelector("#system-unlock-button");
+const systemLockStatus = document.querySelector("#system-lock-status");
+const biometricWave = document.querySelector("#biometric-wave");
+const tickerContent = document.querySelector("#ticker-content");
+const tickerCopy = document.querySelector(".ticker-copy");
+const systemLogLines = document.querySelector("#system-log-lines");
+const simulationOpenButton = document.querySelector("#simulate-open");
+const simulationDialog = document.querySelector("#simulation-dialog");
+const simulationCloseButton = document.querySelector("#simulation-close");
+const simulationForm = document.querySelector("#simulation-form");
+const simulationTargetInput = document.querySelector("#simulation-target");
+const simulationLaunchButton = document.querySelector("#simulation-launch");
+const simulationStatus = document.querySelector("#simulation-status");
+const simulationResultTarget = document.querySelector("#simulation-result-target");
+const simulationProbability = document.querySelector("#simulation-probability");
+const simulationProgress = document.querySelector(".simulation-progress");
+const simulationProgressFill = document.querySelector("#simulation-progress-fill");
+const simulationStrategy = document.querySelector("#simulation-strategy");
+const simulationRisk = document.querySelector("#simulation-risk");
+const simulationRaw = document.querySelector("#simulation-raw");
+const floatingNotes = document.querySelector("#floating-notes");
+const holoNoteAddButton = document.querySelector("#holo-note-add");
+const crosshair = document.querySelector("#target-crosshair");
+const crosshairCoordinates = document.querySelector("#crosshair-coordinates");
+const sentryToggle = document.querySelector("#sentry-toggle");
+const sentryToggleState = document.querySelector("#sentry-toggle-state");
+const sentryStatus = document.querySelector("#sentry-status");
+const sentryDialog = document.querySelector("#sentry-dialog");
+const sentryContinueButton = document.querySelector("#sentry-continue");
+const sentryStandbyButton = document.querySelector("#sentry-standby");
+const sentryStandbyOverlay = document.querySelector("#sentry-standby-overlay");
+const sentryResumeButton = document.querySelector("#sentry-resume");
+const icingAlertFrame = document.querySelector("#icing-alert-frame");
+const icingDismissButton = document.querySelector("#icing-dismiss");
+const flightPanel = document.querySelector("#flight-panel");
+const flightMach = document.querySelector("#flight-mach");
+const flightAltitude = document.querySelector("#flight-altitude");
+const flightTemperature = document.querySelector("#flight-temperature");
+const globalRadarCanvas = document.querySelector("#global-radar");
+const globalRadarStatus = document.querySelector("#global-radar-status");
+const holoDialog = document.querySelector("#holo-dialog");
+const holoOpenButton = document.querySelector("#holo-open");
+const holoCloseButton = document.querySelector("#holo-close");
+const holoCanvas = document.querySelector("#holo-canvas");
+const holoModelSelect = document.querySelector("#holo-model");
+const holoExplodeButton = document.querySelector("#holo-explode");
+const holoStatus = document.querySelector("#holo-status");
+const cipherDialog = document.querySelector("#cipher-dialog");
+const cipherOpenButton = document.querySelector("#cipher-open");
+const cipherCloseButton = document.querySelector("#cipher-close");
+const cipherKeyInput = document.querySelector("#cipher-key");
+const cipherInput = document.querySelector("#cipher-input");
+const cipherOutput = document.querySelector("#cipher-output");
+const cipherEncryptButton = document.querySelector("#cipher-encrypt");
+const cipherDecryptButton = document.querySelector("#cipher-decrypt");
+const cipherStatus = document.querySelector("#cipher-status");
 const HISTORY_STORAGE_KEY = "jarvis.conversation.v1";
 const MEMORY_STORAGE_KEY = "jarvis.long-term-memory.v1";
+const HOLO_NOTES_STORAGE_KEY = "jarvis.holo-notes.v1";
 const MAX_HISTORY_MESSAGES = 40;
 const MAX_MEMORY_ITEMS = 80;
 const WEATHER_REFRESH_INTERVAL = 5 * 60 * 1000;
+const SENTRY_IDLE_LIMIT = 15 * 60 * 1000;
+const SENTRY_CHECK_INTERVAL = 1000;
+const BOOT_SEQUENCE_DURATION = 2500;
+const MODE_TRANSITION_DURATION = 1200;
+const MODE_THEME_SWITCH_DELAY = 540;
+const MISSION_DURATION_SECONDS = 25 * 60;
+const CIPHER_ITERATIONS = 250000;
+const ISS_API_URL = "https://api.wheretheiss.at/v1/satellites/25544";
+const ISS_REFRESH_INTERVAL = 5000;
+const ISS_REQUEST_TIMEOUT = 4200;
+const ISS_MAX_TRACK_POINTS = 180;
+const EARTH_RADIUS_KM = 6371;
+const HAND_SKELETON_CONNECTIONS = [
+  [0, 1], [1, 2], [2, 3], [3, 4],
+  [0, 5], [5, 6], [6, 7], [7, 8],
+  [5, 9], [9, 10], [10, 11], [11, 12],
+  [9, 13], [13, 14], [14, 15], [15, 16],
+  [13, 17], [17, 18], [18, 19], [19, 20], [0, 17],
+];
 const BRIEFING_PROMPT =
   "伊吹様向けに、今日の北海道釧路市の天気予報と、本日の日本の主要ニュース3つをWeb検索で調べて簡潔に報告して";
 const PROTOCOLS = {
@@ -81,6 +200,60 @@ let processingSfxStartTimer = null;
 let sfxMasterGain = null;
 let hudMode = "standard";
 let requestInProgress = false;
+let bootSequenceTimer = null;
+let modeThemeSwitchTimer = null;
+let modeTransitionCleanupTimer = null;
+let modeTransitionVersion = 0;
+let missionRemainingSeconds = MISSION_DURATION_SECONDS;
+let missionTimerDeadline = 0;
+let missionTimerInterval = null;
+let icingAlertTimer = null;
+let opticalStream = null;
+let opticalRequestVersion = 0;
+let opticalReadoutInterval = null;
+let ambientBus = null;
+let ambientOscillators = [];
+let ambientPulseTimeout = null;
+let ambientGeneration = 0;
+let housePartyTimeout = null;
+let housePartyPending = false;
+let globalRadarFrame = null;
+let holoAnimationFrame = null;
+let holoRotationX = -0.18;
+let holoRotationY = 0.36;
+let holoGestureScale = 1;
+let holoExploded = false;
+let holoExplodeProgress = 0;
+let holoPointer = null;
+let cipherOperationRunning = false;
+let issTelemetry = null;
+let issTrack = [];
+let issRequestPromise = null;
+let airGestureCamera = null;
+let airGestureHands = null;
+let airGestureVersion = 0;
+let airGesturePending = false;
+let airGestureAutoOpened = false;
+let airGestureReleasePromise = null;
+let airGestureSessionPromise = null;
+let airIndexPosition = null;
+let airOpenPalmFrames = 0;
+let cleanSlatePending = false;
+let cleanSlateTimers = [];
+let cleanSlateAnimationFrame = null;
+let systemLocked = false;
+let sentryMode = false;
+let sentryPromptPending = false;
+let sentryStandbyActive = false;
+let lastOperatorActivity = Date.now();
+let sentryCheckInterval = null;
+let icingWarningIssued = false;
+let powerDistributionInterval = null;
+let systemLogReady = false;
+let holoNotes = [];
+let holoNoteDrag = null;
+let holoNoteZIndex = 10;
+let holoNotesSaveTimer = null;
 
 function trimHistory() {
   while (history.length > MAX_HISTORY_MESSAGES) history.shift();
@@ -267,8 +440,13 @@ async function refreshWeather() {
     document.querySelector("#weather-low").textContent = formatWeatherValue(weather.today.low_c);
     document.querySelector("#weather-updated").textContent =
       `DATA // ${weather.current.time.slice(11, 16)}`;
+    if (!Array.isArray(weather.forecast) || weather.forecast.length !== 7) {
+      throw new TypeError("7日分の日別予報データの形式が正しくありません。");
+    }
+    renderWeatherForecast(weather.forecast);
     weatherPanel.dataset.state = "ready";
     weatherError.hidden = true;
+    updateTelemetryTicker();
   } catch (error) {
     console.error("Kushiro weather could not be loaded.", error);
     document.querySelector("#weather-current").textContent = "--";
@@ -277,10 +455,40 @@ async function refreshWeather() {
     document.querySelector("#weather-high").textContent = "--";
     document.querySelector("#weather-low").textContent = "--";
     document.querySelector("#weather-updated").textContent = "DATA // OFFLINE";
+    forecastList.replaceChildren();
+    const unavailable = document.createElement("div");
+    unavailable.className = "forecast-placeholder";
+    unavailable.textContent = "FORECAST // UNAVAILABLE";
+    forecastList.append(unavailable);
     weatherPanel.dataset.state = "error";
     weatherError.textContent = error.message;
     weatherError.hidden = false;
+    updateTelemetryTicker();
   }
+}
+
+function renderWeatherForecast(forecast) {
+  const fragment = document.createDocumentFragment();
+  forecast.forEach((day, index) => {
+    const date = new Date(`${day.date}T12:00:00`);
+    const row = document.createElement("div");
+    row.className = `forecast-row${index === 0 ? " is-today" : ""}`;
+    const dateLabel = document.createElement("span");
+    dateLabel.className = "forecast-date";
+    dateLabel.textContent = index === 0
+      ? "TODAY"
+      : new Intl.DateTimeFormat("en-US", { weekday: "short" }).format(date).toUpperCase();
+    const description = document.createElement("span");
+    description.className = "forecast-description";
+    description.textContent = day.description;
+    const temperatures = document.createElement("span");
+    temperatures.className = "forecast-temperatures";
+    temperatures.textContent =
+      `${formatWeatherValue(day.high_c)}° / ${formatWeatherValue(day.low_c)}°`;
+    row.append(dateLabel, description, temperatures);
+    fragment.append(row);
+  });
+  forecastList.replaceChildren(fragment);
 }
 
 function normalizeSearchMetadata(search) {
@@ -539,11 +747,18 @@ function updateVoiceStandbyButton() {
 }
 
 function scheduleStandbyRecognition() {
-  if (!voiceStandbyEnabled) return;
+  if (!voiceStandbyEnabled || housePartyPending || cleanSlatePending) return;
   clearTimeout(standbyRestartTimer);
   standbyRestartTimer = setTimeout(() => {
     standbyRestartTimer = null;
-    if (voiceStandbyEnabled && !recognition && !requestInProgress && !isSpeaking) {
+    if (
+      voiceStandbyEnabled &&
+      !housePartyPending &&
+      !cleanSlatePending &&
+      !recognition &&
+      !requestInProgress &&
+      !isSpeaking
+    ) {
       startRecognition("standby");
     }
   }, 250);
@@ -593,6 +808,55 @@ function playTone(context, frequency, endFrequency, startAt, duration, level, ty
   oscillator.stop(startAt + duration + 0.01);
 }
 
+function playFmTone(
+  context,
+  frequency,
+  endFrequency,
+  modulationFrequency,
+  modulationDepth,
+  startAt,
+  duration,
+  level,
+  filterFrequency,
+  type = "sine",
+) {
+  const carrier = context.createOscillator();
+  const modulator = context.createOscillator();
+  const modulationGain = context.createGain();
+  const filter = context.createBiquadFilter();
+  const envelope = context.createGain();
+  carrier.type = type;
+  carrier.frequency.setValueAtTime(frequency, startAt);
+  if (endFrequency !== frequency) {
+    carrier.frequency.exponentialRampToValueAtTime(endFrequency, startAt + duration);
+  }
+  modulator.type = "sine";
+  modulator.frequency.setValueAtTime(modulationFrequency, startAt);
+  modulationGain.gain.setValueAtTime(modulationDepth, startAt);
+  filter.type = "lowpass";
+  filter.frequency.setValueAtTime(filterFrequency, startAt);
+  filter.frequency.exponentialRampToValueAtTime(
+    Math.max(200, filterFrequency * 0.38),
+    startAt + duration,
+  );
+  filter.Q.setValueAtTime(2.4, startAt);
+  envelope.gain.setValueAtTime(0.0001, startAt);
+  envelope.gain.exponentialRampToValueAtTime(
+    Math.max(0.0001, level),
+    startAt + Math.min(0.008, duration / 3),
+  );
+  envelope.gain.exponentialRampToValueAtTime(0.0001, startAt + duration);
+  modulator.connect(modulationGain);
+  modulationGain.connect(carrier.frequency);
+  carrier.connect(filter);
+  filter.connect(envelope);
+  envelope.connect(sfxMasterGain);
+  modulator.start(startAt);
+  carrier.start(startAt);
+  modulator.stop(startAt + duration + 0.01);
+  carrier.stop(startAt + duration + 0.01);
+}
+
 function playNoise(context, startAt, duration, level, cutoff) {
   const frameCount = Math.max(1, Math.ceil(context.sampleRate * duration));
   const buffer = context.createBuffer(1, frameCount, context.sampleRate);
@@ -624,46 +888,834 @@ function playSfx(sound, allowActivation = false) {
   const now = context.currentTime + 0.005;
   try {
     if (sound === "hover") {
-      playTone(context, 2100, 1640, now, 0.035, 0.035);
+      playFmTone(context, 1780, 1260, 3900, 95, now, 0.042, 0.026, 5200, "square");
+      playFmTone(context, 2670, 2080, 5200, 65, now + 0.008, 0.035, 0.014, 6200);
     } else if (sound === "click") {
-      playTone(context, 1480, 930, now, 0.075, 0.12, "triangle");
-      playTone(context, 2240, 1760, now, 0.035, 0.045);
-      playNoise(context, now, 0.018, 0.055, 2600);
+      playFmTone(context, 1520, 880, 3100, 180, now, 0.058, 0.075, 4800, "triangle");
+      playFmTone(context, 2280, 1740, 4400, 120, now + 0.018, 0.045, 0.05, 6200, "square");
+      playNoise(context, now, 0.014, 0.026, 3100);
     } else if (sound === "transmit") {
-      playTone(context, 370, 1280, now, 0.28, 0.14, "triangle");
-      playTone(context, 740, 1640, now + 0.035, 0.17, 0.07);
-      playNoise(context, now + 0.015, 0.07, 0.045, 1800);
+      playFmTone(context, 330, 1120, 74, 260, now, 0.32, 0.09, 2700, "sawtooth");
+      playFmTone(context, 660, 1760, 1330, 310, now + 0.025, 0.25, 0.052, 3600, "triangle");
+      playFmTone(context, 990, 2260, 2230, 170, now + 0.105, 0.2, 0.032, 5100);
+      playNoise(context, now + 0.015, 0.13, 0.022, 2200);
     } else if (sound === "processing") {
-      playTone(context, 480, 620, now, 0.15, 0.075);
-      playTone(context, 670, 520, now + 0.19, 0.17, 0.055);
-      playTone(context, 500, 640, now + 0.78, 0.15, 0.075);
-      playTone(context, 690, 540, now + 0.97, 0.17, 0.055);
+      playFmTone(context, 118, 142, 36, 22, now, 0.28, 0.025, 420, "sine");
+      playFmTone(context, 205, 168, 53, 32, now + 0.29, 0.23, 0.018, 610, "triangle");
+      playFmTone(context, 126, 158, 41, 22, now + 0.82, 0.24, 0.023, 440, "sine");
+      playNoise(context, now + 0.28, 0.055, 0.006, 760);
     } else if (sound === "ready") {
-      playTone(context, 523.25, 523.25, now, 0.34, 0.105);
-      playTone(context, 659.25, 659.25, now + 0.045, 0.32, 0.085);
-      playTone(context, 783.99, 783.99, now + 0.09, 0.3, 0.07);
+      playFmTone(context, 523.25, 523.25, 1046, 12, now, 0.48, 0.072, 2600);
+      playFmTone(context, 659.25, 659.25, 1318, 16, now + 0.035, 0.45, 0.06, 3200);
+      playFmTone(context, 783.99, 783.99, 1568, 18, now + 0.075, 0.43, 0.052, 3800);
+      playFmTone(context, 1046.5, 1046.5, 2093, 22, now + 0.12, 0.38, 0.026, 4700, "triangle");
     } else if (sound === "launch") {
-      playTone(context, 130, 410, now, 0.48, 0.15, "sawtooth");
-      playTone(context, 820, 190, now + 0.035, 0.42, 0.09, "triangle");
-      playTone(context, 360, 720, now + 0.15, 0.25, 0.055);
-      playNoise(context, now, 0.22, 0.045, 700);
+      playFmTone(context, 145, 430, 48, 84, now, 0.46, 0.095, 1400, "sawtooth");
+      playFmTone(context, 810, 190, 1220, 115, now + 0.035, 0.4, 0.058, 2500, "triangle");
+      playFmTone(context, 365, 960, 730, 145, now + 0.14, 0.28, 0.038, 3400);
+      playNoise(context, now, 0.22, 0.026, 900);
     } else if (sound === "wake") {
-      playTone(context, 740, 1320, now, 0.19, 0.16);
-      playTone(context, 1320, 1760, now + 0.11, 0.14, 0.075);
+      playFmTone(context, 490, 1380, 102, 240, now, 0.26, 0.11, 3200, "triangle");
+      playFmTone(context, 980, 1940, 1960, 240, now + 0.095, 0.23, 0.065, 4300);
+      playFmTone(context, 1470, 2500, 2940, 125, now + 0.16, 0.17, 0.035, 5400, "square");
+      playNoise(context, now + 0.04, 0.12, 0.025, 2450);
+    } else if (sound === "boot") {
+      playFmTone(context, 42, 116, 28, 17, now, 1.95, 0.12, 300, "sawtooth");
+      playFmTone(context, 58, 158, 41, 22, now + 0.08, 1.62, 0.065, 440, "triangle");
+      playFmTone(context, 220, 570, 74, 115, now + 0.42, 0.92, 0.035, 1400);
+      playFmTone(context, 880, 1320, 1760, 145, now + 1.38, 0.18, 0.055, 4200, "square");
+      playFmTone(context, 1320, 1880, 2640, 105, now + 1.67, 0.22, 0.045, 5200, "triangle");
+      playNoise(context, now + 1.32, 0.18, 0.018, 2800);
     } else if (sound === "armor-on") {
-      playTone(context, 780, 125, now, 0.62, 0.2, "sawtooth");
-      playTone(context, 1120, 230, now + 0.1, 0.48, 0.105, "triangle");
-      playTone(context, 92, 54, now + 0.43, 0.38, 0.2, "square");
-      playTone(context, 590, 190, now + 0.4, 0.2, 0.13, "triangle");
-      playNoise(context, now + 0.4, 0.16, 0.16, 560);
+      playFmTone(context, 790, 128, 62, 180, now, 0.58, 0.12, 2100, "sawtooth");
+      playFmTone(context, 1120, 230, 1690, 210, now + 0.09, 0.46, 0.062, 3000, "triangle");
+      playFmTone(context, 92, 54, 46, 34, now + 0.39, 0.36, 0.11, 560, "square");
+      playFmTone(context, 590, 190, 885, 125, now + 0.37, 0.24, 0.075, 1900, "triangle");
+      playNoise(context, now + 0.38, 0.17, 0.045, 700);
     } else if (sound === "armor-off") {
-      playTone(context, 520, 1080, now, 0.32, 0.14, "triangle");
-      playTone(context, 980, 360, now + 0.16, 0.38, 0.09);
-      playTone(context, 170, 72, now + 0.28, 0.3, 0.13, "sawtooth");
-      playNoise(context, now + 0.27, 0.12, 0.11, 900);
+      playFmTone(context, 520, 1080, 780, 145, now, 0.32, 0.085, 3200, "triangle");
+      playFmTone(context, 980, 360, 1470, 170, now + 0.15, 0.38, 0.052, 2600);
+      playFmTone(context, 170, 72, 56, 38, now + 0.28, 0.3, 0.075, 640, "sawtooth");
+      playNoise(context, now + 0.27, 0.12, 0.032, 1100);
+    } else if (sound === "house-party") {
+      for (let index = 0; index < 6; index += 1) {
+        const startAt = now + index * 0.48;
+        const frequency = index % 2 === 0 ? 640 : 920;
+        playFmTone(context, frequency, frequency * 1.08, 52, 48, startAt, 0.43, 0.13, 1900, "sawtooth");
+        playNoise(context, startAt, 0.025, 0.018, 1700);
+      }
+    } else if (sound === "cipher") {
+      playFmTone(context, 1380, 760, 2020, 160, now, 0.12, 0.055, 4000, "square");
+      playFmTone(context, 890, 1540, 1260, 90, now + 0.09, 0.15, 0.035, 5200);
+      playNoise(context, now + 0.02, 0.045, 0.018, 2600);
+    } else if (sound === "countdown") {
+      playFmTone(context, 1040, 720, 180, 32, now, 0.15, 0.075, 3400, "square");
+      playNoise(context, now, 0.025, 0.012, 2800);
+    } else if (sound === "clean-slate-impact") {
+      playFmTone(context, 96, 38, 42, 30, now, 0.9, 0.18, 520, "sawtooth");
+      playFmTone(context, 460, 110, 75, 120, now + 0.04, 0.72, 0.12, 1300, "triangle");
+      playFmTone(context, 1760, 660, 840, 220, now + 0.12, 0.42, 0.055, 4200, "square");
+      playNoise(context, now, 0.42, 0.065, 950);
+    } else if (sound === "sentry-alert") {
+      playFmTone(context, 720, 540, 88, 42, now, 0.34, 0.075, 2400, "square");
+      playFmTone(context, 880, 660, 110, 48, now + 0.42, 0.34, 0.075, 2700, "square");
+      playNoise(context, now + 0.02, 0.045, 0.018, 1900);
+    } else if (sound === "icing-alert") {
+      playFmTone(context, 520, 460, 72, 35, now, 0.48, 0.085, 2100, "triangle");
+      playFmTone(context, 392, 330, 55, 24, now + 0.52, 0.54, 0.06, 1700);
+      playNoise(context, now + 0.02, 0.06, 0.016, 1150);
+    } else if (sound === "lock") {
+      playFmTone(context, 780, 110, 54, 22, now, 0.38, 0.09, 1200, "sawtooth");
+      playFmTone(context, 980, 620, 1470, 110, now + 0.14, 0.22, 0.035, 3100, "square");
+      playNoise(context, now, 0.12, 0.025, 1500);
+    } else if (sound === "unlock") {
+      playFmTone(context, 410, 840, 620, 70, now, 0.28, 0.06, 2400, "triangle");
+      playFmTone(context, 660, 990, 1320, 120, now + 0.08, 0.36, 0.045, 3600);
     }
   } catch (error) {
     console.error(`The ${sound} sound effect could not be played.`, error);
+  }
+}
+
+function updateAmbientButton(enabled, status = enabled ? "ACTIVE" : "STANDBY") {
+  const label = enabled ? "ACTIVE" : status === "STANDBY" ? "STANDBY" : "OFFLINE";
+  ambientToggle.setAttribute("aria-pressed", String(enabled));
+  ambientToggleState.textContent = enabled ? "ON" : "OFF";
+  ambientStatus.textContent = `● ${label}`;
+  ambientStatus.title = enabled ? "Generated reactor ambience // 60-110 Hz" : status;
+}
+
+function scheduleAmbientPulse(generation) {
+  if (generation !== ambientGeneration || !ambientBus) return;
+  const delay = 6000 + Math.random() * 8000;
+  ambientPulseTimeout = setTimeout(() => {
+    ambientPulseTimeout = null;
+    if (generation !== ambientGeneration || !ambientBus || !audioContext) return;
+    const now = audioContext.currentTime;
+    const oscillator = audioContext.createOscillator();
+    const envelope = audioContext.createGain();
+    oscillator.type = "sine";
+    oscillator.frequency.setValueAtTime(540, now);
+    oscillator.frequency.exponentialRampToValueAtTime(920, now + 0.06);
+    envelope.gain.setValueAtTime(0.0001, now);
+    envelope.gain.exponentialRampToValueAtTime(0.035, now + 0.012);
+    envelope.gain.exponentialRampToValueAtTime(0.0001, now + 0.17);
+    oscillator.connect(envelope);
+    envelope.connect(ambientBus);
+    oscillator.start(now);
+    oscillator.stop(now + 0.18);
+    scheduleAmbientPulse(generation);
+  }, delay);
+}
+
+function startAmbientCore() {
+  const context = getAudioContext(true);
+  if (!context) {
+    updateAmbientButton(false, "AUDIO UNAVAILABLE");
+    return;
+  }
+  ambientGeneration += 1;
+  const generation = ambientGeneration;
+  const bus = context.createGain();
+  const filter = context.createBiquadFilter();
+  filter.type = "lowpass";
+  filter.frequency.setValueAtTime(210, context.currentTime);
+  bus.gain.setValueAtTime(0.0001, context.currentTime);
+  bus.gain.setTargetAtTime(0.12, context.currentTime, 0.45);
+  filter.connect(bus);
+  bus.connect(context.destination);
+  ambientBus = bus;
+  ambientOscillators = [60, 82.4, 110].map((frequency, index) => {
+    const oscillator = context.createOscillator();
+    const level = context.createGain();
+    oscillator.type = index === 1 ? "triangle" : "sine";
+    oscillator.frequency.setValueAtTime(frequency, context.currentTime);
+    level.gain.setValueAtTime([0.24, 0.07, 0.035][index], context.currentTime);
+    oscillator.connect(level);
+    level.connect(filter);
+    oscillator.start();
+    return oscillator;
+  });
+  updateAmbientButton(true, "ACTIVE // 60-110 HZ");
+  scheduleAmbientPulse(generation);
+}
+
+function stopAmbientCore() {
+  ambientGeneration += 1;
+  clearTimeout(ambientPulseTimeout);
+  ambientPulseTimeout = null;
+  const bus = ambientBus;
+  const oscillators = ambientOscillators;
+  ambientBus = null;
+  ambientOscillators = [];
+  updateAmbientButton(false);
+  if (!bus || !audioContext) return;
+
+  const context = audioContext;
+  const stopAt = context.currentTime + 1.25;
+  bus.gain.cancelScheduledValues(context.currentTime);
+  bus.gain.setTargetAtTime(0.0001, context.currentTime, 0.25);
+  oscillators.forEach((oscillator) => oscillator.stop(stopAt));
+  setTimeout(() => {
+    oscillators.forEach((oscillator) => oscillator.disconnect());
+    bus.disconnect();
+  }, 1500);
+}
+
+function toggleAmbientCore() {
+  if (ambientBus) stopAmbientCore();
+  else startAmbientCore();
+}
+
+function makeHoloPart(name, center, vertices, edges, explode = [0, 0, 0]) {
+  return { name, center, vertices, edges, explode };
+}
+
+function createCircleMesh(radius, plane, segments = 36) {
+  const vertices = [];
+  const edges = [];
+  for (let index = 0; index < segments; index += 1) {
+    const angle = (index / segments) * Math.PI * 2;
+    const cosine = Math.cos(angle) * radius;
+    const sine = Math.sin(angle) * radius;
+    vertices.push(
+      plane === "xy" ? [cosine, sine, 0]
+        : plane === "xz" ? [cosine, 0, sine]
+          : [0, cosine, sine],
+    );
+    edges.push([index, (index + 1) % segments]);
+  }
+  return { vertices, edges };
+}
+
+function createEllipsoidMesh(radii, latitudeSteps = 10, longitudeSteps = 22) {
+  const vertices = [];
+  const edges = [];
+  const rows = [];
+  for (let latitude = 1; latitude < latitudeSteps; latitude += 1) {
+    const angle = -Math.PI / 2 + (latitude / latitudeSteps) * Math.PI;
+    const row = [];
+    for (let longitude = 0; longitude < longitudeSteps; longitude += 1) {
+      const azimuth = (longitude / longitudeSteps) * Math.PI * 2;
+      row.push(vertices.length);
+      vertices.push([
+        radii[0] * Math.cos(angle) * Math.cos(azimuth),
+        radii[1] * Math.sin(angle),
+        radii[2] * Math.cos(angle) * Math.sin(azimuth),
+      ]);
+    }
+    rows.push(row);
+  }
+  rows.forEach((row, rowIndex) => {
+    row.forEach((vertexIndex, index) => {
+      edges.push([vertexIndex, row[(index + 1) % row.length]]);
+      if (rowIndex < rows.length - 1) edges.push([vertexIndex, rows[rowIndex + 1][index]]);
+    });
+  });
+  const top = vertices.push([0, radii[1], 0]) - 1;
+  const bottom = vertices.push([0, -radii[1], 0]) - 1;
+  rows[0].forEach((index) => edges.push([top, index]));
+  rows.at(-1).forEach((index) => edges.push([bottom, index]));
+  return { vertices, edges };
+}
+
+function createFaceplateMesh() {
+  const vertices = [];
+  const edges = [];
+  const columns = 11;
+  const rows = 8;
+  for (let row = 0; row < rows; row += 1) {
+    const y = -0.34 + (row / (rows - 1)) * 0.68;
+    for (let column = 0; column < columns; column += 1) {
+      const x = -0.5 + (column / (columns - 1)) * 1;
+      const depth = Math.sqrt(Math.max(0.06, 1 - (x * x) / 0.72 - (y * y) / 0.9));
+      vertices.push([x, y, depth * 0.3]);
+      const index = row * columns + column;
+      if (column < columns - 1) edges.push([index, index + 1]);
+      if (row < rows - 1) edges.push([index, index + columns]);
+    }
+  }
+  return { vertices, edges };
+}
+
+function createCrestMesh() {
+  const vertices = [
+    [-0.2, 0.63, 0.24], [0, 0.94, 0.2], [0.2, 0.63, 0.24],
+    [-0.17, 0.55, 0.3], [0, 0.78, 0.34], [0.17, 0.55, 0.3],
+  ];
+  return { vertices, edges: [[0, 1], [1, 2], [0, 3], [3, 4], [4, 5], [5, 2], [1, 4]] };
+}
+
+function makeHoloCirclePart(name, radius, plane, explode) {
+  const mesh = createCircleMesh(radius, plane);
+  return makeHoloPart(name, [0, 0, 0], mesh.vertices, mesh.edges, explode);
+}
+
+function makeHoloEllipsoidPart(name, center, radii, explode = [0, 0, 0]) {
+  const mesh = createEllipsoidMesh(radii);
+  return makeHoloPart(name, center, mesh.vertices, mesh.edges, explode);
+}
+
+const HOLO_MODELS = {
+  reactor: [
+    (() => {
+      const mesh = createEllipsoidMesh([0.38, 0.38, 0.38], 8, 18);
+      return makeHoloPart("ARC CORE", [0, 0, 0], mesh.vertices, mesh.edges);
+    })(),
+    makeHoloCirclePart("CONTAINMENT RING", 0.92, "xy", [0, 0, 1]),
+    makeHoloCirclePart("STABILIZER RING", 0.78, "xz", [0, 1, 0]),
+    makeHoloCirclePart("FIELD RING", 0.64, "yz", [1, 0, 0]),
+    ...[[0.76, 0, 0], [-0.76, 0, 0], [0, 0.76, 0], [0, -0.76, 0]].map((center) => {
+      const direction = center.map((value) => value * 1.35);
+      const mesh = createEllipsoidMesh([0.17, 0.17, 0.17], 6, 12);
+      return makeHoloPart("FLUX COIL", center, mesh.vertices, mesh.edges, direction);
+    }),
+  ],
+  helmet: [
+    makeHoloEllipsoidPart("HELMET SHELL", [0, 0, 0], [0.82, 0.98, 0.62], [0, 0.8, -0.2]),
+    (() => {
+      const mesh = createFaceplateMesh();
+      return makeHoloPart("FACEPLATE", [0, -0.04, 0.48], mesh.vertices, mesh.edges, [0, 0, 1.2]);
+    })(),
+    (() => {
+      const mesh = createCrestMesh();
+      return makeHoloPart("CREST ASSEMBLY", [0, 0, 0], mesh.vertices, mesh.edges, [0, 1.2, 0]);
+    })(),
+    ...[-1, 1].map((side) => {
+      const mesh = createCircleMesh(0.23, "yz", 20);
+      return makeHoloPart("SIDE ACTUATOR", [side * 0.84, 0.02, 0], mesh.vertices, mesh.edges, [side * 1.3, 0, 0]);
+    }),
+    (() => {
+      const mesh = createEllipsoidMesh([0.57, 0.18, 0.38], 6, 16);
+      return makeHoloPart("CHIN GUARD", [0, -0.62, 0.12], mesh.vertices, mesh.edges, [0, -1.1, 0.6]);
+    })(),
+  ],
+};
+
+function projectHoloPoint(point, center, explode, rotationX, rotationY, scale, width, height) {
+  let x = point[0] + center[0] + explode[0];
+  let y = point[1] + center[1] + explode[1];
+  let z = point[2] + center[2] + explode[2];
+  const rotatedX = x * Math.cos(rotationY) + z * Math.sin(rotationY);
+  z = -x * Math.sin(rotationY) + z * Math.cos(rotationY);
+  x = rotatedX;
+  const rotatedY = y * Math.cos(rotationX) - z * Math.sin(rotationX);
+  z = y * Math.sin(rotationX) + z * Math.cos(rotationX);
+  y = rotatedY;
+  const perspective = 3.8 / (3.8 - z);
+  return {
+    x: width / 2 + x * scale * perspective,
+    y: height / 2 - y * scale * perspective,
+    depth: z,
+  };
+}
+
+function drawHoloProjector() {
+  if (!holoDialog.open) {
+    holoAnimationFrame = null;
+    return;
+  }
+  const context = holoCanvas.getContext("2d");
+  if (!context) {
+    holoStatus.textContent = "CANVAS RENDERING IS UNAVAILABLE";
+    holoAnimationFrame = null;
+    return;
+  }
+  const bounds = holoCanvas.getBoundingClientRect();
+  const width = Math.max(1, bounds.width);
+  const height = Math.max(1, bounds.height);
+  const pixelRatio = Math.min(window.devicePixelRatio || 1, 2);
+  const pixelWidth = Math.round(width * pixelRatio);
+  const pixelHeight = Math.round(height * pixelRatio);
+  if (holoCanvas.width !== pixelWidth || holoCanvas.height !== pixelHeight) {
+    holoCanvas.width = pixelWidth;
+    holoCanvas.height = pixelHeight;
+  }
+  context.setTransform(pixelRatio, 0, 0, pixelRatio, 0, 0);
+  context.clearRect(0, 0, width, height);
+  const palette = hudMode === "mark-iii"
+    ? { bright: "#ffb700", secondary: "#ff3b32", faint: "#ffb70020" }
+    : { bright: "#00f3ff", secondary: "#63faff", faint: "#00f3ff20" };
+  const background = context.createRadialGradient(width / 2, height / 2, 5, width / 2, height / 2, width * 0.7);
+  background.addColorStop(0, hudMode === "mark-iii" ? "#260c10" : "#07202a");
+  background.addColorStop(1, "#030a12");
+  context.fillStyle = background;
+  context.fillRect(0, 0, width, height);
+  context.strokeStyle = palette.faint;
+  context.lineWidth = 0.5;
+  for (let x = 0; x < width; x += 24) {
+    context.beginPath();
+    context.moveTo(x, 0);
+    context.lineTo(x, height);
+    context.stroke();
+  }
+  for (let y = 0; y < height; y += 24) {
+    context.beginPath();
+    context.moveTo(0, y);
+    context.lineTo(width, y);
+    context.stroke();
+  }
+
+  const targetExplode = holoExploded ? 1 : 0;
+  const reduceMotion = window.matchMedia("(prefers-reduced-motion: reduce)").matches;
+  if (reduceMotion) holoExplodeProgress = targetExplode;
+  else {
+    holoExplodeProgress += (targetExplode - holoExplodeProgress) * 0.09;
+    if (Math.abs(targetExplode - holoExplodeProgress) < 0.002) holoExplodeProgress = targetExplode;
+  }
+  const scale = Math.min(width, height) * (0.37 - holoExplodeProgress * 0.08) * holoGestureScale;
+  const parts = HOLO_MODELS[holoModelSelect.value] || HOLO_MODELS.reactor;
+  context.lineWidth = 0.9;
+  context.shadowBlur = 7;
+  context.shadowColor = palette.bright;
+  parts.forEach((part, partIndex) => {
+    const explode = part.explode.map((value) => value * 0.82 * holoExplodeProgress);
+    const projected = part.vertices.map((point) =>
+      projectHoloPoint(point, part.center, explode, holoRotationX, holoRotationY, scale, width, height));
+    context.strokeStyle = partIndex % 3 === 1 ? palette.secondary : palette.bright;
+    context.globalAlpha = 0.48 + ((partIndex * 17) % 4) * 0.12;
+    context.beginPath();
+    part.edges.forEach(([start, end]) => {
+      const first = projected[start];
+      const second = projected[end];
+      context.moveTo(first.x, first.y);
+      context.lineTo(second.x, second.y);
+    });
+    context.stroke();
+  });
+  context.globalAlpha = 1;
+  context.shadowBlur = 0;
+  context.strokeStyle = palette.bright;
+  context.beginPath();
+  context.arc(width / 2, height / 2, scale * 1.18, 0, Math.PI * 2);
+  context.stroke();
+  context.fillStyle = palette.bright;
+  context.font = "8px monospace";
+  context.fillText(holoExploded ? "ASSEMBLY // DISPERSED" : "ASSEMBLY // LOCKED", 12, height - 12);
+  holoAnimationFrame = reduceMotion ? null : requestAnimationFrame(drawHoloProjector);
+}
+
+function requestHoloFrame() {
+  if (holoAnimationFrame === null) holoAnimationFrame = requestAnimationFrame(drawHoloProjector);
+}
+
+function openHoloProjector() {
+  if (!holoDialog.open) holoDialog.showModal();
+  holoStatus.textContent = "DRAG TO ROTATE // 360° CONTROL";
+  requestHoloFrame();
+}
+
+function closeHoloProjector() {
+  if (holoAnimationFrame !== null) cancelAnimationFrame(holoAnimationFrame);
+  holoAnimationFrame = null;
+}
+
+function updateHoloExplodeButton() {
+  holoExplodeButton.setAttribute("aria-pressed", String(holoExploded));
+  holoExplodeButton.textContent = holoExploded ? "REASSEMBLE" : "EXPLODE";
+  holoStatus.textContent = holoExploded
+    ? "COMPONENTS DISPERSED // DRAG TO ROTATE"
+    : "DRAG TO ROTATE // 360° CONTROL";
+}
+
+function updateGlobalRadar(time) {
+  const context = globalRadarCanvas.getContext("2d");
+  if (!context) {
+    console.error("GLOBAL RADAR canvas rendering is unavailable.");
+    globalRadarStatus.textContent = "RADAR CANVAS // OFFLINE";
+    globalRadarFrame = null;
+    return;
+  }
+  const bounds = globalRadarCanvas.getBoundingClientRect();
+  const width = Math.max(1, bounds.width);
+  const height = Math.max(1, bounds.height);
+  const pixelRatio = Math.min(window.devicePixelRatio || 1, 2);
+  const pixelWidth = Math.round(width * pixelRatio);
+  const pixelHeight = Math.round(height * pixelRatio);
+  if (globalRadarCanvas.width !== pixelWidth || globalRadarCanvas.height !== pixelHeight) {
+    globalRadarCanvas.width = pixelWidth;
+    globalRadarCanvas.height = pixelHeight;
+  }
+  context.setTransform(pixelRatio, 0, 0, pixelRatio, 0, 0);
+  context.clearRect(0, 0, width, height);
+  const markMode = hudMode === "mark-iii";
+  const bright = markMode ? "#ffb700" : "#00f3ff";
+  const faint = markMode ? "#ffb70035" : "#00f3ff35";
+  const centerX = width / 2;
+  const centerY = height / 2;
+  const radius = Math.min(width * 0.31, height * 0.43);
+  const rotation = -144.38 * Math.PI / 180 + time * 0.000025;
+  const project = (latitude, longitude) => {
+    const lat = latitude * Math.PI / 180;
+    const lon = longitude * Math.PI / 180;
+    const x = Math.cos(lat) * Math.sin(lon);
+    const y = Math.sin(lat);
+    const z = Math.cos(lat) * Math.cos(lon);
+    const rotatedX = x * Math.cos(rotation) + z * Math.sin(rotation);
+    const rotatedZ = -x * Math.sin(rotation) + z * Math.cos(rotation);
+    return { x: centerX + rotatedX * radius, y: centerY - y * radius, depth: rotatedZ };
+  };
+  const drawGeoLine = (points) => {
+    context.beginPath();
+    let active = false;
+    points.forEach(([latitude, longitude]) => {
+      const point = project(latitude, longitude);
+      if (point.depth > 0) {
+        if (!active) context.moveTo(point.x, point.y);
+        else context.lineTo(point.x, point.y);
+        active = true;
+      } else {
+        active = false;
+      }
+    });
+    context.stroke();
+  };
+  context.save();
+  context.strokeStyle = faint;
+  context.lineWidth = 0.7;
+  for (let latitude = -75; latitude <= 75; latitude += 15) {
+    const points = [];
+    for (let longitude = -180; longitude <= 180; longitude += 4) points.push([latitude, longitude]);
+    drawGeoLine(points);
+  }
+  for (let longitude = -180; longitude < 180; longitude += 20) {
+    const points = [];
+    for (let latitude = -90; latitude <= 90; latitude += 3) points.push([latitude, longitude]);
+    drawGeoLine(points);
+  }
+  if (issTrack.length > 1) {
+    const issColor = markMode ? "#ff7252" : "#b9ffff";
+    context.lineWidth = 1.8;
+    context.shadowBlur = 8;
+    context.shadowColor = issColor;
+    for (let index = 1; index < issTrack.length; index += 1) {
+      const previous = project(issTrack[index - 1].latitude, issTrack[index - 1].longitude);
+      const current = project(issTrack[index].latitude, issTrack[index].longitude);
+      if (
+        previous.depth <= 0 ||
+        current.depth <= 0 ||
+        Math.abs(previous.x - current.x) > radius * 0.7
+      ) continue;
+      context.globalAlpha = 0.2 + (index / issTrack.length) * 0.8;
+      context.strokeStyle = issColor;
+      context.beginPath();
+      context.moveTo(previous.x, previous.y);
+      context.lineTo(current.x, current.y);
+      context.stroke();
+    }
+    context.globalAlpha = 1;
+  }
+  context.strokeStyle = bright;
+  context.lineWidth = 1.1;
+  context.shadowBlur = 7;
+  context.shadowColor = bright;
+  context.beginPath();
+  context.arc(centerX, centerY, radius, 0, Math.PI * 2);
+  context.stroke();
+
+  context.save();
+  context.translate(centerX, centerY);
+  context.rotate(-0.3);
+  context.beginPath();
+  context.ellipse(0, 0, radius * 1.42, radius * 0.54, 0, 0, Math.PI * 2);
+  context.strokeStyle = `${bright}88`;
+  context.setLineDash([3, 4]);
+  context.stroke();
+  context.setLineDash([]);
+  const satelliteAngle = time * 0.00065;
+  const satelliteX = Math.cos(satelliteAngle) * radius * 1.42;
+  const satelliteY = Math.sin(satelliteAngle) * radius * 0.54;
+  context.translate(satelliteX, satelliteY);
+  context.fillStyle = bright;
+  context.fillRect(-3, -2, 6, 4);
+  context.fillRect(-8, -1, 4, 2);
+  context.fillRect(4, -1, 4, 2);
+  context.restore();
+
+  const kushiro = project(42.98, 144.38);
+  if (kushiro.depth > 0) {
+    const pulse = 3 + (Math.sin(time * 0.006) + 1) * 2;
+    context.beginPath();
+    context.arc(kushiro.x, kushiro.y, pulse, 0, Math.PI * 2);
+    context.fillStyle = bright;
+    context.fill();
+    context.beginPath();
+    context.arc(kushiro.x, kushiro.y, pulse + 4, 0, Math.PI * 2);
+    context.strokeStyle = `${bright}b0`;
+    context.stroke();
+    context.font = "6px monospace";
+    context.fillText("KUSHIRO", kushiro.x + 7, kushiro.y - 5);
+  }
+  if (issTelemetry) {
+    const station = project(issTelemetry.latitude, issTelemetry.longitude);
+    if (station.depth > 0) {
+      const pulse = 2.2 + (Math.sin(time * 0.01) + 1) * 1.7;
+      const stationColor = markMode ? "#ff7252" : "#d9ffff";
+      context.shadowBlur = 10;
+      context.shadowColor = stationColor;
+      context.beginPath();
+      context.arc(station.x, station.y, pulse, 0, Math.PI * 2);
+      context.fillStyle = stationColor;
+      context.fill();
+      context.beginPath();
+      context.arc(station.x, station.y, pulse + 4, 0, Math.PI * 2);
+      context.strokeStyle = stationColor;
+      context.stroke();
+      context.font = "7px monospace";
+      context.fillText("ISS", station.x + 7, station.y - 6);
+      context.shadowBlur = 0;
+    }
+  }
+  context.restore();
+  globalRadarFrame = window.matchMedia("(prefers-reduced-motion: reduce)").matches
+    ? null
+    : requestAnimationFrame(updateGlobalRadar);
+}
+
+function startGlobalRadar() {
+  if (globalRadarFrame === null) globalRadarFrame = requestAnimationFrame(updateGlobalRadar);
+}
+
+function getISSLocationLabel(latitude, longitude) {
+  if (longitude >= 100 && longitude < 150) return "東アジア・西太平洋上空";
+  if (longitude >= 150 || longitude < -120) return latitude >= 0 ? "北太平洋上空" : "南太平洋上空";
+  if (longitude >= -120 && longitude < -70) return latitude >= 10 ? "北米上空" : "南北アメリカ周辺";
+  if (longitude >= -70 && longitude < -20) return latitude >= 0 ? "北大西洋上空" : "南大西洋上空";
+  if (longitude >= -20 && longitude < 45) return latitude >= 0 ? "欧州・アフリカ周辺上空" : "アフリカ周辺上空";
+  if (longitude >= 45 && longitude < 100) return latitude >= 0 ? "南アジア・インド洋周辺" : "インド洋上空";
+  return latitude >= 0 ? "西太平洋周辺上空" : "南半球上空";
+}
+
+function haversineCentralAngle(latitude1, longitude1, latitude2, longitude2) {
+  const toRadians = (degrees) => (degrees * Math.PI) / 180;
+  const lat1 = toRadians(latitude1);
+  const lat2 = toRadians(latitude2);
+  const deltaLat = lat2 - lat1;
+  const deltaLon = toRadians(longitude2 - longitude1);
+  const haversine =
+    Math.sin(deltaLat / 2) ** 2 +
+    Math.cos(lat1) * Math.cos(lat2) * Math.sin(deltaLon / 2) ** 2;
+  return 2 * Math.atan2(Math.sqrt(haversine), Math.sqrt(1 - haversine));
+}
+
+function getISSRangeFromKushiro(latitude, longitude, altitudeKm) {
+  const centralAngle = haversineCentralAngle(42.98, 144.38, latitude, longitude);
+  const orbitalRadius = EARTH_RADIUS_KM + altitudeKm;
+  return Math.sqrt(
+    orbitalRadius ** 2 +
+    EARTH_RADIUS_KM ** 2 -
+    2 * orbitalRadius * EARTH_RADIUS_KM * Math.cos(centralAngle),
+  );
+}
+
+function updateISSTelemetry() {
+  if (!issTelemetry) return;
+  const stale = Date.now() - issTelemetry.receivedAt > ISS_REFRESH_INTERVAL * 3;
+  const numberFormat = new Intl.NumberFormat("ja-JP", { maximumFractionDigits: 1 });
+  issAltitude.textContent = `${numberFormat.format(issTelemetry.altitudeKm)} KM`;
+  issVelocity.textContent = `${numberFormat.format(issTelemetry.velocityKmh)} KM/H`;
+  issDistance.textContent = `${numberFormat.format(issTelemetry.distanceKm)} KM`;
+  issRegion.textContent =
+    `ISS ${stale ? "STALE" : "LIVE"} // ${issTelemetry.region} // ${issTelemetry.latitude.toFixed(1)}°, ${issTelemetry.longitude.toFixed(1)}°`;
+  updateTelemetryTicker();
+}
+
+function refreshISSTelemetry() {
+  if (issRequestPromise) return issRequestPromise;
+  const controller = new AbortController();
+  const timeout = setTimeout(() => controller.abort(), ISS_REQUEST_TIMEOUT);
+  issRegion.textContent = issTelemetry ? "ISS LINK // REFRESHING..." : "ISS LINK // ACQUIRING TELEMETRY";
+  const request = (async () => {
+    try {
+      const response = await fetch(ISS_API_URL, {
+        cache: "no-store",
+        signal: controller.signal,
+      });
+      if (!response.ok) throw new Error(`ISS API returned HTTP ${response.status}`);
+      const sample = await response.json();
+      const latitude = Number(sample.latitude);
+      const longitude = Number(sample.longitude);
+      const altitudeKm = Number(sample.altitude);
+      const velocityKmh = Number(sample.velocity);
+      if (
+        !Number.isFinite(latitude) || latitude < -90 || latitude > 90 ||
+        !Number.isFinite(longitude) || longitude < -180 || longitude > 180 ||
+        !Number.isFinite(altitudeKm) || altitudeKm <= 0 ||
+        !Number.isFinite(velocityKmh) || velocityKmh < 0
+      ) {
+        throw new TypeError("ISS API returned invalid orbital coordinates.");
+      }
+
+      const previous = issTelemetry;
+      if (
+        previous &&
+        haversineCentralAngle(previous.latitude, previous.longitude, latitude, longitude) *
+          EARTH_RADIUS_KM > 250
+      ) {
+        issTrack = [];
+      }
+      issTelemetry = {
+        latitude,
+        longitude,
+        altitudeKm,
+        velocityKmh,
+        distanceKm: getISSRangeFromKushiro(latitude, longitude, altitudeKm),
+        region: getISSLocationLabel(latitude, longitude),
+        receivedAt: Date.now(),
+      };
+      issTrack.push({ latitude, longitude });
+      if (issTrack.length > ISS_MAX_TRACK_POINTS) issTrack.shift();
+      updateISSTelemetry();
+      return issTelemetry;
+    } catch (error) {
+      console.warn("ISS telemetry could not be refreshed.", error);
+      issRegion.textContent = issTelemetry
+        ? `ISS LINK // STALE // ${issTelemetry.region}`
+        : "ISS LINK // OFFLINE";
+      return issTelemetry;
+    } finally {
+      clearTimeout(timeout);
+      issRequestPromise = null;
+    }
+  })();
+  issRequestPromise = request;
+  return request;
+}
+
+function isISSQuestion(text) {
+  const normalized = text.normalize("NFKC").toLowerCase();
+  return /(iss|国際宇宙ステーション|宇宙ステーション)/u.test(normalized) &&
+    /(どこ|現在地|位置|今|上空)/u.test(normalized);
+}
+
+function buildISSQuestionContext(question, telemetry) {
+  if (!telemetry) {
+    return `${question}\n\n【ISS最新テレメトリー】現在位置データを取得できませんでした。位置・高度・速度・距離を推測せず、最新データの取得に失敗したと明示してください。`;
+  }
+  const sampledAt = new Date(telemetry.receivedAt).toLocaleString("ja-JP");
+  const stale = Date.now() - telemetry.receivedAt > ISS_REFRESH_INTERVAL * 3;
+  return `${question}\n\n【ISS最新テレメトリー${stale ? " // STALE" : ""}】\n取得時刻: ${sampledAt}\n位置推定: ${telemetry.region}\n緯度: ${telemetry.latitude.toFixed(3)}° / 経度: ${telemetry.longitude.toFixed(3)}°\n高度: ${telemetry.altitudeKm.toFixed(1)} km\n速度: ${telemetry.velocityKmh.toFixed(1)} km/h\n釧路市からの直線距離: ${telemetry.distanceKm.toFixed(1)} km\n\nこの最新テレメトリーに基づき、上空の地域・海洋、高度、時速、釧路からの距離をJ.A.R.V.I.S.らしい日本語で報告してください。`;
+}
+
+function bytesToBase64Url(bytes) {
+  let binary = "";
+  for (let offset = 0; offset < bytes.length; offset += 0x8000) {
+    binary += String.fromCharCode(...bytes.subarray(offset, offset + 0x8000));
+  }
+  return btoa(binary).replace(/\+/gu, "-").replace(/\//gu, "_").replace(/=+$/u, "");
+}
+
+function base64UrlToBytes(value) {
+  if (!/^[\w-]+$/u.test(value)) throw new TypeError("暗号文の形式が正しくありません。");
+  const base64 = value.replace(/-/gu, "+").replace(/_/gu, "/");
+  const binary = atob(base64.padEnd(Math.ceil(base64.length / 4) * 4, "="));
+  return Uint8Array.from(binary, (character) => character.charCodeAt(0));
+}
+
+async function deriveCipherKey(passphrase, salt, usage) {
+  const material = await window.crypto.subtle.importKey(
+    "raw",
+    new TextEncoder().encode(passphrase),
+    "PBKDF2",
+    false,
+    ["deriveKey"],
+  );
+  return window.crypto.subtle.deriveKey(
+    { name: "PBKDF2", salt, iterations: CIPHER_ITERATIONS, hash: "SHA-256" },
+    material,
+    { name: "AES-GCM", length: 256 },
+    false,
+    [usage],
+  );
+}
+
+async function encryptCipherText(plainText, passphrase) {
+  const salt = window.crypto.getRandomValues(new Uint8Array(16));
+  const iv = window.crypto.getRandomValues(new Uint8Array(12));
+  const key = await deriveCipherKey(passphrase, salt, "encrypt");
+  const ciphertext = await window.crypto.subtle.encrypt(
+    { name: "AES-GCM", iv },
+    key,
+    new TextEncoder().encode(plainText),
+  );
+  return `STARK1.${bytesToBase64Url(salt)}.${bytesToBase64Url(iv)}.${bytesToBase64Url(new Uint8Array(ciphertext))}`;
+}
+
+async function decryptCipherText(encodedCiphertext, passphrase) {
+  const match = /^STARK1\.([A-Za-z0-9_-]+)\.([A-Za-z0-9_-]+)\.([A-Za-z0-9_-]+)$/u.exec(encodedCiphertext.trim());
+  if (!match) throw new TypeError("STARK1形式の暗号文を入力してください。");
+  const salt = base64UrlToBytes(match[1]);
+  const iv = base64UrlToBytes(match[2]);
+  const ciphertext = base64UrlToBytes(match[3]);
+  if (salt.length !== 16 || iv.length !== 12 || ciphertext.length < 16) {
+    throw new TypeError("暗号文データが破損しているか、形式が正しくありません。");
+  }
+  const key = await deriveCipherKey(passphrase, salt, "decrypt");
+  const plaintext = await window.crypto.subtle.decrypt({ name: "AES-GCM", iv }, key, ciphertext);
+  return new TextDecoder("utf-8", { fatal: true }).decode(plaintext);
+}
+
+function animateCipherScramble() {
+  const alphabet = "ABCDEFGHIJKLMNOPQRSTUVWXYZ0123456789!@#$%&*+-=[]{}<>?";
+  const duration = 1000;
+  const started = performance.now();
+  return new Promise((resolve) => {
+    function update(now) {
+      cipherOutput.value = Array.from({ length: 48 }, () =>
+        alphabet[Math.floor(Math.random() * alphabet.length)]).join("");
+      if (now - started >= duration) resolve();
+      else requestAnimationFrame(update);
+    }
+    requestAnimationFrame(update);
+  });
+}
+
+async function runCipherOperation(mode) {
+  if (cipherOperationRunning) return;
+  if (!window.crypto?.subtle) {
+    cipherStatus.textContent = "WEB CRYPTO UNAVAILABLE // HTTPS OR LOCALHOST REQUIRED";
+    return;
+  }
+  const source = cipherInput.value;
+  const passphrase = cipherKeyInput.value;
+  if (!source.trim()) {
+    cipherStatus.textContent = "INPUT REQUIRED // テキストを入力してください";
+    return;
+  }
+  if (!passphrase) {
+    cipherStatus.textContent = "PASSPHRASE REQUIRED // パスフレーズを入力してください";
+    cipherKeyInput.focus();
+    return;
+  }
+
+  cipherOperationRunning = true;
+  cipherEncryptButton.disabled = true;
+  cipherDecryptButton.disabled = true;
+  cipherStatus.textContent = mode === "encrypt" ? "ENCRYPTING // SCRAMBLING DATA" : "DECRYPTING // SCRAMBLING DATA";
+  playSfx("cipher", true);
+  const scramble = animateCipherScramble();
+  try {
+    const result = mode === "encrypt"
+      ? await encryptCipherText(source, passphrase)
+      : await decryptCipherText(source, passphrase);
+    await scramble;
+    cipherOutput.value = result;
+    cipherStatus.textContent = mode === "encrypt"
+      ? "AES-256-GCM // ENCRYPTION COMPLETE"
+      : "AES-256-GCM // DECRYPTION COMPLETE";
+  } catch (error) {
+    await scramble;
+    console.error(`STARK CIPHER ${mode} operation failed.`, error);
+    cipherOutput.value = "";
+    cipherStatus.textContent = error instanceof TypeError
+      ? error.message
+      : mode === "decrypt"
+        ? "DECRYPT FAILED // PASSPHRASE OR DATA INVALID"
+        : `ENCRYPT FAILED // ${error.message}`;
+  } finally {
+    cipherOperationRunning = false;
+    cipherEncryptButton.disabled = false;
+    cipherDecryptButton.disabled = false;
   }
 }
 
@@ -726,19 +1778,352 @@ function updateHudModeButton() {
   hudModeToggle.title = `HUD MODEを${markMode ? "STANDARD" : "MARK-III"}に切り替え`;
 }
 
-function setHudMode(mode, playTransformSound = true) {
-  if (!["standard", "mark-iii"].includes(mode) || mode === hudMode) return;
-  hudMode = mode;
-  document.body.dataset.hudMode = mode;
+function updateMissionTimerDisplay() {
+  const minutes = Math.floor(missionRemainingSeconds / 60);
+  const seconds = missionRemainingSeconds % 60;
+  const isRunning = missionTimerInterval !== null;
+  missionTimerValue.textContent = `${String(minutes).padStart(2, "0")}:${String(seconds).padStart(2, "0")}`;
+  missionTimerStatus.textContent = missionRemainingSeconds === 0
+    ? "MISSION COMPLETE"
+    : isRunning
+      ? "COUNTDOWN // ACTIVE"
+      : missionRemainingSeconds === MISSION_DURATION_SECONDS
+        ? "READY // 25 MIN"
+        : "PAUSED // READY";
+  missionTimerToggle.textContent = missionRemainingSeconds === 0
+    ? "COMPLETE"
+    : isRunning
+      ? "PAUSE"
+      : "START";
+  missionTimerToggle.disabled = missionRemainingSeconds === 0;
+  missionTimerToggle.setAttribute("aria-pressed", String(isRunning));
+  updateFlightTelemetry();
+  checkIcingAlert();
+}
+
+function tickMissionTimer() {
+  if (!missionTimerDeadline) return;
+  missionRemainingSeconds = Math.max(
+    0,
+    Math.ceil((missionTimerDeadline - performance.now()) / 1000),
+  );
+  if (missionRemainingSeconds === 0) {
+    clearInterval(missionTimerInterval);
+    missionTimerInterval = null;
+    missionTimerDeadline = 0;
+    updateMissionTimerDisplay();
+    playSfx("ready");
+    return;
+  }
+  updateMissionTimerDisplay();
+}
+
+function pauseMissionTimer() {
+  if (missionTimerInterval === null) return;
+  tickMissionTimer();
+  if (missionTimerInterval !== null) {
+    clearInterval(missionTimerInterval);
+    missionTimerInterval = null;
+    missionTimerDeadline = 0;
+    updateMissionTimerDisplay();
+  }
+}
+
+function toggleMissionTimer() {
+  if (missionTimerInterval !== null) {
+    pauseMissionTimer();
+    appendSystemLog("MISSION TIMER // PAUSED");
+    return;
+  }
+  if (missionRemainingSeconds === 0) return;
+  missionTimerDeadline = performance.now() + missionRemainingSeconds * 1000;
+  missionTimerInterval = setInterval(tickMissionTimer, 250);
+  updateMissionTimerDisplay();
+  appendSystemLog("MISSION TIMER // STARTED");
+}
+
+function resetMissionTimer() {
+  clearInterval(missionTimerInterval);
+  missionTimerInterval = null;
+  missionTimerDeadline = 0;
+  missionRemainingSeconds = MISSION_DURATION_SECONDS;
+  icingWarningIssued = false;
+  clearIcingAlert();
+  updateMissionTimerDisplay();
+  appendSystemLog("MISSION TIMER // RESET");
+}
+
+function updateSentryStatus() {
+  sentryToggle.setAttribute("aria-pressed", String(sentryMode));
+  sentryToggleState.textContent = sentryMode ? "ON" : "OFF";
+  sentryStatus.textContent = sentryStandbyActive
+    ? "SENTRY: SYSTEM STANDBY"
+    : sentryPromptPending
+      ? "SENTRY: OPERATOR CHECK PENDING"
+      : sentryMode
+        ? "SENTRY: ACTIVE // OPERATOR FOCUS 100%"
+        : "SENTRY: OFFLINE";
+  updateTelemetryTicker();
+}
+
+function setSentryMode(enabled) {
+  sentryMode = enabled;
+  clearInterval(sentryCheckInterval);
+  sentryCheckInterval = null;
+  sentryPromptPending = false;
+  if (sentryDialog.open) sentryDialog.close();
+  if (enabled) {
+    lastOperatorActivity = Date.now();
+    sentryCheckInterval = setInterval(checkSentryIdle, SENTRY_CHECK_INTERVAL);
+    appendSystemLog("SENTRY MODE // OPERATOR MONITOR ACTIVE");
+  } else {
+    sentryStandbyActive = false;
+    sentryStandbyOverlay.hidden = true;
+    appendSystemLog("SENTRY MODE // DISARMED");
+  }
+  updateSentryStatus();
+}
+
+function markOperatorActivity(event) {
+  if (!sentryMode || sentryStandbyActive) return;
+  if (
+    event.target instanceof Element &&
+    event.target.closest("#system-lock-overlay, #sentry-standby-overlay, #sentry-dialog")
+  ) return;
+  lastOperatorActivity = Date.now();
+}
+
+function checkSentryIdle() {
+  if (
+    !sentryMode ||
+    sentryStandbyActive ||
+    sentryPromptPending ||
+    systemLocked ||
+    cleanSlatePending ||
+    Date.now() - lastOperatorActivity < SENTRY_IDLE_LIMIT
+  ) return;
+  sentryPromptPending = true;
+  updateSentryStatus();
+  [simulationDialog, cipherDialog, memoryDialog, holoDialog].forEach((dialog) => {
+    if (dialog.open) dialog.close();
+  });
+  sentryDialog.showModal();
+  playSfx("sentry-alert", true);
+  const prompt = "伊吹様、15分間操作反応が途絶えております。システムをスタンバイに移行いたしますか？それとも作業を続行されますか？";
+  if (voiceOutputEnabled) void speakReply(prompt);
+  appendSystemLog("SENTRY ALERT // 15-MINUTE IDLE");
+}
+
+function continueAfterSentryPrompt() {
+  if (sentryDialog.open) sentryDialog.close();
+  sentryPromptPending = false;
+  lastOperatorActivity = Date.now();
+  updateSentryStatus();
+}
+
+function enterSentryStandby() {
+  if (sentryDialog.open) sentryDialog.close();
+  sentryPromptPending = false;
+  sentryStandbyActive = true;
+  sentryStandbyOverlay.hidden = false;
+  updateSentryStatus();
+  appendSystemLog("OPERATOR SESSION // STANDBY");
+  sentryResumeButton.focus();
+}
+
+function resumeFromSentryStandby() {
+  sentryStandbyActive = false;
+  sentryStandbyOverlay.hidden = true;
+  lastOperatorActivity = Date.now();
+  updateSentryStatus();
+  appendSystemLog("OPERATOR SESSION // RESUMED");
+}
+
+function setSystemLocked(locked) {
+  systemLocked = locked;
+  if (locked) {
+    [simulationDialog, sentryDialog, cipherDialog, memoryDialog, holoDialog].forEach((dialog) => {
+      if (dialog.open) dialog.close();
+    });
+  }
+  if (locked && !systemLockOverlay.open) systemLockOverlay.showModal();
+  if (!locked && systemLockOverlay.open) systemLockOverlay.close();
+  updateTelemetryTicker();
+  if (locked) {
+    sentryPromptPending = false;
+    updateSentryStatus();
+    systemLockStatus.textContent = "LOCAL UI LOCK // NOT A SECURITY BOUNDARY";
+    appendSystemLog("SYSTEM LOCK // LOCAL UI GUARD ACTIVE");
+    playSfx("lock", true);
+    systemUnlockButton.focus();
+  } else {
+    lastOperatorActivity = Date.now();
+    appendSystemLog("BIOMETRIC SESSION // UNLOCKED");
+    playSfx("unlock", true);
+    promptInput.focus();
+    scheduleStandbyRecognition();
+  }
+}
+
+function lockSystem() {
+  if (!systemLocked) setSystemLocked(true);
+}
+
+function unlockSystem() {
+  if (systemLocked) setSystemLocked(false);
+}
+
+function updateMarkModeSystems() {
+  const markMode = hudMode === "mark-iii";
+  flightPanel.hidden = !markMode;
+  if (!markMode) clearIcingAlert();
+  updateFlightTelemetry();
+  updateMissionTimerDisplay();
+}
+
+function clearIcingAlert() {
+  clearTimeout(icingAlertTimer);
+  icingAlertTimer = null;
+  icingAlertFrame.hidden = true;
+}
+
+function checkIcingAlert() {
+  if (hudMode !== "mark-iii" || missionRemainingSeconds > 180 || icingWarningIssued) return;
+  icingWarningIssued = true;
+  icingAlertFrame.hidden = false;
+  appendSystemLog("FLIGHT WARNING // ICING THRESHOLD");
+  playSfx("icing-alert", true);
+  const warning = "伊吹様、機体表面に氷結の兆候（集中限界）が確認されました。一度高度を下げて休息を取ることを強く推奨いたします。";
+  if (voiceOutputEnabled) void speakReply(warning);
+  icingAlertTimer = setTimeout(clearIcingAlert, 15000);
+}
+
+function clearModeInlineOverrides() {
+  const targets = [
+    document.documentElement,
+    document.body,
+    ...document.body.querySelectorAll("[style]"),
+  ];
+  const properties = [
+    "color",
+    "background",
+    "background-color",
+    "border-color",
+    "box-shadow",
+    "filter",
+    "--cyan",
+    "--cyan-soft",
+    "--blue",
+    "--orange",
+    "--line",
+    "--panel",
+  ];
+  targets.forEach((element) => properties.forEach((property) => element.style.removeProperty(property)));
+  [document.body, ...document.body.querySelectorAll("[class]")].forEach((element) => {
+    [...element.classList]
+      .filter((name) => /^(?:is-)?mark-iii(?:-|$)/u.test(name))
+      .forEach((name) => element.classList.remove(name));
+  });
+}
+
+function restoreStandardAppearance() {
+  pauseMissionTimer();
+  clearModeInlineOverrides();
+  document.body.dataset.hudMode = "standard";
   updateHudModeButton();
-  if (playTransformSound) playSfx(mode === "mark-iii" ? "armor-on" : "armor-off");
+  updateMarkModeSystems();
+}
+
+function completeModeTransition(version) {
+  if (version !== modeTransitionVersion) return;
+  document.body.classList.remove("mode-transitioning", "mode-transitioning-to-mark-iii", "mode-transitioning-to-standard");
+  modeTransitionOverlay.classList.remove("is-active");
+  if (requestInProgress || isListening || isSpeaking) {
+    syncCoreState();
+  }
+}
+
+function setHudMode(mode, playTransformSound = true) {
+  if (!["standard", "mark-iii"].includes(mode)) return;
+  const body = document.body;
+  if (mode === hudMode) {
+    if (mode === "standard" && !body.classList.contains("mode-transitioning")) {
+      restoreStandardAppearance();
+    }
+    return;
+  }
+
+  clearTimeout(modeThemeSwitchTimer);
+  clearTimeout(modeTransitionCleanupTimer);
+  const version = ++modeTransitionVersion;
+  hudMode = mode;
+  appendSystemLog(`HUD MODE // ${mode.toUpperCase()}`);
+  if (mode === "standard") {
+    pauseMissionTimer();
+    flightPanel.hidden = true;
+    clearIcingAlert();
+  } else {
+    flightPanel.hidden = false;
+  }
+  clearModeInlineOverrides();
+  updateHudModeButton();
+  const markMode = mode === "mark-iii";
+  body.classList.remove("mode-transitioning-to-mark-iii", "mode-transitioning-to-standard");
+  body.classList.add("mode-transitioning", `mode-transitioning-to-${mode}`);
+  modeTransitionOverlay.classList.remove("is-active");
+  void modeTransitionOverlay.offsetWidth;
+  modeTransitionOverlay.classList.add("is-active");
+  modeBanner.textContent = markMode
+    ? "[ PROTOCOL: MARK-III COMBAT MODE ENGAGED ]"
+    : "[ RESTORING STANDARD TELEMETRY ]";
+  if (playTransformSound) playSfx(markMode ? "armor-on" : "armor-off", true);
   if (requestInProgress || isListening || isSpeaking) {
     syncCoreState();
   } else {
-    coreCaption.textContent = mode === "mark-iii"
+    coreCaption.textContent = markMode
       ? "マーク3プロトコルを展開しました。"
       : "システムは正常です。ご用件をどうぞ。";
   }
+
+  if (window.matchMedia("(prefers-reduced-motion: reduce)").matches) {
+    if (mode === "standard") restoreStandardAppearance();
+    else {
+      body.dataset.hudMode = mode;
+      updateMarkModeSystems();
+    }
+    completeModeTransition(version);
+    return;
+  }
+
+  modeThemeSwitchTimer = setTimeout(() => {
+    if (version !== modeTransitionVersion) return;
+    if (mode === "standard") restoreStandardAppearance();
+    else {
+      body.dataset.hudMode = mode;
+      updateMarkModeSystems();
+    }
+  }, MODE_THEME_SWITCH_DELAY);
+  modeTransitionCleanupTimer = setTimeout(
+    () => completeModeTransition(version),
+    MODE_TRANSITION_DURATION,
+  );
+}
+
+function finishBootSequence() {
+  if (!document.body.classList.contains("is-booting")) return;
+  clearTimeout(bootSequenceTimer);
+  bootSequenceTimer = null;
+  document.body.classList.remove("is-booting");
+  bootOverlay.classList.add("is-closing");
+  setTimeout(() => bootOverlay.remove(), 450);
+}
+
+function startBootSequence() {
+  if (window.matchMedia("(prefers-reduced-motion: reduce)").matches) {
+    finishBootSequence();
+    return;
+  }
+  bootSequenceTimer = setTimeout(finishBootSequence, BOOT_SEQUENCE_DURATION);
 }
 
 function toggleHudMode() {
@@ -750,7 +2135,14 @@ function detectHudModeCommand(text) {
     .normalize("NFKC")
     .replace(/[\s、。，.!！?？\-]/gu, "")
     .toLowerCase();
-  if (normalized.includes("通常モードに戻して") || normalized.includes("解除して")) {
+  if (
+    normalized.includes("通常モード") ||
+    normalized.includes("スタンダード") ||
+    normalized.includes("標準モード") ||
+    normalized === "解除" ||
+    normalized.includes("解除して") ||
+    normalized.includes("モード解除")
+  ) {
     return "standard";
   }
   if (/(?:マーク(?:スリー|3|iii)|mark(?:3|iii)|アイアンマンモード|戦闘モード)/u.test(normalized)) {
@@ -1091,7 +2483,7 @@ function recognitionErrorText(error) {
 }
 
 function startRecognition(mode) {
-  if (recognition || sendButton.disabled || isSpeaking) return;
+  if (recognition || sendButton.disabled || isSpeaking || housePartyPending || cleanSlatePending) return;
   if (mode === "standby" && !voiceStandbyEnabled) return;
   const SpeechRecognition = getSpeechRecognitionConstructor();
   if (!SpeechRecognition) {
@@ -1379,6 +2771,12 @@ function updateClock() {
   document.querySelector("#date-year").textContent = String(year);
   document.querySelector("#weekday").textContent =
     new Intl.DateTimeFormat("ja-JP", { weekday: "long" }).format(now);
+  const elapsedSeconds = Math.floor((performance.now() - uptimeStartedAt) / 1000);
+  const hours = Math.floor(elapsedSeconds / 3600);
+  document.querySelector("#system-uptime").textContent =
+    `${String(hours).padStart(2, "0")}:${String(Math.floor(elapsedSeconds / 60) % 60).padStart(2, "0")}:` +
+    String(elapsedSeconds % 60).padStart(2, "0");
+  updateTelemetryTicker();
 
   if (dateKey !== updateClock.lastDateKey) {
     updateClock.lastDateKey = dateKey;
@@ -1421,9 +2819,108 @@ function animateTelemetry() {
   };
   animateTelemetry.cpu = updateGauge("#cpu-gauge", "#cpu-value", animateTelemetry.cpu, [24, 46]);
   animateTelemetry.ram = updateGauge("#ram-gauge", "#ram-value", animateTelemetry.ram, [48, 69]);
+  document.querySelector("#diag-core-gauge").style.setProperty("--level", `${animateTelemetry.cpu}%`);
+  document.querySelector("#diag-core-value").textContent = String(animateTelemetry.cpu);
+  document.querySelector("#diag-memory-gauge").style.setProperty("--level", `${animateTelemetry.ram}%`);
+  document.querySelector("#diag-memory-value").textContent = String(animateTelemetry.ram);
+  animateTelemetry.link = Math.max(76, Math.min(93, animateTelemetry.link + Math.round(Math.random() * 6 - 3)));
+  document.querySelector("#diag-link-gauge").style.setProperty("--level", `${animateTelemetry.link}%`);
+  document.querySelector("#diag-link-value").textContent = String(animateTelemetry.link);
 }
 animateTelemetry.cpu = 32;
 animateTelemetry.ram = 58;
+animateTelemetry.link = 84;
+
+function updateTrafficWaveforms() {
+  const pointCount = 46;
+  const phase = performance.now() / 190;
+  const pointsFor = (offset, amplitude) =>
+    Array.from({ length: pointCount }, (_, index) => {
+      const x = (index / (pointCount - 1)) * 180;
+      const y = 15 + Math.sin(index * 0.79 + phase + offset) * amplitude
+        + Math.sin(index * 1.91 - phase * 0.62 + offset) * amplitude * 0.36
+        + (Math.random() - 0.5) * 3;
+      return `${x.toFixed(1)},${Math.max(2, Math.min(28, y)).toFixed(1)}`;
+    }).join(" ");
+  trafficUploadWave.setAttribute("points", pointsFor(0.2, 6.5));
+  trafficDownloadWave.setAttribute("points", pointsFor(2.1, 8));
+  document.querySelector("#traffic-upload-rate").textContent = (12 + Math.random() * 28).toFixed(1);
+  document.querySelector("#traffic-download-rate").textContent = (45 + Math.random() * 96).toFixed(1);
+}
+
+function appendSystemLog(message) {
+  if (!systemLogReady) return;
+  const entry = document.createElement("span");
+  entry.textContent = `> ${new Intl.DateTimeFormat("en-GB", {
+    hour: "2-digit",
+    minute: "2-digit",
+    second: "2-digit",
+  }).format(new Date())} ${message}`;
+  systemLogLines.append(entry);
+  while (systemLogLines.childElementCount > 5) systemLogLines.firstElementChild.remove();
+}
+
+function updateTelemetryTicker() {
+  const time = new Intl.DateTimeFormat("en-GB", {
+    hour: "2-digit",
+    minute: "2-digit",
+    second: "2-digit",
+    hour12: false,
+  }).format(new Date());
+  const temperature = document.querySelector("#weather-current").textContent;
+  const telemetryFresh = issTelemetry && Date.now() - issTelemetry.receivedAt <= ISS_REFRESH_INTERVAL * 3;
+  const velocity = telemetryFresh ? `${issTelemetry.velocityKmh.toFixed(1)} KM/H` : "LINK STALE";
+  const status = sentryStandbyActive ? "SYSTEM STANDBY" : systemLocked ? "SYSTEM LOCKED" : "SYSTEM NOMINAL";
+  const line = `TIME ${time} // KUSHIRO ${temperature}°C // ISS ${velocity} // ${status} //`;
+  tickerContent.textContent = line;
+  tickerCopy.textContent = line;
+}
+
+function updateBiometricWaveform() {
+  const phase = performance.now() / 155;
+  const points = Array.from({ length: 42 }, (_, index) => {
+    const x = (index / 41) * 84;
+    const pulse = Math.max(0, 1 - Math.abs((index % 21) - 5) / 5);
+    const y = 8 - Math.sin(index * 0.9 + phase) * 1.2 - pulse * (index % 21 < 9 ? 4.8 : 0);
+    return `${x.toFixed(1)},${Math.max(1, Math.min(15, y)).toFixed(1)}`;
+  }).join(" ");
+  biometricWave.setAttribute("points", points);
+}
+
+function updatePowerDistribution() {
+  const elapsed = performance.now() / 1700;
+  const base = [42, 25, 18, 15];
+  const elements = [
+    ["#power-core-bar", "#power-core-value"],
+    ["#power-sensors-bar", "#power-sensors-value"],
+    ["#power-network-bar", "#power-network-value"],
+    ["#power-aux-bar", "#power-aux-value"],
+  ];
+  elements.forEach(([barSelector, valueSelector], index) => {
+    const value = Math.round(base[index] + Math.sin(elapsed + index * 1.7) * 2.4);
+    document.querySelector(barSelector).style.setProperty("--level", `${value}%`);
+    document.querySelector(valueSelector).textContent = `${value}%`;
+  });
+}
+
+function updateFlightTelemetry() {
+  if (hudMode !== "mark-iii") return;
+  const time = performance.now() / 3200;
+  const mach = 2.45 + Math.sin(time) * 0.35;
+  const altitude = 60000 + Math.sin(time * 0.61 + 1.2) * 25000;
+  const temperature = -42.5 - Math.sin(time * 0.73 + 0.4) * 22.5;
+  flightMach.textContent = `MACH ${mach.toFixed(2)}`;
+  flightAltitude.textContent = `${(Math.round(altitude / 100) * 100).toLocaleString("en-US")} FT`;
+  flightTemperature.textContent = `${Math.round(temperature)}°C`;
+}
+
+function updateTargetLockReadouts() {
+  const time = performance.now() / 1900;
+  document.querySelectorAll(".target-lock small i").forEach((range, index) => {
+    const distance = Math.round(24 + index * 27 + Math.sin(time + index) * 6);
+    range.textContent = String(distance).padStart(3, "0");
+  });
+}
 
 function addMessage(role, text, { typing = false, scroll = null } = {}) {
   const article = document.createElement("article");
@@ -1439,11 +2936,23 @@ function addMessage(role, text, { typing = false, scroll = null } = {}) {
   const sender = document.createElement("span");
   sender.className = "message-sender";
   sender.textContent = role === "user" ? "YOU" : "J.A.R.V.I.S.";
+  const toolbar = document.createElement("div");
+  toolbar.className = "message-toolbar";
   if (!typing) {
     const time = document.createElement("time");
     time.textContent = new Intl.DateTimeFormat("ja-JP", { hour: "2-digit", minute: "2-digit" }).format(new Date());
     sender.append(" ", time);
+    if (role === "assistant") {
+      const noteButton = document.createElement("button");
+      noteButton.className = "message-note-button";
+      noteButton.type = "button";
+      noteButton.textContent = "HUDに展開";
+      noteButton.setAttribute("aria-label", "このAI回答をホログラムノートとしてHUDに展開");
+      noteButton.addEventListener("click", () => addFloatingNote(text));
+      toolbar.append(noteButton);
+    }
   }
+  toolbar.prepend(sender);
   const body = document.createElement("div");
   body.className = "message-body";
   if (role === "assistant" && !typing) {
@@ -1462,30 +2971,356 @@ function addMessage(role, text, { typing = false, scroll = null } = {}) {
     body.classList.add("plain-text");
     body.textContent = text;
   }
-  content.append(sender, body);
+  content.append(toolbar, body);
   article.append(avatar, content);
   messagesElement.append(article);
+  if (!typing && systemLogReady) {
+    appendSystemLog(role === "user" ? "OPERATOR INPUT RECEIVED" : "NEURAL LINK: RESPONSE RECEIVED");
+  }
   if (scroll) scrollMessageIntoView(article, scroll);
   return article;
+}
+
+function getHoloNotePosition(x, y, width = 300, height = 220) {
+  return {
+    x: Math.max(8, Math.min(window.innerWidth - width - 8, x)),
+    y: Math.max(8, Math.min(window.innerHeight - height - 34, y)),
+  };
+}
+
+function persistHoloNotes() {
+  try {
+    window.localStorage.setItem(HOLO_NOTES_STORAGE_KEY, JSON.stringify(holoNotes));
+    floatingNotes.querySelectorAll(".note-save-state").forEach((state) => {
+      state.textContent = "LOCAL BUFFER // SAVED";
+    });
+    appendSystemLog("CACHE OPTIMIZED // HOLO-NOTES SAVED");
+  } catch (error) {
+    console.error("Hologram notes could not be saved to localStorage.", error);
+    floatingNotes.querySelectorAll(".note-save-state").forEach((state) => {
+      state.textContent = "LOCAL BUFFER // SAVE FAILED";
+    });
+    appendSystemLog("HOLO-NOTE STORAGE ERROR");
+  }
+}
+
+function scheduleHoloNotesSave() {
+  clearTimeout(holoNotesSaveTimer);
+  holoNotesSaveTimer = setTimeout(() => {
+    holoNotesSaveTimer = null;
+    persistHoloNotes();
+  }, 250);
+}
+
+function renderFloatingNote(note) {
+  const position = getHoloNotePosition(note.x, note.y);
+  note.x = position.x;
+  note.y = position.y;
+  const element = document.createElement("article");
+  element.className = "floating-note";
+  element.dataset.noteId = note.id;
+  element.style.left = `${note.x}px`;
+  element.style.top = `${note.y}px`;
+  element.style.zIndex = String(holoNoteZIndex++);
+  element.setAttribute("aria-label", "ドラッグして移動できるホログラムノート");
+
+  const header = document.createElement("header");
+  header.className = "floating-note-header";
+  const title = document.createElement("span");
+  title.textContent = "HOLO-NOTE // LOCAL BUFFER";
+  const close = document.createElement("button");
+  close.type = "button";
+  close.className = "floating-note-close";
+  close.textContent = "×";
+  close.setAttribute("aria-label", "ノートを閉じる");
+  close.addEventListener("click", () => {
+    holoNotes = holoNotes.filter((item) => item.id !== note.id);
+    element.remove();
+    scheduleHoloNotesSave();
+  });
+  header.append(title, close);
+
+  const textarea = document.createElement("textarea");
+  textarea.maxLength = 6000;
+  textarea.placeholder = "メモを入力するか、AIの回答をHUDへ展開...";
+  textarea.setAttribute("aria-label", "ホログラムノートの内容");
+  textarea.value = note.content;
+  textarea.addEventListener("input", () => {
+    note.content = textarea.value;
+    scheduleHoloNotesSave();
+  });
+  const footer = document.createElement("footer");
+  footer.className = "note-save-state";
+  footer.textContent = "LOCAL BUFFER // SAVED";
+  element.append(header, textarea, footer);
+  floatingNotes.append(element);
+  return { element, header };
+}
+
+function addFloatingNote(content = "") {
+  const noteIndex = holoNotes.length;
+  const position = getHoloNotePosition(
+    window.innerWidth - 326 - (noteIndex % 7) * 24,
+    86 + (noteIndex % 7) * 28,
+  );
+  const note = {
+    id: globalThis.crypto?.randomUUID?.() || `note-${Date.now()}-${Math.random().toString(36).slice(2, 8)}`,
+    content: String(content).slice(0, 6000),
+    x: position.x,
+    y: position.y,
+  };
+  holoNotes.push(note);
+  const rendered = renderFloatingNote(note);
+  scheduleHoloNotesSave();
+  rendered.element.querySelector("textarea").focus();
+  appendSystemLog("HOLO-NOTE DEPLOYED");
+}
+
+function restoreHoloNotes() {
+  try {
+    const stored = window.localStorage.getItem(HOLO_NOTES_STORAGE_KEY);
+    if (!stored) return;
+    const decoded = JSON.parse(stored);
+    if (!Array.isArray(decoded)) throw new TypeError("保存されたホログラムノートが配列ではありません。");
+    holoNotes = decoded
+      .filter((note) =>
+        note &&
+        typeof note.id === "string" &&
+        typeof note.content === "string" &&
+        Number.isFinite(note.x) &&
+        Number.isFinite(note.y))
+      .map((note) => ({
+        id: note.id,
+        content: note.content.slice(0, 6000),
+        x: note.x,
+        y: note.y,
+      }));
+    holoNotes.forEach((note) => renderFloatingNote(note));
+  } catch (error) {
+    console.error("Hologram notes could not be restored from localStorage.", error);
+    appendSystemLog("HOLO-NOTE RESTORE FAILED");
+  }
+}
+
+function beginHoloNoteDrag(event) {
+  if (!(event.target instanceof Element) || event.button !== 0) return;
+  const header = event.target.closest(".floating-note-header");
+  if (!header || event.target.closest(".floating-note-close")) return;
+  const element = header.closest(".floating-note");
+  const bounds = element.getBoundingClientRect();
+  element.style.zIndex = String(holoNoteZIndex++);
+  holoNoteDrag = {
+    element,
+    pointerId: event.pointerId,
+    offsetX: event.clientX - bounds.left,
+    offsetY: event.clientY - bounds.top,
+  };
+  header.setPointerCapture(event.pointerId);
+  event.preventDefault();
+}
+
+function moveHoloNote(event) {
+  if (!holoNoteDrag || event.pointerId !== holoNoteDrag.pointerId) return;
+  const position = getHoloNotePosition(
+    event.clientX - holoNoteDrag.offsetX,
+    event.clientY - holoNoteDrag.offsetY,
+    holoNoteDrag.element.offsetWidth,
+    holoNoteDrag.element.offsetHeight,
+  );
+  holoNoteDrag.element.style.left = `${position.x}px`;
+  holoNoteDrag.element.style.top = `${position.y}px`;
+}
+
+function endHoloNoteDrag(event) {
+  if (!holoNoteDrag || event.pointerId !== holoNoteDrag.pointerId) return;
+  const note = holoNotes.find((item) => item.id === holoNoteDrag.element.dataset.noteId);
+  if (note) {
+    note.x = Number.parseFloat(holoNoteDrag.element.style.left);
+    note.y = Number.parseFloat(holoNoteDrag.element.style.top);
+    scheduleHoloNotesSave();
+  }
+  holoNoteDrag = null;
 }
 
 function setBusy(busy) {
   requestInProgress = busy;
   sendButton.disabled = busy;
+  dataScanButton.disabled = busy;
   promptInput.disabled = busy;
   microphoneButton.disabled = busy;
+  simulationLaunchButton.disabled = busy;
   if (busy) startProcessingSfx();
   else stopProcessingSfx();
   syncCoreState();
 }
 
+function getSimulationTarget(text) {
+  const source = text.trim();
+  const patterns = [
+    /^(.+?)の(?:作戦)?シミュレーション(?:を)?(?:して|してください|お願いします|してほしい).*$/u,
+    /^(.+?)(?:を|について)?(?:作戦)?シミュレーション(?:して|してください|お願いします).*$/u,
+    /^(.+?)の攻略確率(?:を)?(?:計算|見積も|予測).*$/u,
+  ];
+  for (const pattern of patterns) {
+    const match = source.match(pattern);
+    if (match?.[1]?.trim()) return match[1].trim().replace(/[「」『』"]/gu, "");
+  }
+  if (/シミュレーション|攻略確率/u.test(source)) return source;
+  return null;
+}
+
+function openSimulationDialog(target = "") {
+  [sentryDialog, cipherDialog, memoryDialog, holoDialog].forEach((dialog) => {
+    if (dialog.open) dialog.close();
+  });
+  if (sentryPromptPending) {
+    sentryPromptPending = false;
+    lastOperatorActivity = Date.now();
+    updateSentryStatus();
+  }
+  if (!simulationDialog.open) simulationDialog.showModal();
+  if (target) simulationTargetInput.value = target;
+  simulationStatus.textContent = target ? "TARGET ACQUIRED // READY" : "READY // ENTER A TARGET";
+  simulationResultTarget.textContent = target || "AWAITING INPUT";
+  if (!target) {
+    simulationProbability.textContent = "--.-%";
+    simulationProgressFill.style.width = "0%";
+    simulationProgress.setAttribute("aria-valuenow", "0");
+    simulationStrategy.textContent = "シミュレーションを待機中です。";
+    simulationRisk.textContent = "解析開始後に表示します。";
+    simulationRaw.textContent = "";
+    simulationRaw.hidden = true;
+  }
+  if (!target) simulationTargetInput.focus();
+}
+
+function extractSimulationSection(reply, headingPattern) {
+  const heading = headingPattern.exec(reply);
+  if (!heading) return "";
+  const content = reply.slice(heading.index + heading[0].length);
+  const nextHeading = content.search(/【[^】]+】/u);
+  return content.slice(0, nextHeading < 0 ? content.length : nextHeading).trim();
+}
+
+function renderSimulationResult(target, reply) {
+  const targetSection = extractSimulationSection(
+    reply,
+    /【\s*(?:TARGET\s*\/\s*)?目標\s*】|【\s*TARGET\s*\/\s*目標\s*】/iu,
+  );
+  const probabilitySection = extractSimulationSection(
+    reply,
+    /【\s*(?:SUCCESS\s+PROBABILITY\s*\/\s*)?成功確率\s*】|【\s*SUCCESS\s+PROBABILITY[^】]*】/iu,
+  );
+  const strategySection = extractSimulationSection(
+    reply,
+    /【\s*(?:OPTIMAL\s+STRATEGY\s*\/\s*)?最適攻略ルート[^】]*】|【\s*OPTIMAL\s+STRATEGY[^】]*】/iu,
+  );
+  const riskSection = extractSimulationSection(
+    reply,
+    /【\s*(?:RISK\s+FACTOR\s*\/\s*)?注意すべきリスク\s*】|【\s*RISK\s+FACTOR[^】]*】/iu,
+  );
+  const probabilityMatches = [...(probabilitySection || reply).matchAll(/(\d{1,2}(?:\.\d)?|99\.9)\s*%/gu)];
+  const probability = probabilityMatches
+    .map((match) => Number(match[1]))
+    .find((value) => Number.isFinite(value) && value >= 0 && value <= 99.9);
+
+  simulationResultTarget.textContent = targetSection || target;
+  simulationProbability.textContent = probability === undefined ? "NOT REPORTED" : `${probability.toFixed(1)}%`;
+  simulationProgressFill.style.width = `${probability ?? 0}%`;
+  simulationProgress.setAttribute("aria-valuenow", String(probability ?? 0));
+  simulationStrategy.textContent = strategySection || "AIの回答全文をご確認ください。";
+  simulationRisk.textContent = riskSection || "AIの回答全文をご確認ください。";
+  simulationRaw.textContent = reply;
+  simulationRaw.hidden = false;
+  simulationStatus.textContent = probability === undefined
+    ? "ANALYSIS COMPLETE // PROBABILITY NOT REPORTED"
+    : "ANALYSIS COMPLETE // MODEL ESTIMATE";
+}
+
+function runSimulation(target, sourceText, voice = false) {
+  const normalizedTarget = target.trim();
+  if (!normalizedTarget || sendButton.disabled) return;
+  openSimulationDialog(normalizedTarget);
+  simulationStatus.textContent = "SCANNING VARIABLES // SIMULATION IN PROGRESS";
+  simulationResultTarget.textContent = normalizedTarget;
+  simulationProbability.textContent = "CALCULATING";
+  simulationProgressFill.style.width = "0%";
+  simulationProgress.setAttribute("aria-valuenow", "0");
+  simulationStrategy.textContent = "最適攻略ルートを解析しています...";
+  simulationRisk.textContent = "リスク要因を評価しています...";
+  simulationRaw.textContent = "";
+  simulationRaw.hidden = true;
+  const requestText =
+    `以下の対象を現実的な前提と不確実性を明示してシミュレーションしてください。\n` +
+    `【TARGET / 目標】\n${normalizedTarget}\n\n` +
+    `回答には必ず次の見出しを含めてください。\n` +
+    `【TARGET / 目標】対象の簡潔な説明\n` +
+    `【SUCCESS PROBABILITY / 成功確率】0.0%から99.9%の範囲の数値を1つ。保証ではなく、前提に基づく概算として説明。\n` +
+    `【OPTIMAL STRATEGY / 最適攻略ルート】実行可能な3段階を番号付きで提示。\n` +
+    `【RISK FACTOR / 注意すべきリスク】重要な不確実性と回避策。\n` +
+    `危険・違法な行為の成功率を高める手順は提示せず、安全な代替策を示してください。`;
+  appendSystemLog("SIMULATION PROTOCOL // TARGET LOCKED");
+  void sendMessage(sourceText, {
+    voice,
+    displayText: `SIMULATE // ${normalizedTarget}`,
+    requestText,
+    simulationTarget: normalizedTarget,
+  });
+}
+
 function submitUserInput(
   text,
-  { voice = false, forcedProtocol = null, displayText = text } = {},
+  {
+    voice = false,
+    forcedProtocol = null,
+    displayText = text,
+    detectCommands = true,
+  } = {},
 ) {
-  const requestedHudMode = detectHudModeCommand(text);
+  if (systemLocked) {
+    if (detectSystemUnlockCommand(text)) unlockSystem();
+    else if (voice) systemLockStatus.textContent = "LOCAL UI LOCK // SAY 「ロック解除」";
+    return;
+  }
+  if (sentryStandbyActive) {
+    if (/再開|復帰|resume|continue/iu.test(text.normalize("NFKC"))) resumeFromSentryStandby();
+    return;
+  }
+  if (housePartyPending || cleanSlatePending) return;
+  if (detectSystemUnlockCommand(text)) {
+    unlockSystem();
+    return;
+  }
+  if (sentryPromptPending && detectSentryChoice(text) === "continue") {
+    continueAfterSentryPrompt();
+    return;
+  }
+  if (sentryPromptPending && detectSentryChoice(text) === "standby") {
+    enterSentryStandby();
+    return;
+  }
+  if (detectCommands && detectHousePartyProtocol(text)) {
+    triggerHousePartyProtocol(text, voice);
+    return;
+  }
+  if (detectCommands && detectCleanSlateProtocol(text)) {
+    triggerCleanSlateProtocol(text, voice);
+    return;
+  }
+  const airGestureCommand = detectCommands ? detectAirGestureCommand(text) : null;
+  if (airGestureCommand !== null) {
+    if (airGestureCommand) requestAirGestureStart();
+    else stopAirGestureMode();
+    return;
+  }
+  const simulationTarget = detectCommands ? getSimulationTarget(text) : null;
+  if (simulationTarget) {
+    runSimulation(simulationTarget, text, voice);
+    return;
+  }
+  const requestedHudMode = detectCommands ? detectHudModeCommand(text) : null;
   if (requestedHudMode) setHudMode(requestedHudMode);
-  const launcherAction = forcedProtocol || detectProtocol(text);
+  const launcherAction = forcedProtocol || (detectCommands ? detectProtocol(text) : null);
   const launcherOpened = launcherAction ? openProtocolTab(launcherAction) : true;
   const requestText = launcherAction === "briefing" ? BRIEFING_PROMPT : text;
   void sendMessage(text, {
@@ -1494,7 +3329,664 @@ function submitUserInput(
     launcherOpened,
     displayText,
     requestText,
+    includeISSContext: detectCommands && isISSQuestion(text),
   });
+}
+
+function announceDataScanUnavailable() {
+  addMessage("assistant", "解析対象のデータがクリップボードに見当たりません、伊吹様");
+}
+
+function detectHousePartyProtocol(text) {
+  const normalized = text
+    .normalize("NFKC")
+    .toLowerCase()
+    .replace(/[\s・･\-‐‑‒–—―]/gu, "");
+  return normalized.includes("ハウスパーティープロトコル") ||
+    normalized.includes("全機起動") ||
+    normalized.includes("housepartyprotocol");
+}
+
+function detectCleanSlateProtocol(text) {
+  const normalized = text
+    .normalize("NFKC")
+    .toLowerCase()
+    .replace(/[\s・･\-‐‑‒–—―、。，.!！?？]/gu, "");
+  return normalized.includes("クリーンスレート") ||
+    normalized.includes("履歴全消去") ||
+    normalized.includes("cleanslateprotocol");
+}
+
+function detectAirGestureCommand(text) {
+  const normalized = text
+    .normalize("NFKC")
+    .toLowerCase()
+    .replace(/[\s・･\-‐‑‒–—―、。，.!！?？]/gu, "");
+  if (/(ジェスチャー|ハンドトラッキング).*(停止|終了|オフ|解除)/u.test(normalized)) return false;
+  if (
+    normalized.includes("ジェスチャー起動") ||
+    normalized.includes("ジェスチャー開始") ||
+    normalized === "ハンドトラッキング" ||
+    /ハンドトラッキング(起動|開始|オン)/u.test(normalized)
+  ) return true;
+  return null;
+}
+
+function detectSystemUnlockCommand(text) {
+  const normalized = text.normalize("NFKC").toLowerCase().replace(/[\s・･\-]/gu, "");
+  return normalized.includes("ロック解除") || normalized.includes("unlock");
+}
+
+function detectSentryChoice(text) {
+  const normalized = text.normalize("NFKC").toLowerCase();
+  if (/(作業を)?続行|作業を続ける|continue/u.test(normalized)) return "continue";
+  if (/スタンバイ|休憩|standby/u.test(normalized)) return "standby";
+  return null;
+}
+
+function setHousePartyControlsLocked(locked) {
+  sendButton.disabled = locked;
+  promptInput.disabled = locked;
+  microphoneButton.disabled = locked;
+  standbyButton.disabled = locked;
+  dataScanButton.disabled = locked;
+  simulationLaunchButton.disabled = locked;
+}
+
+function triggerHousePartyProtocol(text, voice) {
+  if (housePartyPending || sendButton.disabled) return;
+  [holoDialog, cipherDialog, memoryDialog].forEach((dialog) => {
+    if (dialog.open) dialog.close();
+  });
+  housePartyPending = true;
+  if (!voice) {
+    promptInput.value = "";
+    promptInput.style.height = "auto";
+  }
+  addMessage("user", text);
+  history.push({ role: "user", content: text });
+  trimHistory();
+  persistHistory();
+  clearTimeout(standbyRestartTimer);
+  standbyRestartTimer = null;
+  if (recognition) {
+    cancelRecognition = true;
+    isListening = false;
+    recognition.abort();
+  }
+  setHousePartyControlsLocked(true);
+  setVoiceStatus("HOUSE PARTY // RED ALERT", "speaking");
+  houseAlert.hidden = false;
+  document.body.classList.add("house-party-active");
+  playSfx("house-party", true);
+  housePartyTimeout = setTimeout(() => {
+    housePartyTimeout = null;
+    housePartyPending = false;
+    houseAlert.hidden = true;
+    document.body.classList.remove("house-party-active");
+    setHudMode("mark-iii");
+
+    const reply = "了解いたしました、伊吹様。ハウス・パーティー・プロトコルを起動、全システムを戦闘態勢へ移行します。";
+    addMessage("assistant", reply, { scroll: "start" });
+    history.push({ role: "assistant", content: reply });
+    trimHistory();
+    persistHistory();
+    setHousePartyControlsLocked(false);
+    if (voiceOutputEnabled) speakReply(reply);
+    else {
+      setVoiceStatus("VOICE OUTPUT // MUTED", "muted");
+      scheduleStandbyRecognition();
+    }
+    if (!voice) promptInput.focus();
+  }, 3000);
+}
+
+function setCleanSlateControlsLocked(locked) {
+  sendButton.disabled = locked;
+  promptInput.disabled = locked;
+  microphoneButton.disabled = locked;
+  standbyButton.disabled = locked;
+  dataScanButton.disabled = locked;
+  airGestureToggle.disabled = locked;
+  sentryToggle.disabled = locked;
+  simulationLaunchButton.disabled = locked;
+}
+
+function drawCleanSlateExplosion(startedAt) {
+  const context = cleanSlateCanvas.getContext("2d");
+  if (!context) {
+    console.error("CLEAN SLATE spark canvas is unavailable.");
+    cleanSlateAnimationFrame = null;
+    return;
+  }
+  const bounds = cleanSlateCanvas.getBoundingClientRect();
+  const width = Math.max(1, bounds.width);
+  const height = Math.max(1, bounds.height);
+  const pixelRatio = Math.min(window.devicePixelRatio || 1, 2);
+  const pixelWidth = Math.round(width * pixelRatio);
+  const pixelHeight = Math.round(height * pixelRatio);
+  if (cleanSlateCanvas.width !== pixelWidth || cleanSlateCanvas.height !== pixelHeight) {
+    cleanSlateCanvas.width = pixelWidth;
+    cleanSlateCanvas.height = pixelHeight;
+  }
+  if (!cleanSlateCanvas.sparkParticles) {
+    const diagonal = Math.hypot(width, height);
+    cleanSlateCanvas.sparkParticles = Array.from({ length: 240 }, () => {
+      const angle = Math.random() * Math.PI * 2;
+      const speed = diagonal * (0.25 + Math.random() * 0.75);
+      return {
+        angle,
+        speed,
+        length: 4 + Math.random() * 18,
+        age: 0,
+        life: 0.75 + Math.random() * 1.15,
+        color: Math.random() < 0.62 ? "#ffd46a" : "#ff543b",
+      };
+    });
+  }
+  const elapsed = (performance.now() - startedAt) / 1000;
+  context.setTransform(pixelRatio, 0, 0, pixelRatio, 0, 0);
+  context.clearRect(0, 0, width, height);
+  cleanSlateCanvas.sparkParticles.forEach((particle) => {
+    particle.age = elapsed;
+    if (particle.age >= particle.life) return;
+    const progress = particle.age;
+    const x = width / 2 + Math.cos(particle.angle) * particle.speed * progress;
+    const y = height / 2 + Math.sin(particle.angle) * particle.speed * progress +
+      120 * progress * progress;
+    const alpha = Math.max(0, 1 - particle.age / particle.life);
+    context.globalAlpha = alpha;
+    context.strokeStyle = particle.color;
+    context.lineWidth = 0.8 + alpha * 1.8;
+    context.shadowBlur = 9;
+    context.shadowColor = particle.color;
+    context.beginPath();
+    context.moveTo(x, y);
+    context.lineTo(
+      x - Math.cos(particle.angle) * particle.length,
+      y - Math.sin(particle.angle) * particle.length,
+    );
+    context.stroke();
+  });
+  context.globalAlpha = 1;
+  context.shadowBlur = 0;
+  if (elapsed < 1.9) cleanSlateAnimationFrame = requestAnimationFrame(() => drawCleanSlateExplosion(startedAt));
+  else cleanSlateAnimationFrame = null;
+}
+
+function clearCleanSlateTimers() {
+  cleanSlateTimers.forEach((timer) => {
+    clearTimeout(timer);
+    clearInterval(timer);
+  });
+  cleanSlateTimers = [];
+}
+
+function completeCleanSlateProtocol(voice, storageCleared) {
+  cleanSlateTimers = [];
+  cleanSlateOverlay.hidden = true;
+  cleanSlateOverlay.classList.remove("is-exploding");
+  cleanSlateCanvas.sparkParticles = null;
+  if (cleanSlateAnimationFrame !== null) cancelAnimationFrame(cleanSlateAnimationFrame);
+  cleanSlateAnimationFrame = null;
+  cleanSlatePending = false;
+  setCleanSlateControlsLocked(false);
+  const reply = "クリーン・スレート・プロトコル完了。全ログを消去し、システムを再起動いたしました、伊吹様。";
+  addMessage("assistant", reply, { scroll: "start" });
+  if (voice && voiceOutputEnabled) speakReply(reply);
+  else if (voice) setVoiceStatus("VOICE OUTPUT // MUTED", "muted");
+  if (!storageCleared) updateSessionStatus("SESSION CLEAR FAILED");
+  if (!voice) promptInput.focus();
+  scheduleStandbyRecognition();
+}
+
+function triggerCleanSlateProtocol(text, voice) {
+  if (cleanSlatePending || housePartyPending || sendButton.disabled) return;
+  cleanSlatePending = true;
+  clearCleanSlateTimers();
+  if (cleanSlateAnimationFrame !== null) cancelAnimationFrame(cleanSlateAnimationFrame);
+  cleanSlateAnimationFrame = null;
+  if (!voice) {
+    promptInput.value = "";
+    promptInput.style.height = "auto";
+  }
+  clearTimeout(standbyRestartTimer);
+  standbyRestartTimer = null;
+  if (recognition) {
+    cancelRecognition = true;
+    isListening = false;
+    recognition.abort();
+  }
+  if (isSpeaking) stopSpeech();
+  [holoDialog, cipherDialog, memoryDialog].forEach((dialog) => {
+    if (dialog.open) dialog.close();
+  });
+  setCleanSlateControlsLocked(true);
+  cleanSlateOverlay.hidden = false;
+  cleanSlateOverlay.classList.remove("is-exploding");
+  cleanSlateOverlay.querySelector("#clean-slate-message").textContent =
+    "WARNING: INITIATING CLEAN SLATE PROTOCOL...";
+  cleanSlateCountdown.textContent = "3";
+  cleanSlatePhase.textContent = "SECURE WIPE // PREPARING";
+  playSfx("countdown", true);
+  let remaining = 3;
+  const countdown = setInterval(() => {
+    remaining -= 1;
+    cleanSlateCountdown.textContent = String(remaining);
+    if (remaining > 0) {
+      playSfx("countdown", true);
+      return;
+    }
+
+    clearInterval(countdown);
+    history.length = 0;
+    messagesElement.replaceChildren();
+    let storageCleared = true;
+    try {
+      window.localStorage.removeItem(HISTORY_STORAGE_KEY);
+      updateSessionStatus();
+    } catch (error) {
+      storageCleared = false;
+      console.error("CLEAN SLATE could not clear conversation history from localStorage.", error);
+      updateSessionStatus("SESSION CLEAR FAILED");
+    }
+    cleanSlatePhase.textContent = "LOGS PURGED // REBOOTING";
+    cleanSlateOverlay.classList.add("is-exploding");
+    playSfx("clean-slate-impact", true);
+    cleanSlateCanvas.sparkParticles = null;
+    drawCleanSlateExplosion(performance.now());
+    const finish = setTimeout(() => completeCleanSlateProtocol(voice, storageCleared), 1950);
+    cleanSlateTimers.push(finish);
+  }, 1000);
+  cleanSlateTimers.push(countdown);
+}
+
+async function scanClipboard() {
+  if (sendButton.disabled) return;
+  let clipboardText;
+  try {
+    if (!navigator.clipboard?.readText) throw new Error("Clipboard text access is unavailable.");
+    clipboardText = await navigator.clipboard.readText();
+  } catch (error) {
+    console.warn("Clipboard data could not be read for DATA SCAN.", error);
+    announceDataScanUnavailable();
+    return;
+  }
+  if (!clipboardText.trim()) {
+    announceDataScanUnavailable();
+    return;
+  }
+
+  const prompt = `伊吹様がスキャンした以下のデータを解析してください。英語や外国語が含まれる場合は自然な日本語に翻訳し、重要なポイントを3行以内の箇条書きで分かりやすく要約して報告してください：\n\n【データ】\n${clipboardText}`;
+  submitUserInput(prompt, {
+    displayText: "DATA SCAN // CLIPBOARD INTEL",
+    detectCommands: false,
+  });
+}
+
+function setOpticalToggle(enabled) {
+  opticalToggle.setAttribute("aria-pressed", String(enabled));
+  opticalToggleState.textContent = enabled ? "ON" : "OFF";
+}
+
+function showOpticalError(error) {
+  const message = error?.name === "NotAllowedError" || error?.name === "SecurityError"
+    ? "CAMERA ACCESS DENIED // ブラウザーのカメラ許可を確認してください"
+    : error?.name === "NotFoundError" || error?.name === "DevicesNotFoundError"
+      ? "NO CAMERA DEVICE // 利用可能なカメラが見つかりません"
+      : `SENSOR ERROR // ${error?.message || "カメラを起動できませんでした"}`;
+  opticalStatus.textContent = message;
+  opticalWindow.hidden = false;
+  setOpticalToggle(false);
+}
+
+function updateOpticalReadouts() {
+  opticalDistance.textContent = `${(0.8 + Math.random() * 3.2).toFixed(1)} M`;
+  opticalAnalysis.textContent = `${Math.floor(76 + Math.random() * 24)}%`;
+}
+
+function stopOpticalSensor() {
+  opticalRequestVersion += 1;
+  clearInterval(opticalReadoutInterval);
+  opticalReadoutInterval = null;
+  const stream = opticalStream;
+  opticalStream = null;
+  stream?.getTracks().forEach((track) => track.stop());
+  opticalVideo.pause();
+  opticalVideo.srcObject = null;
+  opticalWindow.hidden = true;
+  opticalToggle.disabled = false;
+  setOpticalToggle(false);
+}
+
+async function startOpticalSensor() {
+  if (airGestureCamera || airGesturePending) {
+    opticalWindow.hidden = false;
+    opticalStatus.textContent = "CAMERA BUSY // STOP AIR GESTURE FIRST";
+    setOpticalToggle(false);
+    return;
+  }
+  if (!navigator.mediaDevices?.getUserMedia) {
+    showOpticalError(new Error("このブラウザーではカメラを利用できません。HTTPS接続をご確認ください。"));
+    return;
+  }
+  const requestVersion = ++opticalRequestVersion;
+  opticalWindow.hidden = false;
+  opticalStatus.textContent = "REQUESTING CAMERA PERMISSION";
+  opticalToggle.disabled = true;
+  setOpticalToggle(true);
+  try {
+    const stream = await navigator.mediaDevices.getUserMedia({ video: true });
+    if (requestVersion !== opticalRequestVersion) {
+      stream.getTracks().forEach((track) => track.stop());
+      return;
+    }
+    opticalStream = stream;
+    opticalVideo.srcObject = stream;
+    await opticalVideo.play();
+    if (requestVersion !== opticalRequestVersion) return;
+    opticalStatus.textContent = "LOCAL FEED // NOT TRANSMITTED";
+    updateOpticalReadouts();
+    opticalReadoutInterval = setInterval(updateOpticalReadouts, 1100);
+    stream.getVideoTracks().forEach((track) => {
+      track.addEventListener("ended", () => {
+        if (requestVersion !== opticalRequestVersion || opticalStream !== stream) return;
+        opticalStream = null;
+        stream.getTracks().forEach((activeTrack) => activeTrack.stop());
+        clearInterval(opticalReadoutInterval);
+        opticalReadoutInterval = null;
+        opticalVideo.srcObject = null;
+        setOpticalToggle(false);
+        opticalStatus.textContent = "CAMERA CONNECTION LOST";
+      }, { once: true });
+    });
+  } catch (error) {
+    if (requestVersion !== opticalRequestVersion) return;
+    console.error("OPTICAL SENSOR camera startup failed.", error);
+    const stream = opticalStream;
+    opticalStream = null;
+    stream?.getTracks().forEach((track) => track.stop());
+    opticalVideo.srcObject = null;
+    showOpticalError(error);
+  } finally {
+    if (requestVersion === opticalRequestVersion) opticalToggle.disabled = false;
+  }
+}
+
+function toggleOpticalSensor() {
+  if (opticalStream) stopOpticalSensor();
+  else void startOpticalSensor();
+}
+
+function updateAirGestureToggle(enabled, state = enabled ? "ON" : "OFF") {
+  airGestureToggle.setAttribute("aria-pressed", String(enabled));
+  airGestureToggleState.textContent = state;
+  airGestureToggle.setAttribute("aria-busy", String(state === "LINK"));
+}
+
+function setAirGestureIndicator(locked, message) {
+  airGestureIndicatorLight.classList.toggle("is-locked", locked);
+  airGestureHud.classList.toggle("is-locked", locked);
+  airGestureStatus.textContent = message;
+}
+
+function drawGestureSkeleton(landmarks) {
+  const context = gesturePreview.getContext("2d");
+  if (!context) {
+    console.error("AIR GESTURE skeleton preview canvas is unavailable.");
+    return;
+  }
+  const width = gesturePreview.width;
+  const height = gesturePreview.height;
+  context.clearRect(0, 0, width, height);
+  context.fillStyle = "#030a12";
+  context.fillRect(0, 0, width, height);
+  context.strokeStyle = hudMode === "mark-iii" ? "#ffb70028" : "#00f3ff28";
+  context.lineWidth = 0.5;
+  for (let x = 0; x < width; x += 16) {
+    context.beginPath();
+    context.moveTo(x, 0);
+    context.lineTo(x, height);
+    context.stroke();
+  }
+  for (let y = 0; y < height; y += 16) {
+    context.beginPath();
+    context.moveTo(0, y);
+    context.lineTo(width, y);
+    context.stroke();
+  }
+  if (!landmarks) return;
+
+  const points = landmarks.map(({ x, y }) => ({
+    x: (1 - x) * width,
+    y: y * height,
+  }));
+  const bright = hudMode === "mark-iii" ? "#ffcf55" : "#8bffff";
+  context.strokeStyle = hudMode === "mark-iii" ? "#ff634b" : "#00f3ff";
+  context.lineWidth = 1.4;
+  context.shadowBlur = 5;
+  context.shadowColor = bright;
+  HAND_SKELETON_CONNECTIONS.forEach(([start, end]) => {
+    context.beginPath();
+    context.moveTo(points[start].x, points[start].y);
+    context.lineTo(points[end].x, points[end].y);
+    context.stroke();
+  });
+  points.forEach(({ x, y }, index) => {
+    context.beginPath();
+    context.arc(x, y, index === 8 ? 2.8 : 1.5, 0, Math.PI * 2);
+    context.fillStyle = index === 8 ? "#ffffff" : bright;
+    context.fill();
+  });
+  context.shadowBlur = 0;
+}
+
+function landmarkDistance(first, second) {
+  return Math.hypot(first.x - second.x, first.y - second.y, (first.z || 0) - (second.z || 0));
+}
+
+function isOpenPalm(landmarks) {
+  const wrist = landmarks[0];
+  const extendedFingers = [[4, 3], [8, 6], [12, 10], [16, 14], [20, 18]];
+  return extendedFingers.every(([tip, joint]) =>
+    landmarkDistance(wrist, landmarks[tip]) > landmarkDistance(wrist, landmarks[joint]) * 1.12) &&
+    landmarkDistance(landmarks[8], landmarks[20]) >
+      landmarkDistance(landmarks[5], landmarks[17]) * 1.05;
+}
+
+function onAirGestureResults(results, version) {
+  if (version !== airGestureVersion || !airGesturePending && !airGestureCamera) return;
+  const landmarks = results.multiHandLandmarks?.[0];
+  if (!landmarks) {
+    airIndexPosition = null;
+    airOpenPalmFrames = 0;
+    drawGestureSkeleton(null);
+    setAirGestureIndicator(false, "HAND TRACKING: SEARCHING");
+    return;
+  }
+  drawGestureSkeleton(landmarks);
+  setAirGestureIndicator(true, "HAND TRACKING: LOCKED [21 JOINTS]");
+
+  const indexTip = landmarks[8];
+  if (airIndexPosition) {
+    const deltaX = airIndexPosition.x - indexTip.x;
+    const deltaY = indexTip.y - airIndexPosition.y;
+    if (Math.abs(deltaX) > 0.0015 || Math.abs(deltaY) > 0.0015) {
+      holoRotationY += deltaX * 5.5;
+      holoRotationX = Math.max(-Math.PI, Math.min(Math.PI, holoRotationX + deltaY * 5.5));
+    }
+  }
+  airIndexPosition = { x: indexTip.x, y: indexTip.y };
+
+  const pinchDistance = landmarkDistance(landmarks[4], indexTip);
+  holoGestureScale += (Math.max(0.65, Math.min(1.65, 0.62 + pinchDistance * 3.2)) - holoGestureScale) * 0.18;
+  requestHoloFrame();
+
+  if (isOpenPalm(landmarks)) {
+    airOpenPalmFrames += 1;
+    if (airOpenPalmFrames >= 3 && !holoExploded) {
+      holoExploded = true;
+      updateHoloExplodeButton();
+      requestHoloFrame();
+    }
+  } else {
+    airOpenPalmFrames = 0;
+  }
+
+  if (!airGestureAutoOpened) {
+    airGestureAutoOpened = true;
+    openHoloProjector();
+  }
+}
+
+async function releaseAirGestureResources(camera, hands) {
+  if (airGestureReleasePromise) return airGestureReleasePromise;
+  const release = (async () => {
+    if (camera) {
+      try {
+        await camera.stop();
+      } catch (error) {
+        console.warn("AIR GESTURE camera helper could not stop cleanly.", error);
+      }
+    }
+    const stream = airGestureVideo.srcObject;
+    if (typeof MediaStream !== "undefined" && stream instanceof MediaStream) {
+      stream.getTracks().forEach((track) => track.stop());
+    }
+    airGestureVideo.pause();
+    airGestureVideo.srcObject = null;
+    if (hands) {
+      try {
+        await hands.close();
+      } catch (error) {
+        console.warn("MediaPipe Hands could not release its resources cleanly.", error);
+      }
+    }
+  })();
+  airGestureReleasePromise = release;
+  try {
+    await release;
+  } finally {
+    if (airGestureReleasePromise === release) airGestureReleasePromise = null;
+  }
+}
+
+async function startAirGestureMode(previousSession) {
+  if (airGesturePending || airGestureCamera) {
+    stopAirGestureMode();
+    return;
+  }
+  const version = ++airGestureVersion;
+  airGesturePending = true;
+  airGestureHud.hidden = false;
+  updateAirGestureToggle(true, "LINK");
+  setAirGestureIndicator(false, "REQUESTING CAMERA // MEDIAPIPE HANDS");
+  airIndexPosition = null;
+  airOpenPalmFrames = 0;
+  airGestureAutoOpened = holoDialog.open;
+  try {
+    if (previousSession) await previousSession;
+    if (version !== airGestureVersion) return;
+    if (airGestureReleasePromise) await airGestureReleasePromise;
+    if (version !== airGestureVersion) return;
+    if (opticalStream || opticalToggle.disabled) {
+      throw new Error("OPTICAL SENSOR is using the camera. Stop it before enabling AIR GESTURE.");
+    }
+    if (typeof window.Hands !== "function" || typeof window.Camera !== "function") {
+      throw new Error("MediaPipe Hands or Camera Utils did not load. Check the network and retry.");
+    }
+    const hands = new window.Hands({
+      locateFile: (file) => `https://cdn.jsdelivr.net/npm/@mediapipe/hands@0.4.1675469240/${file}`,
+    });
+    airGestureHands = hands;
+    hands.setOptions({
+      maxNumHands: 1,
+      modelComplexity: 1,
+      minDetectionConfidence: 0.7,
+      minTrackingConfidence: 0.65,
+    });
+    hands.onResults((results) => onAirGestureResults(results, version));
+    const camera = new window.Camera(airGestureVideo, {
+      onFrame: async () => {
+        if (version === airGestureVersion && airGestureHands === hands) {
+          await hands.send({ image: airGestureVideo });
+        }
+      },
+      width: 640,
+      height: 480,
+    });
+    airGestureCamera = camera;
+    await camera.start();
+    if (version !== airGestureVersion) {
+      await releaseAirGestureResources(camera, hands);
+      return;
+    }
+    airGesturePending = false;
+    updateAirGestureToggle(true);
+    setAirGestureIndicator(false, "HAND TRACKING: SEARCHING");
+    const stream = airGestureVideo.srcObject;
+    if (stream instanceof MediaStream) {
+      stream.getTracks().forEach((track) => {
+        track.addEventListener("ended", () => {
+          if (version === airGestureVersion) stopAirGestureMode();
+        }, { once: true });
+      });
+    }
+  } catch (error) {
+    if (version !== airGestureVersion) return;
+    console.error("AIR GESTURE startup failed.", error);
+    const camera = airGestureCamera;
+    const hands = airGestureHands;
+    airGestureCamera = null;
+    airGestureHands = null;
+    await releaseAirGestureResources(camera, hands);
+    if (version !== airGestureVersion) return;
+    airGesturePending = false;
+    airGestureHud.hidden = false;
+    updateAirGestureToggle(false);
+    setAirGestureIndicator(false, `SENSOR ERROR // ${error.message}`);
+  }
+}
+
+function stopAirGestureMode() {
+  airGestureVersion += 1;
+  airGesturePending = false;
+  const camera = airGestureCamera;
+  const hands = airGestureHands;
+  airGestureCamera = null;
+  airGestureHands = null;
+  airGestureAutoOpened = false;
+  airIndexPosition = null;
+  airOpenPalmFrames = 0;
+  holoGestureScale = 1;
+  holoExploded = false;
+  updateHoloExplodeButton();
+  drawGestureSkeleton(null);
+  setAirGestureIndicator(false, "HAND TRACKING: OFFLINE");
+  airGestureHud.hidden = true;
+  updateAirGestureToggle(false);
+  void releaseAirGestureResources(camera, hands);
+}
+
+function toggleAirGestureMode() {
+  if (airGesturePending || airGestureCamera) stopAirGestureMode();
+  else requestAirGestureStart();
+}
+
+function requestAirGestureStart() {
+  if (airGesturePending || airGestureCamera) return;
+  const previousSession = airGestureSessionPromise;
+  const startup = startAirGestureMode(previousSession);
+  airGestureSessionPromise = startup;
+  void startup.then(
+    () => {
+      if (airGestureSessionPromise === startup) airGestureSessionPromise = null;
+    },
+    (error) => {
+      console.error("AIR GESTURE startup failed unexpectedly.", error);
+      if (airGestureSessionPromise === startup) airGestureSessionPromise = null;
+    },
+  );
 }
 
 async function sendMessage(
@@ -1505,6 +3997,8 @@ async function sendMessage(
     launcherOpened = true,
     displayText = text,
     requestText = text,
+    includeISSContext = false,
+    simulationTarget = null,
   } = {},
 ) {
   if (!text || sendButton.disabled) return;
@@ -1533,6 +4027,20 @@ async function sendMessage(
   });
 
   try {
+    if (includeISSContext) {
+      const telemetry = await refreshISSTelemetry();
+      requestText = buildISSQuestionContext(requestText, telemetry);
+    }
+    if (hudMode === "mark-iii") {
+      requestText +=
+        "\n\nMARK-III TACTICAL BRIEFING FORMAT: 回答は必ず以下の3見出しで簡潔に構成してください。" +
+        "\n【MISSION SUMMARY / 結論】結論を1〜2文。" +
+        "\n【EXECUTION STEPS / 実行手順】1〜3の具体的な手順。" +
+        "\n【J.A.R.V.I.S. ADVICE / 戦術助言】最重要の助言または注意点。" +
+        (simulationTarget
+          ? "\nシミュレーション依頼の場合、MISSION SUMMARYに【TARGET / 目標】と【SUCCESS PROBABILITY / 成功確率】、EXECUTION STEPSに【OPTIMAL STRATEGY / 最適攻略ルート】の3段階、J.A.R.V.I.S. ADVICEに【RISK FACTOR / 注意すべきリスク】を必ず含めてください。"
+          : "");
+    }
     const requestMessages = history.map(({ role, content }) => ({ role, content }));
     if (requestText !== text && requestMessages.at(-1)?.role === "user") {
       requestMessages[requestMessages.length - 1].content = requestText;
@@ -1550,6 +4058,7 @@ async function sendMessage(
     const data = await response.json();
     if (!response.ok) throw new Error(data.error || "リクエストに失敗しました。");
     if (typeof data.reply !== "string" || !data.reply.trim()) throw new Error("AIから空の応答が返されました。");
+    appendSystemLog("PACKET VERIFIED // AI RESPONSE RECEIVED");
     typingMessage.remove();
     const searchMetadata = normalizeSearchMetadata({
       status: data.search_status,
@@ -1567,6 +4076,7 @@ async function sendMessage(
     trimHistory();
     persistHistory();
     addMessage("assistant", data.reply, { scroll: "start" });
+    if (simulationTarget) renderSimulationResult(simulationTarget, data.reply);
     playSfx("ready");
     if (searchMetadata) addSearchReceipt(searchMetadata);
     if (launcherAction) addProtocolReceipt(launcherAction, launcherOpened);
@@ -1595,6 +4105,7 @@ async function sendMessage(
     }
   } catch (error) {
     typingMessage.remove();
+    if (simulationTarget) simulationStatus.textContent = `SIMULATION FAILED // ${error.message}`;
     addMessage("assistant", `申し訳ありません、伊吹様。${error.message}`, {
       scroll: "start",
     });
@@ -1636,11 +4147,110 @@ document.querySelectorAll("[data-protocol]").forEach((button) => {
   });
 });
 
+dataScanButton.addEventListener("click", () => void scanClipboard());
+opticalToggle.addEventListener("click", toggleOpticalSensor);
+opticalCloseButton.addEventListener("click", stopOpticalSensor);
+ambientToggle.addEventListener("click", toggleAmbientCore);
+airGestureToggle.addEventListener("click", toggleAirGestureMode);
+simulationOpenButton.addEventListener("click", () => openSimulationDialog());
+simulationCloseButton.addEventListener("click", () => simulationDialog.close());
+simulationForm.addEventListener("submit", (event) => {
+  event.preventDefault();
+  const target = simulationTargetInput.value.trim();
+  if (!target) return;
+  runSimulation(target, `${target} のシミュレーションをしてください`);
+});
+holoNoteAddButton.addEventListener("click", () => addFloatingNote());
+floatingNotes.addEventListener("pointerdown", beginHoloNoteDrag);
+window.addEventListener("pointermove", moveHoloNote);
+window.addEventListener("pointerup", endHoloNoteDrag);
+window.addEventListener("pointercancel", endHoloNoteDrag);
+sentryToggle.addEventListener("click", () => setSentryMode(!sentryMode));
+sentryContinueButton.addEventListener("click", continueAfterSentryPrompt);
+sentryStandbyButton.addEventListener("click", enterSentryStandby);
+sentryResumeButton.addEventListener("click", resumeFromSentryStandby);
+systemLockButton.addEventListener("click", lockSystem);
+systemUnlockButton.addEventListener("click", unlockSystem);
+systemLockOverlay.addEventListener("cancel", (event) => event.preventDefault());
+sentryDialog.addEventListener("cancel", (event) => event.preventDefault());
+icingDismissButton.addEventListener("click", clearIcingAlert);
+document.addEventListener("pointermove", (event) => {
+  markOperatorActivity(event);
+  if (hudMode !== "mark-iii" || event.pointerType === "touch") {
+    crosshair.classList.remove("is-visible");
+    return;
+  }
+  crosshair.style.left = `${event.clientX}px`;
+  crosshair.style.top = `${event.clientY}px`;
+  crosshairCoordinates.textContent =
+    `X:${String(Math.round(event.clientX)).padStart(4, "0")} // Y:${String(Math.round(event.clientY)).padStart(4, "0")}`;
+  crosshair.classList.add("is-visible");
+}, { passive: true });
+["pointerdown", "keydown", "touchstart", "wheel"].forEach((eventName) => {
+  document.addEventListener(eventName, markOperatorActivity, { passive: true, capture: true });
+});
+holoOpenButton.addEventListener("click", openHoloProjector);
+holoCloseButton.addEventListener("click", () => holoDialog.close());
+holoDialog.addEventListener("close", closeHoloProjector);
+holoModelSelect.addEventListener("change", () => {
+  holoStatus.textContent = `${holoModelSelect.value === "reactor" ? "ARC REACTOR" : "HELMET ASSEMBLY"} // DRAG TO ROTATE`;
+  requestHoloFrame();
+});
+holoExplodeButton.addEventListener("click", () => {
+  holoExploded = !holoExploded;
+  updateHoloExplodeButton();
+  requestHoloFrame();
+});
+holoCanvas.addEventListener("pointerdown", (event) => {
+  holoPointer = { x: event.clientX, y: event.clientY, id: event.pointerId };
+  holoCanvas.setPointerCapture(event.pointerId);
+});
+holoCanvas.addEventListener("pointermove", (event) => {
+  if (!holoPointer || event.pointerId !== holoPointer.id) return;
+  holoRotationY += (event.clientX - holoPointer.x) * 0.012;
+  holoRotationX = Math.max(-Math.PI, Math.min(Math.PI, holoRotationX + (event.clientY - holoPointer.y) * 0.012));
+  holoPointer.x = event.clientX;
+  holoPointer.y = event.clientY;
+  requestHoloFrame();
+});
+["pointerup", "pointercancel", "lostpointercapture"].forEach((eventName) => {
+  holoCanvas.addEventListener(eventName, () => {
+    holoPointer = null;
+  });
+});
+cipherOpenButton.addEventListener("click", () => {
+  if (!cipherDialog.open) cipherDialog.showModal();
+  cipherInput.focus();
+});
+cipherCloseButton.addEventListener("click", () => cipherDialog.close());
+cipherEncryptButton.addEventListener("click", () => void runCipherOperation("encrypt"));
+cipherDecryptButton.addEventListener("click", () => void runCipherOperation("decrypt"));
 microphoneButton.addEventListener("click", toggleVoiceInput);
 standbyButton.addEventListener("click", toggleVoiceStandby);
 speakerButton.addEventListener("click", toggleVoiceOutput);
 sfxToggle.addEventListener("click", toggleSfx);
 hudModeToggle.addEventListener("click", toggleHudMode);
+bootEnableAudioButton.addEventListener("click", (event) => {
+  event.stopPropagation();
+  if (!sfxEnabled) {
+    bootEnableAudioButton.textContent = "SFX MUTED";
+    return;
+  }
+  playSfx("boot", true);
+  bootEnableAudioButton.textContent = "AUDIO LINK // ARMED";
+  bootEnableAudioButton.disabled = true;
+});
+bootSkipButton.addEventListener("click", finishBootSequence);
+bootOverlay.addEventListener("click", (event) => {
+  if (!(event.target instanceof Element) || !event.target.closest("#boot-enable-audio")) {
+    finishBootSequence();
+  }
+});
+document.addEventListener("keydown", (event) => {
+  if (event.key === "Escape" && document.body.classList.contains("is-booting")) {
+    finishBootSequence();
+  }
+});
 sfxVolumeInput.addEventListener("input", () => {
   sfxVolume = Number(sfxVolumeInput.value) / 100;
   sfxVolumeValue.textContent = `${sfxVolumeInput.value}%`;
@@ -1696,19 +4306,95 @@ document.querySelector("#open-memory").addEventListener("click", () => {
 });
 document.querySelector("#close-memory").addEventListener("click", () => memoryDialog.close());
 document.querySelector("#clear-memory").addEventListener("click", clearMemory);
+missionTimerToggle.addEventListener("click", toggleMissionTimer);
+missionTimerReset.addEventListener("click", resetMissionTimer);
+window.addEventListener("pagehide", () => {
+  clearInterval(sentryCheckInterval);
+  sentryCheckInterval = null;
+  clearTimeout(icingAlertTimer);
+  icingAlertTimer = null;
+  clearInterval(powerDistributionInterval);
+  if (holoNotesSaveTimer !== null) {
+    clearTimeout(holoNotesSaveTimer);
+    holoNotesSaveTimer = null;
+    persistHoloNotes();
+  }
+  if (housePartyPending) setHousePartyControlsLocked(false);
+  clearTimeout(housePartyTimeout);
+  housePartyTimeout = null;
+  housePartyPending = false;
+  houseAlert.hidden = true;
+  document.body.classList.remove("house-party-active");
+  clearCleanSlateTimers();
+  if (cleanSlateAnimationFrame !== null) cancelAnimationFrame(cleanSlateAnimationFrame);
+  cleanSlateAnimationFrame = null;
+  cleanSlatePending = false;
+  cleanSlateOverlay.hidden = true;
+  setCleanSlateControlsLocked(false);
+  stopAirGestureMode();
+  stopOpticalSensor();
+  stopAmbientCore();
+});
+window.addEventListener("resize", () => {
+  holoNotes.forEach((note) => {
+    const element = [...floatingNotes.children].find((item) => item.dataset.noteId === note.id);
+    if (!element) return;
+    const position = getHoloNotePosition(
+      Number.parseFloat(element.style.left),
+      Number.parseFloat(element.style.top),
+      element.offsetWidth,
+      element.offsetHeight,
+    );
+    note.x = position.x;
+    note.y = position.y;
+    element.style.left = `${note.x}px`;
+    element.style.top = `${note.y}px`;
+  });
+  scheduleHoloNotesSave();
+});
+document.addEventListener("visibilitychange", () => {
+  if (document.hidden) {
+    if (globalRadarFrame !== null) cancelAnimationFrame(globalRadarFrame);
+    globalRadarFrame = null;
+  } else {
+    startGlobalRadar();
+  }
+});
 
 restoreHistory();
 restoreMemories();
+restoreHoloNotes();
+systemLogReady = true;
+appendSystemLog("NEURAL LINK: ACTIVE");
+appendSystemLog("BIOMETRIC SESSION: VERIFIED");
 updateVoiceStandbyButton();
 updateSfxButton();
+updateMissionTimerDisplay();
+updateMarkModeSystems();
+updateSentryStatus();
+clearModeInlineOverrides();
 document.body.dataset.hudMode = hudMode;
 updateHudModeButton();
 sfxVolumeValue.textContent = `${sfxVolumeInput.value}%`;
 preloadWakeAcknowledgement();
 void refreshWeather();
+void refreshISSTelemetry();
 updateClock();
-createWaveform(".network-wave", 42);
+updateTelemetryTicker();
+updateBiometricWaveform();
+updatePowerDistribution();
+updateFlightTelemetry();
+updateTargetLockReadouts();
 createWaveform("#spectrum", 32);
+updateTrafficWaveforms();
+startBootSequence();
 setInterval(updateClock, 1000);
+setInterval(updateBiometricWaveform, 110);
+powerDistributionInterval = setInterval(updatePowerDistribution, 850);
+setInterval(updateFlightTelemetry, 850);
+setInterval(updateTargetLockReadouts, 1800);
 setInterval(animateTelemetry, 1800);
+setInterval(updateTrafficWaveforms, 120);
 setInterval(() => void refreshWeather(), WEATHER_REFRESH_INTERVAL);
+setInterval(() => void refreshISSTelemetry(), ISS_REFRESH_INTERVAL);
+startGlobalRadar();

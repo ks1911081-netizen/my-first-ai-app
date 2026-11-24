@@ -31,6 +31,16 @@ KUSHIRO_WEATHER = {
         "high_c": 7.0,
         "low_c": 1.0,
     },
+    "forecast": [
+        {
+            "date": f"2026-11-{day:02d}",
+            "weather_code": 3,
+            "description": "曇り",
+            "high_c": 7.0 + day - 24,
+            "low_c": 1.0 + day - 24,
+        }
+        for day in range(24, 31)
+    ],
     "fetched_at": "2026-11-24T08:05+09:00",
     "source": "Open-Meteo",
 }
@@ -49,6 +59,14 @@ class SystemPromptIdentityTests(unittest.TestCase):
         )
         self.assertIn("はい、伊吹様。お呼びでしょうか？", prompt)
         self.assertIn("はい、待機しております、伊吹様。", prompt)
+
+    def test_hud_mode_instructions_switch_between_detailed_and_concise(self):
+        standard_prompt = app_module.build_system_prompt([], hud_mode="standard")
+        mark_iii_prompt = app_module.build_system_prompt([], hud_mode="mark-iii")
+
+        self.assertIn("背景・理由・具体的な手順", standard_prompt)
+        self.assertIn("結論や最優先の解決策を最初に", mark_iii_prompt)
+        self.assertIn("短い箇条書き", mark_iii_prompt)
 
 
 class SelectChatModelTests(unittest.TestCase):
@@ -150,6 +168,8 @@ class SelectChatModelTests(unittest.TestCase):
         self.assertIn("体感温度", system_prompt)
         self.assertIn("HUD MODEはMARK-III", system_prompt)
         self.assertIn("戦術補佐AI", system_prompt)
+        self.assertIn("結論や最優先の解決策を最初に", system_prompt)
+        self.assertIn("短い箇条書き", system_prompt)
         self.assertNotIn("サー", system_prompt)
         get.assert_called_once_with(
             app_module.GROQ_MODELS_URL,
@@ -366,10 +386,10 @@ class SelectChatModelTests(unittest.TestCase):
                 "precipitation": 0.0,
             },
             "daily": {
-                "time": ["2026-11-24"],
-                "weather_code": [3],
-                "temperature_2m_max": [7.0],
-                "temperature_2m_min": [1.0],
+                "time": [f"2026-11-{day:02d}" for day in range(24, 31)],
+                "weather_code": [3] * 7,
+                "temperature_2m_max": [7.0 + day - 24 for day in range(24, 31)],
+                "temperature_2m_min": [1.0 + day - 24 for day in range(24, 31)],
             },
         }
         with patch("app.requests.get", return_value=response) as get:
@@ -380,10 +400,14 @@ class SelectChatModelTests(unittest.TestCase):
         self.assertEqual(weather["current"]["description"], "曇り")
         self.assertEqual(weather["today"]["high_c"], 7.0)
         self.assertEqual(weather["today"]["low_c"], 1.0)
+        self.assertEqual(len(weather["forecast"]), 7)
+        self.assertEqual(weather["forecast"][0]["date"], "2026-11-24")
+        self.assertEqual(weather["forecast"][-1]["low_c"], 7.0)
         self.assertEqual(get.call_args.args[0], app_module.OPEN_METEO_URL)
         self.assertEqual(get.call_args.kwargs["params"]["latitude"], 42.9849)
         self.assertEqual(get.call_args.kwargs["params"]["longitude"], 144.3814)
         self.assertEqual(get.call_args.kwargs["params"]["timezone"], "Asia/Tokyo")
+        self.assertEqual(get.call_args.kwargs["params"]["forecast_days"], 7)
 
     def test_weather_api_returns_live_weather_payload(self):
         with patch("app.get_kushiro_weather", return_value=KUSHIRO_WEATHER):
