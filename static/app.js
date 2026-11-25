@@ -213,16 +213,17 @@ const ISS_REQUEST_TIMEOUT = 4200;
 const ISS_MAX_TRACK_POINTS = 180;
 const EARTH_RADIUS_KM = 6371;
 const CITY_DEFAULT_CENTER = { latitude: 42.9849, longitude: 144.3814 };
-const CITY_SCAN_RADIUS_METERS = 500;
+const CITY_SCAN_RADIUS_METERS = 350;
 const CITY_OSM_SCALE = 0.0044;
 const CITY_BUILDING_HEIGHT_SCALE = 0.014;
 const CITY_MAX_BUILDINGS = 600;
 const CITY_MAX_ROADS = 1200;
 const CITY_GEOLOCATION_TIMEOUT = 6500;
-const CITY_REQUEST_TIMEOUT = 22000;
+const CITY_REQUEST_TIMEOUT = 20000;
 const CITY_OVERPASS_ENDPOINTS = [
   "https://overpass-api.de/api/interpreter",
   "https://overpass.kumi.systems/api/interpreter",
+  "https://maps.mail.ru/osm/tools/overpass/api/interpreter",
 ];
 const NOMINATIM_SEARCH_URL = "https://nominatim.openstreetmap.org/search";
 const NOMINATIM_MIN_INTERVAL = 1100;
@@ -2527,6 +2528,80 @@ function createCityModel(elements, center, locationLabel = "OPERATOR LOCATION") 
   cityScanStartedAt = performance.now();
 }
 
+function addSyntheticCityFallback() {
+  const THREE = window.THREE;
+  if (!THREE || !cityModelGroup) throw new Error("Three.js city renderer is unavailable.");
+  const palette = holoPalette();
+  const buildingMaterial = addCityPaletteMaterial(new THREE.MeshBasicMaterial({
+    color: palette.primary,
+    transparent: true,
+    opacity: 0.07,
+    side: THREE.DoubleSide,
+    blending: THREE.AdditiveBlending,
+    depthWrite: false,
+  }));
+  const buildingEdgeMaterial = addCityPaletteMaterial(new THREE.LineBasicMaterial({
+    color: palette.secondary,
+    transparent: true,
+    opacity: 0.9,
+    blending: THREE.AdditiveBlending,
+    depthWrite: false,
+  }), true);
+  const baseGeometry = new THREE.BoxGeometry(1, 1, 1);
+  const edgeGeometry = new THREE.EdgesGeometry(baseGeometry);
+  addCityResource(baseGeometry);
+  addCityResource(edgeGeometry);
+
+  let buildingIndex = 0;
+  for (let row = -4; row <= 4; row += 1) {
+    for (let column = -4; column <= 4; column += 1) {
+      if ((Math.abs(row) <= 1 && Math.abs(column) <= 1) || (row * 3 + column * 5) % 7 === 0) continue;
+      const seed = Math.abs(row * 71 + column * 37);
+      const width = 0.12 + (seed % 5) * 0.025;
+      const depth = 0.11 + (Math.floor(seed / 3) % 5) * 0.025;
+      const height = 0.1 + (seed % 9) * 0.045;
+      const x = column * 0.39 + (row % 2) * 0.08;
+      const z = row * 0.39;
+      const buildingGeometry = baseGeometry.clone();
+      buildingGeometry.scale(width, height, depth);
+      addCityResource(buildingGeometry);
+      const building = new THREE.Mesh(buildingGeometry, buildingMaterial);
+      building.position.set(x, height / 2 + 0.025, z);
+      cityModelGroup.add(building);
+
+      const wireGeometry = edgeGeometry.clone();
+      wireGeometry.scale(width, height, depth);
+      addCityResource(wireGeometry);
+      const wireframe = new THREE.LineSegments(wireGeometry, buildingEdgeMaterial);
+      wireframe.position.copy(building.position);
+      cityModelGroup.add(wireframe);
+      buildingIndex += 1;
+    }
+  }
+  cityMapCounts.buildings += buildingIndex;
+
+  if (cityMapCounts.roads === 0) {
+    const roadMaterial = addCityPaletteMaterial(new THREE.LineBasicMaterial({
+      color: palette.primary,
+      transparent: true,
+      opacity: 0.48,
+      blending: THREE.AdditiveBlending,
+      depthWrite: false,
+    }));
+    for (let index = -4; index <= 4; index += 2) {
+      const offset = index * 0.39;
+      for (const axis of ["x", "z"]) {
+        const points = axis === "x"
+          ? [new THREE.Vector3(offset, 0.02, -1.9), new THREE.Vector3(offset, 0.02, 1.9)]
+          : [new THREE.Vector3(-1.9, 0.02, offset), new THREE.Vector3(1.9, 0.02, offset)];
+        const roadGeometry = addCityResource(new THREE.BufferGeometry().setFromPoints(points));
+        cityModelGroup.add(new THREE.Line(roadGeometry, roadMaterial));
+        cityMapCounts.roads += 1;
+      }
+    }
+  }
+}
+
 function animateCityScan(time) {
   if (!cityModeActive) return;
   cityScanRings.forEach(({ ring, material, phase }) => {
@@ -2753,12 +2828,16 @@ function geocodeCityPlace(place, signal) {
 }
 
 async function fetchCityOverpassData(center, signal) {
-  const query = `[out:json][timeout:25];(way(around:${CITY_SCAN_RADIUS_METERS},${center.latitude},${center.longitude})[building];way(around:${CITY_SCAN_RADIUS_METERS},${center.latitude},${center.longitude})[highway];);out body geom;`;
+  const query = `[out:json][timeout:20];(way(around:${CITY_SCAN_RADIUS_METERS},${center.latitude},${center.longitude})[building];way(around:${CITY_SCAN_RADIUS_METERS},${center.latitude},${center.longitude})[highway];);out body geom;`;
   let lastError;
   for (const endpoint of CITY_OVERPASS_ENDPOINTS) {
     if (signal.aborted) throw new DOMException("City scan was cancelled.", "AbortError");
     const controller = new AbortController();
-    const timeout = window.setTimeout(() => controller.abort(), CITY_REQUEST_TIMEOUT);
+    let timedOut = false;
+    const timeout = window.setTimeout(() => {
+      timedOut = true;
+      controller.abort();
+    }, CITY_REQUEST_TIMEOUT);
     const abortFromRequest = () => controller.abort();
     signal.addEventListener("abort", abortFromRequest, { once: true });
     try {
@@ -2774,8 +2853,10 @@ async function fetchCityOverpassData(center, signal) {
       return data.elements;
     } catch (error) {
       if (signal.aborted) throw new DOMException("City scan was cancelled.", "AbortError");
-      lastError = error;
-      console.warn(`CITY SCANNER endpoint failed: ${endpoint}`, error);
+      lastError = timedOut
+        ? new Error(`Overpass endpoint timed out after 20 seconds: ${endpoint}`)
+        : error;
+      console.warn(`CITY SCANNER endpoint failed: ${endpoint}`, lastError);
     } finally {
       window.clearTimeout(timeout);
       signal.removeEventListener("abort", abortFromRequest);
@@ -2812,21 +2893,39 @@ async function scanTacticalCity({ place = "", sourceText = "", voice = false } =
       : await getCityOperatorLocation();
     if (controller.signal.aborted || scanId !== cityScanRequestId) return;
     cityScanStatus.textContent = `QUERYING OPENSTREETMAP // ${center.source}`;
-    const elements = await fetchCityOverpassData(center, controller.signal);
+    let elements = [];
+    let osmUnavailable = false;
+    try {
+      elements = await fetchCityOverpassData(center, controller.signal);
+    } catch (error) {
+      if (controller.signal.aborted || scanId !== cityScanRequestId) return;
+      osmUnavailable = true;
+      console.warn("CITY SCANNER is using generated fallback geometry.", error);
+    }
     if (controller.signal.aborted || scanId !== cityScanRequestId) return;
     createCityModel(elements, center, place ? "TARGET LOCATION" : "OPERATOR LOCATION");
-    cityScanStatus.textContent =
-      `SCAN COMPLETE // ${cityMapCounts.buildings} BUILDINGS · ${cityMapCounts.roads} ROADS`;
+    const missingBuildings = cityMapCounts.buildings === 0;
+    if (missingBuildings || osmUnavailable) addSyntheticCityFallback();
+    const supplemented = missingBuildings || osmUnavailable;
+    cityScanStatus.textContent = supplemented
+      ? `SUPPLEMENTAL PROJECTION COMPLETE // ${cityMapCounts.buildings} BUILDINGS · ${cityMapCounts.roads} ROADS`
+      : `SCAN COMPLETE // ${cityMapCounts.buildings} BUILDINGS · ${cityMapCounts.roads} ROADS`;
     holoStatus.textContent =
-      `${place ? "TARGET" : "OPERATOR"} // ${center.latitude.toFixed(4)}, ${center.longitude.toFixed(4)} // DRAG / WHEEL TO ORBIT`;
-    appendSystemLog(`CITY SCANNER // ${cityMapCounts.buildings} BUILDINGS · ${cityMapCounts.roads} ROADS`);
-    const response =
-      `3D都市スキャンが完了しました、伊吹様。\n` +
+      `${supplemented ? "SUPPLEMENTAL CITY PROJECTION" : place ? "TARGET" : "OPERATOR"} // ${center.latitude.toFixed(4)}, ${center.longitude.toFixed(4)} // DRAG / WHEEL TO ORBIT`;
+    appendSystemLog(`CITY SCANNER // ${supplemented ? "SUPPLEMENTAL MODEL" : "OSM MODEL"} · ${cityMapCounts.buildings} BUILDINGS`);
+    const response = supplemented
+      ? `周辺データの補完投影を完了しました、伊吹様。\n`
+      : `3D都市スキャンが完了しました、伊吹様。\n`;
+    const report =
       `対象: ${center.source}\n` +
       `座標: ${center.latitude.toFixed(4)}, ${center.longitude.toFixed(4)}\n` +
       `検出: 建物 ${cityMapCounts.buildings} 棟 / 道路 ${cityMapCounts.roads} 区間\n` +
-      `地図データ: OpenStreetMap。高さ情報がない建物は表示用の推定値で補っています。`;
-    recordCityScanMessage("assistant", response, voice);
+      (osmUnavailable
+        ? "Overpass APIが応答しなかったため、周辺道路と建物の一部をSFモデルで補完しました。"
+        : missingBuildings
+          ? "建物データが見つからなかったため、周辺道路とSFワイヤーフレームビル群を補完投影しました。"
+          : "地図データ: OpenStreetMap。高さ情報がない建物は表示用の推定値で補っています。");
+    recordCityScanMessage("assistant", `${response}${report}`, voice);
   } catch (error) {
     if (controller.signal.aborted || scanId !== cityScanRequestId) return;
     console.error("CITY SCANNER could not retrieve map data.", error);
