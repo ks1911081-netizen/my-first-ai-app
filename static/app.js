@@ -1,6 +1,10 @@
 const form = document.querySelector("#chat-form");
 const promptInput = document.querySelector("#prompt");
 const messagesElement = document.querySelector("#messages");
+const imageInput = document.querySelector("#image-input");
+const imageAttachButton = document.querySelector("#image-attach");
+const imageAttachments = document.querySelector("#image-attachments");
+const scanViewButton = document.querySelector("#scan-view");
 const sendButton = document.querySelector("#send-button");
 const microphoneButton = document.querySelector("#voice-input");
 const microphoneLabel = document.querySelector("#mic-label");
@@ -111,6 +115,20 @@ const flightAltitude = document.querySelector("#flight-altitude");
 const flightTemperature = document.querySelector("#flight-temperature");
 const globalRadarCanvas = document.querySelector("#global-radar");
 const globalRadarStatus = document.querySelector("#global-radar-status");
+const threatKp = document.querySelector("#threat-kp");
+const threatGeomagneticAlert = document.querySelector("#threat-geomagnetic-alert");
+const threatSolarFlux = document.querySelector("#threat-solar-flux");
+const threatSolarAlert = document.querySelector("#threat-solar-alert");
+const threatEarthquake = document.querySelector("#threat-earthquake");
+const threatMonitorStatus = document.querySelector("#threat-monitor-status");
+const analyticsRank = document.querySelector("#analytics-rank");
+const analyticsPoints = document.querySelector("#analytics-points");
+const analyticsProgress = document.querySelector("#analytics-progress");
+const analyticsProgressFill = document.querySelector("#analytics-progress-fill");
+const analyticsFocusCount = document.querySelector("#analytics-focus-count");
+const analyticsTaskCount = document.querySelector("#analytics-task-count");
+const analyticsConversationCount = document.querySelector("#analytics-conversation-count");
+const analyticsTaskButton = document.querySelector("#analytics-task-complete");
 const holoDialog = document.querySelector("#holo-dialog");
 const holoOpenButton = document.querySelector("#holo-open");
 const holoCloseButton = document.querySelector("#holo-close");
@@ -118,6 +136,12 @@ const holoCanvas = document.querySelector("#holo-canvas");
 const holoModelSelect = document.querySelector("#holo-model");
 const holoExplodeButton = document.querySelector("#holo-explode");
 const holoStatus = document.querySelector("#holo-status");
+const cityMapOpenButton = document.querySelector("#city-map-open");
+const holoCityToggle = document.querySelector("#holo-city-toggle");
+const cityScanForm = document.querySelector("#city-scan-form");
+const cityPlaceInput = document.querySelector("#city-place");
+const cityCurrentScanButton = document.querySelector("#city-current-scan");
+const cityScanStatus = document.querySelector("#city-scan-status");
 const ideaOpenButton = document.querySelector("#idea-open");
 const ideaDialog = document.querySelector("#idea-dialog");
 const ideaCloseButton = document.querySelector("#idea-close");
@@ -145,13 +169,37 @@ const cipherOutput = document.querySelector("#cipher-output");
 const cipherEncryptButton = document.querySelector("#cipher-encrypt");
 const cipherDecryptButton = document.querySelector("#cipher-decrypt");
 const cipherStatus = document.querySelector("#cipher-status");
+const prototypeDialog = document.querySelector("#prototype-dialog");
+const prototypeOpenButton = document.querySelector("#prototype-open");
+const prototypeCloseButton = document.querySelector("#prototype-close");
+const prototypeForm = document.querySelector("#prototype-form");
+const prototypeTopicInput = document.querySelector("#prototype-topic");
+const prototypeBuildButton = document.querySelector("#prototype-build");
+const prototypeFrame = document.querySelector("#prototype-frame");
+const prototypeFullscreenButton = document.querySelector("#prototype-fullscreen");
+const prototypeDownloadButton = document.querySelector("#prototype-download");
+const prototypeStatus = document.querySelector("#prototype-status");
+const knowledgeDialog = document.querySelector("#knowledge-dialog");
+const knowledgeOpenButton = document.querySelector("#knowledge-open");
+const knowledgeCloseButton = document.querySelector("#knowledge-close");
+const knowledgeCanvas = document.querySelector("#knowledge-canvas");
+const knowledgeNodeCount = document.querySelector("#knowledge-node-count");
+const knowledgeDetail = document.querySelector("#knowledge-detail");
+const knowledgeStatus = document.querySelector("#knowledge-status");
 const HISTORY_STORAGE_KEY = "jarvis.conversation.v1";
 const MEMORY_STORAGE_KEY = "jarvis.long-term-memory.v1";
 const HOLO_NOTES_STORAGE_KEY = "jarvis.holo-notes.v1";
 const CHRONO_EVENTS_STORAGE_KEY = "jarvis.chrono-events.v1";
+const WEATHER_CACHE_STORAGE_KEY = "jarvis.kushiro-weather.v1";
+const OPERATOR_ANALYTICS_STORAGE_KEY = "jarvis.operator-analytics.v1";
 const MAX_HISTORY_MESSAGES = 40;
 const MAX_MEMORY_ITEMS = 80;
+const MAX_PROTOTYPE_HTML_LENGTH = 250000;
 const WEATHER_REFRESH_INTERVAL = 5 * 60 * 1000;
+const WEATHER_REQUEST_TIMEOUT = 10000;
+const WEATHER_RETRY_DELAY = 2000;
+const OPEN_METEO_KUSHIRO_URL =
+  "https://api.open-meteo.com/v1/forecast?latitude=42.9849&longitude=144.3814&current=temperature_2m,weather_code,wind_speed_10m&daily=weather_code,temperature_2m_max,temperature_2m_min&timezone=Asia%2FTokyo";
 const SENTRY_IDLE_LIMIT = 15 * 60 * 1000;
 const SENTRY_CHECK_INTERVAL = 1000;
 const BOOT_SEQUENCE_DURATION = 2500;
@@ -164,6 +212,36 @@ const ISS_REFRESH_INTERVAL = 5000;
 const ISS_REQUEST_TIMEOUT = 4200;
 const ISS_MAX_TRACK_POINTS = 180;
 const EARTH_RADIUS_KM = 6371;
+const CITY_DEFAULT_CENTER = { latitude: 42.9849, longitude: 144.3814 };
+const CITY_SCAN_RADIUS_METERS = 500;
+const CITY_OSM_SCALE = 0.0044;
+const CITY_BUILDING_HEIGHT_SCALE = 0.014;
+const CITY_MAX_BUILDINGS = 600;
+const CITY_MAX_ROADS = 1200;
+const CITY_GEOLOCATION_TIMEOUT = 6500;
+const CITY_REQUEST_TIMEOUT = 22000;
+const CITY_OVERPASS_ENDPOINTS = [
+  "https://overpass-api.de/api/interpreter",
+  "https://overpass.kumi.systems/api/interpreter",
+];
+const NOMINATIM_SEARCH_URL = "https://nominatim.openstreetmap.org/search";
+const NOMINATIM_MIN_INTERVAL = 1100;
+const USGS_EARTHQUAKE_URL =
+  "https://earthquake.usgs.gov/earthquakes/feed/v1.0/summary/4.5_day.geojson";
+const NOAA_KP_URL = "https://services.swpc.noaa.gov/json/planetary_k_index_1m.json";
+const NOAA_XRAY_URL = "https://services.swpc.noaa.gov/json/goes/primary/xrays-1-day.json";
+const USGS_REFRESH_INTERVAL = 3 * 60 * 1000;
+const NOAA_REFRESH_INTERVAL = 60 * 1000;
+const THREAT_REQUEST_TIMEOUT = 10000;
+const MAX_IMAGE_ATTACHMENTS = 4;
+const MAX_IMAGE_BYTES = 4 * 1024 * 1024;
+const MAX_TOTAL_IMAGE_BYTES = 8 * 1024 * 1024;
+const OPERATOR_RANKS = [
+  { name: "RANK I: TRAINEE", points: 0 },
+  { name: "RANK II: AGENT", points: 250 },
+  { name: "RANK III: COMMANDER", points: 750 },
+  { name: "RANK IV: STARK LEVEL", points: 1800 },
+];
 const HAND_SKELETON_CONNECTIONS = [
   [0, 1], [1, 2], [2, 3], [3, 4],
   [0, 5], [5, 6], [6, 7], [7, 8],
@@ -172,7 +250,7 @@ const HAND_SKELETON_CONNECTIONS = [
   [13, 17], [17, 18], [18, 19], [19, 20], [0, 17],
 ];
 const BRIEFING_PROMPT =
-  "伊吹様向けに、今日の北海道釧路市の天気予報と、本日の日本の主要ニュース3つをWeb検索で調べて簡潔に報告して";
+  "伊吹様向けに、提供された最新の北海道釧路市の天気データを確認し、本日の天気・気温・最高/最低気温を最初に報告したうえで、本日の日本の主要ニュース3つをWeb検索で調べて簡潔に報告して";
 const PROTOCOLS = {
   briefing: { label: "BRIEFING", url: null },
   coding: { label: "CODING", url: "https://github.com/" },
@@ -226,6 +304,27 @@ let modeTransitionVersion = 0;
 let missionRemainingSeconds = MISSION_DURATION_SECONDS;
 let missionTimerDeadline = 0;
 let missionTimerInterval = null;
+let earthquakeData = [];
+let kpTelemetry = null;
+let solarXrayTelemetry = null;
+let usgsReceivedAt = 0;
+let noaaReceivedAt = 0;
+let solarReceivedAt = 0;
+let usgsFeedFailed = false;
+let noaaFeedFailed = false;
+let solarFeedFailed = false;
+let usgsRequestPromise = null;
+let noaaRequestPromise = null;
+let solarRequestPromise = null;
+let pendingImages = [];
+let imageAttachmentSequence = 0;
+let operatorAnalytics = {
+  completedFocusSessions: 0,
+  completedFocusMinutes: 0,
+  completedTasks: 0,
+  conversations: 0,
+};
+let currentOperatorRankIndex = 0;
 let icingAlertTimer = null;
 let opticalStream = null;
 let opticalRequestVersion = 0;
@@ -242,7 +341,20 @@ let holoRenderer = null;
 let holoScene = null;
 let holoCamera = null;
 let holoModelGroup = null;
+let cityModelGroup = null;
 let holoModelParts = [];
+let cityResources = new Set();
+let cityPaletteMaterials = [];
+let cityScanRings = [];
+let cityModeActive = false;
+let cityScanStartedAt = 0;
+let cityScanRequestVersion = 0;
+let cityOperatorLocation = null;
+let cityMapCounts = { buildings: 0, roads: 0 };
+let nominatimLastRequestAt = 0;
+let nominatimQueue = Promise.resolve();
+let cityScanController = null;
+let cityScanRequestId = 0;
 let holoResizeObserver = null;
 let holoRotationX = -0.18;
 let holoRotationY = 0.36;
@@ -284,6 +396,18 @@ let chronoEventCounter = 0;
 let chronoDisplayedDay = null;
 let veronicaDropTimer = null;
 let ideaNodeDrag = null;
+let kushiroWeather = null;
+let kushiroWeatherFetchedAt = 0;
+let weatherLastAttemptAt = 0;
+let weatherRefreshPromise = null;
+let prototypeHtmlSource = "";
+let prototypeBuildPending = false;
+let knowledgeFrame = null;
+let knowledgeResizeObserver = null;
+let knowledgeNodes = [];
+let knowledgeEdges = [];
+let knowledgePointer = null;
+let knowledgeSelectedIndex = -1;
 
 function trimHistory() {
   while (history.length > MAX_HISTORY_MESSAGES) history.shift();
@@ -302,6 +426,7 @@ function persistHistory() {
     console.error("Conversation history could not be saved to localStorage.", error);
     updateSessionStatus("SESSION SAVE FAILED");
   }
+  if (knowledgeDialog.open) rebuildKnowledgeMatrix();
 }
 
 function restoreHistory() {
@@ -357,13 +482,14 @@ function persistMemories() {
     window.localStorage.setItem(MEMORY_STORAGE_KEY, JSON.stringify(memoryItems));
     setMemoryStatus("LOCAL STORAGE // ACTIVE");
     updateMemoryCount(memoryItems.length);
-    return true;
   } catch (error) {
     console.error("Long-term memory could not be saved to localStorage.", error);
     setMemoryStatus("LOCAL SAVE FAILED", "error");
     if (memoryDialog.open) memoryDialogStatus.textContent = "ブラウザーの記憶領域に保存できませんでした。";
     return false;
   }
+  if (knowledgeDialog.open) rebuildKnowledgeMatrix();
+  return true;
 }
 
 function restoreMemories() {
@@ -448,53 +574,548 @@ function renderMemoryList(memories) {
   });
 }
 
+function getKnowledgeTokens(text) {
+  const cleaned = String(text)
+    .normalize("NFKC")
+    .replace(/```[\s\S]*?```/gu, " ")
+    .replace(/https?:\/\/\S+/gu, " ")
+    .replace(/[\p{P}\p{S}\d_]+/gu, " ")
+    .trim();
+  if (!cleaned) return [];
+  const segments = typeof Intl.Segmenter === "function"
+    ? [...new Intl.Segmenter("ja", { granularity: "word" }).segment(cleaned)]
+      .filter((segment) => segment.isWordLike)
+      .map((segment) => segment.segment)
+    : cleaned.match(/[ぁ-んァ-ヴー一-龠々]{2,10}|[A-Za-z][A-Za-z0-9+#.-]{1,24}/gu) || [];
+  const stopWords = new Set([
+    "jarvis", "assistant", "ibuki", "伊吹", "伊吹様", "ジャービス", "ください", "下さい",
+    "お願い", "お願いします", "教えて", "教え", "知りたい", "作って", "作っ", "作り", "作成", "して", "する",
+    "です", "ます", "ある", "いる", "こと", "もの", "これ", "それ", "ため", "よう",
+    "今日", "今回", "既存", "機能", "追加", "実装", "お願いします", "について", "に関して", "くだ", "さい",
+  ]);
+  return [...new Set(segments
+    .map((segment) => segment.trim())
+    .filter((segment) => segment.length >= 2 && segment.length <= 24 && !stopWords.has(segment.toLowerCase())))];
+}
+
+function rebuildKnowledgeMatrix() {
+  const memoryRecords = memoryItems.slice(-MAX_MEMORY_ITEMS).map((memory) => ({
+    id: `memory-${memory.id}`,
+    type: "MEMORY",
+    label: memory.text.replace(/\s+/gu, " ").slice(0, 18),
+    detail: `[${memoryCategoryName(memory.category)}]\n${memory.text}`,
+    tokens: new Set(getKnowledgeTokens(memory.text).map((token) => token.toLowerCase())),
+  }));
+  const conversationMessages = history
+    .filter((message) => message.role === "user" && typeof message.content === "string")
+    .slice(-MAX_HISTORY_MESSAGES);
+  const keywordCounts = new Map();
+  conversationMessages.forEach((message, index) => {
+    const snippet = message.content.replace(/\s+/gu, " ").slice(0, 180);
+    getKnowledgeTokens(message.content).forEach((token) => {
+      const key = token.toLowerCase();
+      const entry = keywordCounts.get(key) || { label: token, count: 0, recency: index, snippets: [] };
+      entry.count += 1;
+      entry.recency = index;
+      if (entry.snippets.length < 3 && !entry.snippets.includes(snippet)) entry.snippets.push(snippet);
+      keywordCounts.set(key, entry);
+    });
+  });
+  const keywordRecords = [...keywordCounts.entries()]
+    .sort((left, right) => right[1].count - left[1].count || right[1].recency - left[1].recency)
+    .slice(0, 30)
+    .map(([key, entry]) => ({
+      id: `keyword-${key}`,
+      type: "KEYWORD",
+      label: entry.label.slice(0, 18),
+      detail: `会話キーワード // ${entry.count} HIT${entry.count === 1 ? "" : "S"}\n\n${entry.snippets.join("\n\n")}`,
+      tokens: new Set([key]),
+    }));
+
+  knowledgeNodes = [{
+    id: "knowledge-core",
+    type: "CORE",
+    label: "J.A.R.V.I.S.",
+    detail: "NEURAL KNOWLEDGE MATRIX\nブラウザー内の長期記憶と最近の会話キーワードを可視化しています。",
+    x: 0.5,
+    y: 0.5,
+    radius: 8,
+    phase: 0,
+    tokens: new Set(),
+  }];
+  const detailRecords = [...memoryRecords, ...keywordRecords];
+  detailRecords.forEach((record, index) => {
+    const isMemory = record.type === "MEMORY";
+    const angle = index * 2.399963229728653;
+    const radius = isMemory
+      ? 0.34 + (index % 3) * 0.055
+      : 0.18 + (index % 2) * 0.075;
+    knowledgeNodes.push({
+      ...record,
+      x: 0.5 + Math.cos(angle) * radius,
+      y: 0.5 + Math.sin(angle) * radius * 0.82,
+      radius: isMemory ? 4.6 : 5.3,
+      phase: (index * 0.173) % 1,
+    });
+  });
+
+  knowledgeEdges = [];
+  for (let index = 1; index < knowledgeNodes.length; index += 1) {
+    knowledgeEdges.push({ from: 0, to: index, phase: (index * 0.137) % 1, strength: 0.48 });
+  }
+  const memoryNodeIndices = knowledgeNodes
+    .map((node, index) => node.type === "MEMORY" ? index : -1)
+    .filter((index) => index >= 0);
+  knowledgeNodes.forEach((keyword, keywordIndex) => {
+    if (keyword.type !== "KEYWORD") return;
+    let linked = 0;
+    memoryNodeIndices.forEach((memoryIndex) => {
+      if (linked >= 5) return;
+      const memory = knowledgeNodes[memoryIndex];
+      const keywordToken = keyword.tokens.values().next().value;
+      if (!memory.tokens.has(keywordToken)) return;
+      knowledgeEdges.push({
+        from: memoryIndex,
+        to: keywordIndex,
+        phase: ((memoryIndex + keywordIndex) * 0.119) % 1,
+        strength: 0.9,
+      });
+      linked += 1;
+    });
+  });
+  knowledgeNodeCount.textContent =
+    `${detailRecords.length} NODES // ${memoryRecords.length} MEMORY · ${keywordRecords.length} KEYWORDS`;
+  knowledgeStatus.textContent = detailRecords.length
+    ? "LOCAL MEMORY + RECENT CONVERSATION ANALYSIS // LIVE SIGNALS"
+    : "NO STORED MEMORY OR CONVERSATION KEYWORDS // START A CHAT TO POPULATE";
+  knowledgeDetail.textContent = detailRecords.length
+    ? "ノードを選択すると関連する記憶や会話を表示します。"
+    : "記憶データや会話キーワードはまだありません。会話やMEMORY BANKへの保存に応じてネットワークが形成されます。";
+  knowledgeSelectedIndex = -1;
+  requestKnowledgeFrame();
+}
+
+function showKnowledgeNode(index) {
+  const node = knowledgeNodes[index];
+  if (!node) return;
+  knowledgeSelectedIndex = index;
+  knowledgeDetail.textContent = `${node.type} // ${node.label}\n\n${node.detail}`;
+  requestKnowledgeFrame();
+}
+
+function requestKnowledgeFrame() {
+  if (!knowledgeDialog.open || knowledgeFrame !== null) return;
+  knowledgeFrame = requestAnimationFrame(drawKnowledgeMatrix);
+}
+
+function drawKnowledgeMatrix(time) {
+  knowledgeFrame = null;
+  if (!knowledgeDialog.open) return;
+  const context = knowledgeCanvas.getContext("2d");
+  if (!context) {
+    knowledgeStatus.textContent = "CANVAS UNAVAILABLE // MATRIX OFFLINE";
+    return;
+  }
+  const bounds = knowledgeCanvas.getBoundingClientRect();
+  if (!bounds.width || !bounds.height) {
+    knowledgeFrame = requestAnimationFrame(drawKnowledgeMatrix);
+    return;
+  }
+  const width = bounds.width;
+  const height = bounds.height;
+  const pixelRatio = Math.min(window.devicePixelRatio || 1, 2);
+  const pixelWidth = Math.round(width * pixelRatio);
+  const pixelHeight = Math.round(height * pixelRatio);
+  if (knowledgeCanvas.width !== pixelWidth || knowledgeCanvas.height !== pixelHeight) {
+    knowledgeCanvas.width = pixelWidth;
+    knowledgeCanvas.height = pixelHeight;
+  }
+  context.setTransform(pixelRatio, 0, 0, pixelRatio, 0, 0);
+  context.clearRect(0, 0, width, height);
+  const markMode = hudMode === "mark-iii";
+  const primary = markMode ? "#ffb700" : "#00f3ff";
+  const secondary = markMode ? "#ff453a" : "#8bffff";
+  const background = markMode ? "#17090d" : "#031017";
+  context.fillStyle = background;
+  context.fillRect(0, 0, width, height);
+  context.strokeStyle = markMode ? "#ffb70012" : "#00f3ff12";
+  context.lineWidth = 1;
+  for (let x = 0; x < width; x += 24) {
+    context.beginPath();
+    context.moveTo(x, 0);
+    context.lineTo(x, height);
+    context.stroke();
+  }
+  for (let y = 0; y < height; y += 24) {
+    context.beginPath();
+    context.moveTo(0, y);
+    context.lineTo(width, y);
+    context.stroke();
+  }
+
+  const pointFor = (node) => ({ x: node.x * width, y: node.y * height });
+  knowledgeEdges.forEach((edge) => {
+    const from = pointFor(knowledgeNodes[edge.from]);
+    const to = pointFor(knowledgeNodes[edge.to]);
+    context.beginPath();
+    context.moveTo(from.x, from.y);
+    context.lineTo(to.x, to.y);
+    context.strokeStyle = markMode
+      ? `rgba(255, 183, 0, ${0.08 + edge.strength * 0.17})`
+      : `rgba(0, 243, 255, ${0.08 + edge.strength * 0.17})`;
+    context.lineWidth = edge.strength > 0.7 ? 1 : 0.7;
+    context.stroke();
+    const pulse = ((time / 1800) + edge.phase) % 1;
+    const pulseX = from.x + (to.x - from.x) * pulse;
+    const pulseY = from.y + (to.y - from.y) * pulse;
+    context.beginPath();
+    context.arc(pulseX, pulseY, edge.strength > 0.7 ? 2 : 1.5, 0, Math.PI * 2);
+    context.fillStyle = secondary;
+    context.shadowBlur = 9;
+    context.shadowColor = primary;
+    context.fill();
+    context.shadowBlur = 0;
+  });
+
+  const detailCount = knowledgeNodes.length - 1;
+  knowledgeNodes.forEach((node, index) => {
+    const point = pointFor(node);
+    const selected = index === knowledgeSelectedIndex;
+    const isCore = node.type === "CORE";
+    const pulse = 0.8 + Math.sin(time / 420 + node.phase * Math.PI * 2) * 0.2;
+    const radius = node.radius * (selected ? 1.45 : pulse);
+    const color = isCore ? secondary : node.type === "MEMORY" ? primary : secondary;
+    const glow = context.createRadialGradient(point.x, point.y, 0, point.x, point.y, radius * (isCore ? 3 : 2.8));
+    glow.addColorStop(0, isCore ? `${secondary}ee` : `${color}f2`);
+    glow.addColorStop(0.35, `${color}90`);
+    glow.addColorStop(1, `${color}00`);
+    context.beginPath();
+    context.arc(point.x, point.y, radius * (isCore ? 3 : 2.8), 0, Math.PI * 2);
+    context.fillStyle = glow;
+    context.fill();
+    context.beginPath();
+    context.arc(point.x, point.y, radius, 0, Math.PI * 2);
+    context.fillStyle = isCore ? secondary : color;
+    context.shadowColor = color;
+    context.shadowBlur = selected ? 16 : 8;
+    context.fill();
+    context.shadowBlur = 0;
+    if (isCore || detailCount <= 34 || selected || (node.type === "KEYWORD" && detailCount <= 55)) {
+      context.font = isCore ? "600 9px monospace" : "7px monospace";
+      context.textAlign = node.x > 0.5 ? "left" : "right";
+      context.textBaseline = "middle";
+      context.fillStyle = selected || isCore ? "#f2ffff" : markMode ? "#e5bf70" : "#8bcbd2";
+      const offset = radius + 5;
+      context.fillText(node.label, point.x + (node.x > 0.5 ? offset : -offset), point.y, 115);
+    }
+  });
+  if (!window.matchMedia("(prefers-reduced-motion: reduce)").matches) {
+    knowledgeFrame = requestAnimationFrame(drawKnowledgeMatrix);
+  }
+}
+
+function openKnowledgeMatrix() {
+  [prototypeDialog, memoryDialog, holoDialog, ideaDialog, cipherDialog, simulationDialog, sentryDialog].forEach((dialog) => {
+    if (dialog.open) dialog.close();
+  });
+  if (sentryPromptPending) {
+    sentryPromptPending = false;
+    lastOperatorActivity = Date.now();
+    updateSentryStatus();
+  }
+  if (!knowledgeDialog.open) knowledgeDialog.showModal();
+  rebuildKnowledgeMatrix();
+  knowledgeResizeObserver?.disconnect();
+  knowledgeResizeObserver = new ResizeObserver(requestKnowledgeFrame);
+  knowledgeResizeObserver.observe(knowledgeCanvas);
+}
+
+function closeKnowledgeMatrix() {
+  if (knowledgeFrame !== null) cancelAnimationFrame(knowledgeFrame);
+  knowledgeFrame = null;
+  knowledgeResizeObserver?.disconnect();
+  knowledgeResizeObserver = null;
+  knowledgePointer = null;
+}
+
 function formatWeatherValue(value, digits = 0) {
   return Number.isFinite(value)
     ? new Intl.NumberFormat("ja-JP", { maximumFractionDigits: digits }).format(value)
     : "--";
 }
 
-async function refreshWeather() {
-  try {
-    const response = await fetch("/api/weather");
-    const weather = await response.json();
-    if (!response.ok) throw new Error(weather.error || "気象データを取得できませんでした。");
+const WEATHER_CODE_DESCRIPTIONS = {
+  0: "快晴",
+  1: "おおむね晴れ",
+  2: "一部曇り",
+  3: "曇り",
+  45: "霧",
+  48: "着氷性の霧",
+  51: "弱い霧雨",
+  53: "霧雨",
+  55: "強い霧雨",
+  56: "弱い着氷性の霧雨",
+  57: "強い着氷性の霧雨",
+  61: "弱い雨",
+  63: "雨",
+  65: "強い雨",
+  66: "弱い着氷性の雨",
+  67: "強い着氷性の雨",
+  71: "弱い雪",
+  73: "雪",
+  75: "強い雪",
+  77: "細氷",
+  80: "弱いにわか雨",
+  81: "にわか雨",
+  82: "強いにわか雨",
+  85: "弱いにわか雪",
+  86: "強いにわか雪",
+  95: "雷雨",
+  96: "ひょうを伴う雷雨",
+  99: "強いひょうを伴う雷雨",
+};
 
-    document.querySelector("#weather-current").textContent =
-      formatWeatherValue(weather.current.temperature_c);
-    document.querySelector("#weather-description").textContent =
-      weather.current.description.toUpperCase();
-    document.querySelector("#weather-wind").textContent =
-      formatWeatherValue(weather.current.wind_speed_kmh, 1);
-    document.querySelector("#weather-high").textContent = formatWeatherValue(weather.today.high_c);
-    document.querySelector("#weather-low").textContent = formatWeatherValue(weather.today.low_c);
-    document.querySelector("#weather-updated").textContent =
-      `DATA // ${weather.current.time.slice(11, 16)}`;
-    if (!Array.isArray(weather.forecast) || weather.forecast.length !== 7) {
-      throw new TypeError("7日分の日別予報データの形式が正しくありません。");
-    }
-    renderWeatherForecast(weather.forecast);
-    weatherPanel.dataset.state = "ready";
-    weatherError.hidden = true;
-    updateTelemetryTicker();
-  } catch (error) {
-    console.error("Kushiro weather could not be loaded.", error);
-    document.querySelector("#weather-current").textContent = "--";
-    document.querySelector("#weather-description").textContent = "DATA UNAVAILABLE";
-    document.querySelector("#weather-wind").textContent = "--";
-    document.querySelector("#weather-high").textContent = "--";
-    document.querySelector("#weather-low").textContent = "--";
-    document.querySelector("#weather-updated").textContent = "DATA // OFFLINE";
-    forecastList.replaceChildren();
-    const unavailable = document.createElement("div");
-    unavailable.className = "forecast-placeholder";
-    unavailable.textContent = "FORECAST // UNAVAILABLE";
-    forecastList.append(unavailable);
-    weatherPanel.dataset.state = "error";
-    weatherError.textContent = error.message;
-    weatherError.hidden = false;
-    updateTelemetryTicker();
+function isValidWeatherData(weather) {
+  return Boolean(
+    weather &&
+      weather.location === "北海道釧路市" &&
+      weather.current &&
+      typeof weather.current.time === "string" &&
+      Number.isFinite(weather.current.temperature_c) &&
+      Number.isInteger(weather.current.weather_code) &&
+      typeof weather.current.description === "string" &&
+      Number.isFinite(weather.current.wind_speed_kmh) &&
+      weather.today &&
+      typeof weather.today.date === "string" &&
+      Number.isInteger(weather.today.weather_code) &&
+      typeof weather.today.description === "string" &&
+      Number.isFinite(weather.today.high_c) &&
+      Number.isFinite(weather.today.low_c) &&
+      Array.isArray(weather.forecast) &&
+      weather.forecast.length === 7 &&
+      weather.forecast.every((day) =>
+        day &&
+        typeof day.date === "string" &&
+        Number.isInteger(day.weather_code) &&
+        typeof day.description === "string" &&
+        Number.isFinite(day.high_c) &&
+        Number.isFinite(day.low_c)) &&
+      typeof weather.fetched_at === "string",
+  );
+}
+
+function normalizeOpenMeteoWeather(payload) {
+  const toNumber = (value) => typeof value === "number" && Number.isFinite(value) ? value : Number.NaN;
+  const current = payload?.current;
+  const daily = payload?.daily;
+  if (
+    !current ||
+    !daily ||
+    !Array.isArray(daily.time) ||
+    !Array.isArray(daily.weather_code) ||
+    !Array.isArray(daily.temperature_2m_max) ||
+    !Array.isArray(daily.temperature_2m_min) ||
+    daily.time.length < 7 ||
+    [daily.weather_code, daily.temperature_2m_max, daily.temperature_2m_min]
+      .some((values) => values.length < 7)
+  ) {
+    throw new TypeError("Open-Meteoから7日分の予報データを受信できませんでした。");
   }
+  const currentCode = toNumber(current.weather_code);
+  const temperature = toNumber(current.temperature_2m);
+  const windSpeed = toNumber(current.wind_speed_10m);
+  if (
+    current.temperature_2m === null ||
+    current.wind_speed_10m === null ||
+    current.weather_code === null ||
+    !current.time ||
+    !Number.isInteger(currentCode) ||
+    !Number.isFinite(temperature) ||
+    !Number.isFinite(windSpeed)
+  ) {
+    throw new TypeError("Open-Meteoの現在の気象データの形式が正しくありません。");
+  }
+  const forecast = daily.time.slice(0, 7).map((date, index) => {
+    const code = toNumber(daily.weather_code[index]);
+    const high = toNumber(daily.temperature_2m_max[index]);
+    const low = toNumber(daily.temperature_2m_min[index]);
+    if (
+      !date ||
+      daily.weather_code[index] === null ||
+      daily.temperature_2m_max[index] === null ||
+      daily.temperature_2m_min[index] === null ||
+      !Number.isInteger(code) ||
+      !Number.isFinite(high) ||
+      !Number.isFinite(low)
+    ) {
+      throw new TypeError("Open-Meteoの日別予報データの形式が正しくありません。");
+    }
+    return {
+      date,
+      weather_code: code,
+      description: WEATHER_CODE_DESCRIPTIONS[code] || "天候情報",
+      high_c: high,
+      low_c: low,
+    };
+  });
+  return {
+    location: "北海道釧路市",
+    latitude: 42.9849,
+    longitude: 144.3814,
+    timezone: "Asia/Tokyo",
+    current: {
+      time: current.time,
+      temperature_c: temperature,
+      weather_code: currentCode,
+      description: WEATHER_CODE_DESCRIPTIONS[currentCode] || "天候情報",
+      wind_speed_kmh: windSpeed,
+    },
+    today: {
+      date: forecast[0].date,
+      weather_code: forecast[0].weather_code,
+      description: forecast[0].description,
+      high_c: forecast[0].high_c,
+      low_c: forecast[0].low_c,
+    },
+    forecast,
+    fetched_at: new Date().toISOString(),
+    source: "Open-Meteo",
+  };
+}
+
+function displayWeather(weather, { cached = false, warning = "" } = {}) {
+  if (!isValidWeatherData(weather)) throw new TypeError("保存または取得した天気データの形式が正しくありません。");
+  kushiroWeather = weather;
+  document.querySelector("#weather-current").textContent =
+    formatWeatherValue(weather.current.temperature_c);
+  document.querySelector("#weather-description").textContent =
+    weather.current.description.toUpperCase();
+  document.querySelector("#weather-wind").textContent =
+    formatWeatherValue(weather.current.wind_speed_kmh, 1);
+  document.querySelector("#weather-high").textContent = formatWeatherValue(weather.today.high_c);
+  document.querySelector("#weather-low").textContent = formatWeatherValue(weather.today.low_c);
+  const observedTime = weather.current.time.slice(11, 16);
+  document.querySelector("#weather-updated").textContent =
+    `DATA // ${cached ? "CACHE" : "LIVE"} ${observedTime}`;
+  document.querySelector("#weather-updated").title =
+    `観測時刻 ${weather.current.time} // 取得 ${weather.fetched_at}`;
+  renderWeatherForecast(weather.forecast);
+  weatherPanel.dataset.state = cached ? "cached" : "ready";
+  weatherError.textContent = warning;
+  weatherError.hidden = !warning;
+  updateTelemetryTicker();
+}
+
+function restoreWeatherCache() {
+  try {
+    const stored = window.localStorage.getItem(WEATHER_CACHE_STORAGE_KEY);
+    if (!stored) return false;
+    const cached = JSON.parse(stored);
+    if (!cached || !isValidWeatherData(cached.data) || !Number.isFinite(cached.fetchedAt)) {
+      throw new TypeError("保存された釧路市の天気キャッシュ形式が正しくありません。");
+    }
+    kushiroWeatherFetchedAt = cached.fetchedAt;
+    displayWeather(cached.data, { cached: true });
+    return true;
+  } catch (error) {
+    console.error("Kushiro weather cache could not be restored.", error);
+    weatherError.textContent = "保存済みの天気データを読み込めませんでした。";
+    weatherError.hidden = false;
+    return false;
+  }
+}
+
+async function fetchOpenMeteoWeather() {
+  const controller = new AbortController();
+  const timeout = setTimeout(() => controller.abort(), WEATHER_REQUEST_TIMEOUT);
+  try {
+    const response = await fetch(OPEN_METEO_KUSHIRO_URL, {
+      cache: "no-store",
+      signal: controller.signal,
+    });
+    if (!response.ok) throw new Error(`Open-Meteo APIがHTTP ${response.status}を返しました。`);
+    return normalizeOpenMeteoWeather(await response.json());
+  } finally {
+    clearTimeout(timeout);
+  }
+}
+
+async function requestOpenMeteoWithRetry() {
+  try {
+    return await fetchOpenMeteoWeather();
+  } catch (firstError) {
+    console.warn("Direct Open-Meteo request failed; retrying once in two seconds.", firstError);
+    await new Promise((resolve) => setTimeout(resolve, WEATHER_RETRY_DELAY));
+    try {
+      return await fetchOpenMeteoWeather();
+    } catch (retryError) {
+      retryError.message = `Open-Meteoへの再試行にも失敗しました: ${retryError.message}`;
+      throw retryError;
+    }
+  }
+}
+
+function refreshWeather() {
+  if (weatherRefreshPromise) return weatherRefreshPromise;
+  weatherLastAttemptAt = Date.now();
+  weatherRefreshPromise = (async () => {
+    try {
+      const weather = await requestOpenMeteoWithRetry();
+      const fetchedAt = Date.now();
+      try {
+        window.localStorage.setItem(
+          WEATHER_CACHE_STORAGE_KEY,
+          JSON.stringify({ data: weather, fetchedAt }),
+        );
+      } catch (error) {
+        console.error("Kushiro weather could not be cached in localStorage.", error);
+      }
+      kushiroWeatherFetchedAt = fetchedAt;
+      displayWeather(weather);
+      return weather;
+    } catch (error) {
+      console.error("Direct Open-Meteo weather request failed.", error);
+      if (!kushiroWeather) restoreWeatherCache();
+      if (kushiroWeather) {
+        displayWeather(kushiroWeather, {
+          cached: true,
+          warning: `最新データに接続できないため、保存済みデータを表示しています。${error.message}`,
+        });
+        return kushiroWeather;
+      }
+      document.querySelector("#weather-current").textContent = "--";
+      document.querySelector("#weather-description").textContent = "DATA UNAVAILABLE";
+      document.querySelector("#weather-wind").textContent = "--";
+      document.querySelector("#weather-high").textContent = "--";
+      document.querySelector("#weather-low").textContent = "--";
+      document.querySelector("#weather-updated").textContent = "DATA // OFFLINE";
+      forecastList.replaceChildren();
+      const unavailable = document.createElement("div");
+      unavailable.className = "forecast-placeholder";
+      unavailable.textContent = "FORECAST // UNAVAILABLE";
+      forecastList.append(unavailable);
+      weatherPanel.dataset.state = "error";
+      weatherError.textContent = error.message;
+      weatherError.hidden = false;
+      updateTelemetryTicker();
+      return null;
+    } finally {
+      weatherRefreshPromise = null;
+    }
+  })();
+  return weatherRefreshPromise;
+}
+
+async function getWeatherForChat() {
+  if (weatherRefreshPromise) return weatherRefreshPromise;
+  if (
+    kushiroWeather &&
+    (Date.now() - kushiroWeatherFetchedAt < WEATHER_REFRESH_INTERVAL ||
+      Date.now() - weatherLastAttemptAt < WEATHER_REFRESH_INTERVAL)
+  ) {
+    return kushiroWeather;
+  }
+  return refreshWeather();
 }
 
 function renderWeatherForecast(forecast) {
@@ -939,6 +1560,11 @@ function playSfx(sound, allowActivation = false) {
       playFmTone(context, 659.25, 659.25, 1318, 16, now + 0.035, 0.45, 0.06, 3200);
       playFmTone(context, 783.99, 783.99, 1568, 18, now + 0.075, 0.43, 0.052, 3800);
       playFmTone(context, 1046.5, 1046.5, 2093, 22, now + 0.12, 0.38, 0.026, 4700, "triangle");
+    } else if (sound === "rank-up") {
+      playFmTone(context, 392, 523.25, 784, 18, now, 0.36, 0.07, 2200, "triangle");
+      playFmTone(context, 523.25, 659.25, 1046, 16, now + 0.11, 0.42, 0.064, 3200);
+      playFmTone(context, 659.25, 783.99, 1318, 20, now + 0.23, 0.48, 0.052, 4200, "triangle");
+      playFmTone(context, 783.99, 1046.5, 1568, 24, now + 0.35, 0.54, 0.042, 5200);
     } else if (sound === "launch") {
       playFmTone(context, 145, 430, 48, 84, now, 0.46, 0.095, 1400, "sawtooth");
       playFmTone(context, 810, 190, 1220, 115, now + 0.035, 0.4, 0.058, 2500, "triangle");
@@ -1364,7 +1990,7 @@ function updateHoloExplodeButton() {
 }
 
 function openIdeaSynthesizer(topic = "") {
-  [simulationDialog, sentryDialog, cipherDialog, memoryDialog, holoDialog].forEach((dialog) => {
+  [simulationDialog, sentryDialog, cipherDialog, memoryDialog, holoDialog, prototypeDialog, knowledgeDialog].forEach((dialog) => {
     if (dialog.open) dialog.close();
   });
   if (!ideaDialog.open) ideaDialog.showModal();
@@ -1512,6 +2138,7 @@ function runIdeaSynthesis(topic, sourceText, voice = false) {
 
 function setHoloModel(modelName) {
   if (!["reactor", "crystal", "helmet", "dna"].includes(modelName)) return;
+  if (cityModeActive) setCityViewEnabled(false);
   holoModelSelect.value = modelName;
   if (holoRenderer) {
     createHoloModel(modelName);
@@ -1667,6 +2294,249 @@ function createHoloModel(modelName) {
   }
 }
 
+function addCityResource(resource) {
+  cityResources.add(resource);
+  return resource;
+}
+
+function addCityPaletteMaterial(material, accent = false) {
+  cityPaletteMaterials.push({ material, accent });
+  return addCityResource(material);
+}
+
+function clearCityModel() {
+  if (cityModelGroup) cityModelGroup.clear();
+  cityResources.forEach((resource) => resource.dispose?.());
+  cityResources.clear();
+  cityPaletteMaterials = [];
+  cityScanRings = [];
+  cityMapCounts = { buildings: 0, roads: 0 };
+}
+
+function setCityViewEnabled(enabled) {
+  cityModeActive = enabled;
+  if (cityModelGroup) cityModelGroup.visible = enabled;
+  if (holoModelGroup) holoModelGroup.visible = !enabled;
+  holoCityToggle.setAttribute("aria-pressed", String(enabled));
+  holoExplodeButton.disabled = enabled;
+  if (enabled) {
+    holoRotationX = -0.46;
+    holoGestureScale = 1;
+    holoStatus.textContent = "CITY SCANNER // DRAG TO ORBIT · WHEEL TO ZOOM";
+  } else {
+    updateHoloExplodeButton();
+    holoStatus.textContent = "DRAG TO ROTATE // SCROLL TO ZOOM // AIR GESTURE READY";
+  }
+  requestHoloFrame();
+}
+
+function getCityCoordinate(latitude, longitude, center) {
+  const longitudeMeters =
+    (longitude - center.longitude) * 111320 * Math.cos(center.latitude * Math.PI / 180);
+  const northMeters = (latitude - center.latitude) * 110540;
+  return {
+    x: longitudeMeters * CITY_OSM_SCALE,
+    z: -northMeters * CITY_OSM_SCALE,
+  };
+}
+
+function getCityBuildingHeight(tags, id, index) {
+  const heightText = String(tags.height || "").trim().replace(",", ".");
+  const rawHeight = Number.parseFloat(heightText);
+  const height = Number.isFinite(rawHeight)
+    ? rawHeight * (/\bft\b|feet/iu.test(heightText) ? 0.3048 : 1)
+    : Number.parseFloat(tags["building:levels"] || "") * 3.2;
+  const fallback = 6 + (Math.abs(Number(id) || index * 17) % 6) * 1.8;
+  return Math.max(3, Math.min(150, Number.isFinite(height) && height > 0 ? height : fallback));
+}
+
+function createCityLocationLabel(text) {
+  const THREE = window.THREE;
+  const canvas = document.createElement("canvas");
+  canvas.width = 512;
+  canvas.height = 96;
+  const context = canvas.getContext("2d");
+  if (!context) {
+    console.error("CITY SCANNER location label canvas is unavailable.");
+    return null;
+  }
+  context.fillStyle = "rgba(2, 14, 24, 0.88)";
+  context.fillRect(4, 9, 504, 78);
+  context.strokeStyle = "#bfffff";
+  context.lineWidth = 2;
+  context.strokeRect(4, 9, 504, 78);
+  context.fillStyle = "#ffffff";
+  context.font = "600 26px monospace";
+  context.textAlign = "center";
+  context.textBaseline = "middle";
+  context.fillText(text.slice(0, 30), 256, 48, 480);
+  const texture = addCityResource(new THREE.CanvasTexture(canvas));
+  const material = addCityPaletteMaterial(new THREE.SpriteMaterial({
+    map: texture,
+    color: holoPalette().primary,
+    transparent: true,
+    depthTest: false,
+    blending: THREE.AdditiveBlending,
+  }));
+  return new THREE.Sprite(material);
+}
+
+function createCityModel(elements, center, locationLabel = "OPERATOR LOCATION") {
+  const THREE = window.THREE;
+  if (!THREE || !cityModelGroup) throw new Error("Three.js city renderer is unavailable.");
+  clearCityModel();
+
+  const palette = holoPalette();
+  const roadMaterial = addCityPaletteMaterial(new THREE.LineBasicMaterial({
+    color: palette.secondary,
+    transparent: true,
+    opacity: 0.42,
+    blending: THREE.AdditiveBlending,
+    depthWrite: false,
+  }), true);
+  const mainRoadMaterial = addCityPaletteMaterial(new THREE.LineBasicMaterial({
+    color: palette.primary,
+    transparent: true,
+    opacity: 0.76,
+    blending: THREE.AdditiveBlending,
+    depthWrite: false,
+  }));
+  const buildingMaterial = addCityPaletteMaterial(new THREE.MeshBasicMaterial({
+    color: palette.primary,
+    transparent: true,
+    opacity: 0.1,
+    side: THREE.DoubleSide,
+    blending: THREE.AdditiveBlending,
+    depthWrite: false,
+  }));
+  const buildingEdgeMaterial = addCityPaletteMaterial(new THREE.LineBasicMaterial({
+    color: palette.primary,
+    transparent: true,
+    opacity: 0.82,
+    blending: THREE.AdditiveBlending,
+    depthWrite: false,
+  }));
+
+  const roads = elements
+    .filter((element) => element.type === "way" && element.tags?.highway && Array.isArray(element.geometry))
+    .slice(0, CITY_MAX_ROADS);
+  roads.forEach((way) => {
+    const points = way.geometry
+      .filter((node) => Number.isFinite(Number(node.lat)) && Number.isFinite(Number(node.lon)))
+      .map((node) => {
+        const point = getCityCoordinate(Number(node.lat), Number(node.lon), center);
+        return new THREE.Vector3(point.x, 0.018, point.z);
+      });
+    if (points.length < 2) return;
+    const geometry = addCityResource(new THREE.BufferGeometry().setFromPoints(points));
+    const major = /^(?:motorway|trunk|primary|secondary)$/u.test(way.tags.highway);
+    cityModelGroup.add(new THREE.Line(geometry, major ? mainRoadMaterial : roadMaterial));
+    cityMapCounts.roads += 1;
+  });
+
+  const buildings = elements
+    .filter((element) => element.type === "way" && element.tags?.building && Array.isArray(element.geometry))
+    .slice(0, CITY_MAX_BUILDINGS);
+  buildings.forEach((way, index) => {
+    const points = way.geometry
+      .filter((node) => Number.isFinite(Number(node.lat)) && Number.isFinite(Number(node.lon)))
+      .map((node) => getCityCoordinate(Number(node.lat), Number(node.lon), center));
+    if (points.length < 3) return;
+    const shape = new THREE.Shape();
+    shape.moveTo(points[0].x, points[0].z);
+    points.slice(1).forEach((point) => shape.lineTo(point.x, point.z));
+    shape.closePath();
+    const height = getCityBuildingHeight(way.tags, way.id, index);
+    const geometry = addCityResource(new THREE.ExtrudeGeometry(shape, {
+      depth: height * CITY_BUILDING_HEIGHT_SCALE,
+      bevelEnabled: false,
+      steps: 1,
+    }));
+    geometry.rotateX(-Math.PI / 2);
+    const building = new THREE.Mesh(geometry, buildingMaterial);
+    cityModelGroup.add(building);
+    const edgeGeometry = addCityResource(new THREE.EdgesGeometry(geometry, 1));
+    cityModelGroup.add(new THREE.LineSegments(edgeGeometry, buildingEdgeMaterial));
+    cityMapCounts.buildings += 1;
+  });
+
+  const baseGeometry = addCityResource(new THREE.CircleGeometry(2.25, 96));
+  baseGeometry.rotateX(-Math.PI / 2);
+  const baseMaterial = addCityPaletteMaterial(new THREE.MeshBasicMaterial({
+    color: palette.primary,
+    transparent: true,
+    opacity: 0.035,
+    side: THREE.DoubleSide,
+    blending: THREE.AdditiveBlending,
+    depthWrite: false,
+  }));
+  cityModelGroup.add(new THREE.Mesh(baseGeometry, baseMaterial));
+
+  const beaconGeometry = addCityResource(new THREE.SphereGeometry(0.055, 14, 10));
+  const beaconMaterial = addCityPaletteMaterial(new THREE.MeshBasicMaterial({
+    color: palette.secondary,
+    blending: THREE.AdditiveBlending,
+  }), true);
+  const beacon = new THREE.Mesh(beaconGeometry, beaconMaterial);
+  beacon.position.y = 0.12;
+  cityModelGroup.add(beacon);
+
+  const beamGeometry = addCityResource(new THREE.BufferGeometry().setFromPoints([
+    new THREE.Vector3(0, 0.02, 0),
+    new THREE.Vector3(0, 0.82, 0),
+  ]));
+  cityModelGroup.add(new THREE.Line(beamGeometry, mainRoadMaterial));
+
+  const targetRingGeometry = addCityResource(new THREE.RingGeometry(0.1, 0.115, 64));
+  targetRingGeometry.rotateX(-Math.PI / 2);
+  const targetRingMaterial = addCityPaletteMaterial(new THREE.MeshBasicMaterial({
+    color: palette.secondary,
+    transparent: true,
+    opacity: 0.9,
+    side: THREE.DoubleSide,
+    blending: THREE.AdditiveBlending,
+    depthWrite: false,
+  }), true);
+  const targetRing = new THREE.Mesh(targetRingGeometry, targetRingMaterial);
+  targetRing.position.y = 0.035;
+  cityModelGroup.add(targetRing);
+
+  for (let index = 0; index < 3; index += 1) {
+    const geometry = addCityResource(new THREE.RingGeometry(0.96, 0.98, 96));
+    geometry.rotateX(-Math.PI / 2);
+    const material = addCityPaletteMaterial(new THREE.MeshBasicMaterial({
+      color: palette.primary,
+      transparent: true,
+      opacity: 0.55,
+      side: THREE.DoubleSide,
+      blending: THREE.AdditiveBlending,
+      depthWrite: false,
+    }));
+    const ring = new THREE.Mesh(geometry, material);
+    ring.position.y = 0.026 + index * 0.002;
+    cityModelGroup.add(ring);
+    cityScanRings.push({ ring, material, phase: index / 3 });
+  }
+
+  const label = createCityLocationLabel(locationLabel);
+  if (label) {
+    label.position.set(0, 0.94, 0);
+    label.scale.set(1.7, 0.32, 1);
+    cityModelGroup.add(label);
+  }
+  cityScanStartedAt = performance.now();
+}
+
+function animateCityScan(time) {
+  if (!cityModeActive) return;
+  cityScanRings.forEach(({ ring, material, phase }) => {
+    const progress = ((time - cityScanStartedAt) / 3200 + phase) % 1;
+    const radius = 0.08 + progress * 2.25;
+    ring.scale.set(radius, radius, radius);
+    material.opacity = 0.72 * (1 - progress);
+  });
+}
+
 function resizeHoloRenderer() {
   if (!holoRenderer || !holoCamera) return;
   const bounds = holoCanvas.getBoundingClientRect();
@@ -1683,6 +2553,9 @@ function updateHoloTheme() {
   holoScene.background = null;
   holoModelParts.forEach((part) => {
     part.material.color.setHex(part.userData.accent ? palette.secondary : palette.primary);
+  });
+  cityPaletteMaterials.forEach(({ material, accent }) => {
+    material.color.setHex(accent ? palette.secondary : palette.primary);
   });
 }
 
@@ -1705,8 +2578,19 @@ function drawHoloProjector() {
   });
   holoModelGroup.rotation.x += (holoRotationX - holoModelGroup.rotation.x) * 0.18;
   holoModelGroup.rotation.y += (holoRotationY - holoModelGroup.rotation.y) * 0.18 + 0.0015;
-  holoModelGroup.scale.setScalar(holoGestureScale);
-  holoCamera.position.z = 4.1 / holoGestureScale;
+  if (cityModeActive) {
+    cityModelGroup.rotation.x += (holoRotationX - cityModelGroup.rotation.x) * 0.18;
+    cityModelGroup.rotation.y += (holoRotationY - cityModelGroup.rotation.y) * 0.18 + 0.0015;
+    cityModelGroup.scale.setScalar(holoGestureScale);
+    const distance = 8.6;
+    holoCamera.position.set(0, distance * 0.68, distance);
+    holoCamera.lookAt(0, 0, 0);
+    animateCityScan(performance.now());
+  } else {
+    holoModelGroup.scale.setScalar(holoGestureScale);
+    holoCamera.position.set(0, 0, 4.1 / holoGestureScale);
+    holoCamera.lookAt(0, 0, 0);
+  }
   holoRenderer.render(holoScene, holoCamera);
   holoAnimationFrame = window.matchMedia("(prefers-reduced-motion: reduce)").matches
     ? null
@@ -1737,6 +2621,9 @@ function initializeHoloRenderer() {
     holoCamera.position.set(0, 0, 4.1);
     holoModelGroup = new THREE.Group();
     holoScene.add(holoModelGroup);
+    cityModelGroup = new THREE.Group();
+    cityModelGroup.visible = false;
+    holoScene.add(cityModelGroup);
     holoResizeObserver = new ResizeObserver(resizeHoloRenderer);
     holoResizeObserver.observe(holoCanvas);
     createHoloModel(holoModelSelect.value);
@@ -1754,7 +2641,7 @@ function initializeHoloRenderer() {
 }
 
 function openHoloProjector() {
-  [simulationDialog, sentryDialog, cipherDialog, memoryDialog, ideaDialog].forEach((dialog) => {
+  [simulationDialog, sentryDialog, cipherDialog, memoryDialog, ideaDialog, prototypeDialog, knowledgeDialog].forEach((dialog) => {
     if (dialog.open) dialog.close();
   });
   if (!holoDialog.open) holoDialog.showModal();
@@ -1764,9 +2651,205 @@ function openHoloProjector() {
   return true;
 }
 
+function openCityProjector() {
+  if (!openHoloProjector()) return false;
+  setCityViewEnabled(true);
+  return true;
+}
+
+function getCityScanTarget(text) {
+  const normalized = text.normalize("NFKC").trim();
+  const scanIntent = /(?:3d\s*(?:(?:tactical\s*)?city\s*(?:map|scanner)|scan|projection)|3d(?:スキャン|投影)|(?:都市|シティ).*(?:スキャン|スキャナ|投影)|(?:周辺|付近|近辺|近く).*(?:スキャン|スキャナ|投影)|(?:スキャン|スキャナ|投影).*(?:周辺|付近|近辺|近く))/iu;
+  if (!scanIntent.test(normalized)) return null;
+
+  const patterns = [
+    /^(.+?)(?:の)?(?:周辺|付近|近辺|近く)(?:を|に)?(?:3d\s*)?(?:スキャン|スキャナ(?:ー)?|投影)(?:して|してください|する|お願いします)?$/iu,
+    /^(.+?)を(?:3d\s*)?(?:スキャン|スキャナ(?:ー)?|投影)(?:して|してください|する|お願いします)?$/iu,
+    /^(?:3d\s*(?:tactical\s*)?city\s*(?:map|scanner)|3d\s*(?:scan|projection)|3d(?:スキャン|投影))(?:を|で)?(.+?)(?:してください|して|お願いします)?$/iu,
+  ];
+  for (const pattern of patterns) {
+    const match = normalized.match(pattern);
+    if (!match) continue;
+    const target = match[1]
+      .replace(/^[\s「『"'、:：]+|[\s」』"'、。.!！?？]+$/gu, "")
+      .replace(/(?:の)?(?:周辺|付近|近辺|近く)(?:の?(?:街並み|建物|エリア|地域))?$/u, "")
+      .trim();
+    if (/^(?:現在地|自分の場所|今いる場所|ここ|operator location|my location)$/iu.test(target)) return "";
+    if (target) return target;
+  }
+  return "";
+}
+
+function getCityOperatorLocation() {
+  if (!navigator.geolocation?.getCurrentPosition) {
+    return Promise.resolve({
+      ...CITY_DEFAULT_CENTER,
+      source: "GEOLOCATION UNAVAILABLE // KUSHIRO FALLBACK",
+    });
+  }
+  return new Promise((resolve) => {
+    navigator.geolocation.getCurrentPosition(
+      ({ coords }) => resolve({
+        latitude: coords.latitude,
+        longitude: coords.longitude,
+        source: "CURRENT OPERATOR LOCATION",
+      }),
+      (error) => {
+        console.warn("CITY SCANNER geolocation unavailable; using Kushiro fallback.", error);
+        resolve({
+          ...CITY_DEFAULT_CENTER,
+          source: "LOCATION UNAVAILABLE // KUSHIRO FALLBACK",
+        });
+      },
+      { enableHighAccuracy: false, maximumAge: 300000, timeout: CITY_GEOLOCATION_TIMEOUT },
+    );
+  });
+}
+
+function geocodeCityPlace(place, signal) {
+  const request = nominatimQueue.then(async () => {
+    const remaining = NOMINATIM_MIN_INTERVAL - (Date.now() - nominatimLastRequestAt);
+    if (remaining > 0) await new Promise((resolve) => window.setTimeout(resolve, remaining));
+    if (signal.aborted) throw new DOMException("City scan was cancelled.", "AbortError");
+    nominatimLastRequestAt = Date.now();
+
+    const url = new URL(NOMINATIM_SEARCH_URL);
+    url.search = new URLSearchParams({
+      q: place,
+      format: "jsonv2",
+      limit: "1",
+    }).toString();
+    const controller = new AbortController();
+    const timeout = window.setTimeout(() => controller.abort(), CITY_REQUEST_TIMEOUT);
+    const abortFromRequest = () => controller.abort();
+    signal.addEventListener("abort", abortFromRequest, { once: true });
+    try {
+      const response = await fetch(url, {
+        headers: { "Accept-Language": "ja,en;q=0.8" },
+        signal: controller.signal,
+      });
+      if (!response.ok) throw new Error(`Nominatim responded with HTTP ${response.status}.`);
+      const results = await response.json();
+      if (!Array.isArray(results) || !results[0]) {
+        throw new Error(`Nominatim returned no matching location for "${place}".`);
+      }
+      const latitude = Number(results[0].lat);
+      const longitude = Number(results[0].lon);
+      if (!Number.isFinite(latitude) || !Number.isFinite(longitude)) {
+        throw new TypeError("Nominatim returned invalid coordinates.");
+      }
+      return {
+        latitude,
+        longitude,
+        source: results[0].display_name || place,
+      };
+    } finally {
+      window.clearTimeout(timeout);
+      signal.removeEventListener("abort", abortFromRequest);
+    }
+  });
+  nominatimQueue = request.then(() => undefined, () => undefined);
+  return request;
+}
+
+async function fetchCityOverpassData(center, signal) {
+  const query = `[out:json][timeout:25];(way(around:${CITY_SCAN_RADIUS_METERS},${center.latitude},${center.longitude})[building];way(around:${CITY_SCAN_RADIUS_METERS},${center.latitude},${center.longitude})[highway];);out body geom;`;
+  let lastError;
+  for (const endpoint of CITY_OVERPASS_ENDPOINTS) {
+    if (signal.aborted) throw new DOMException("City scan was cancelled.", "AbortError");
+    const controller = new AbortController();
+    const timeout = window.setTimeout(() => controller.abort(), CITY_REQUEST_TIMEOUT);
+    const abortFromRequest = () => controller.abort();
+    signal.addEventListener("abort", abortFromRequest, { once: true });
+    try {
+      const url = new URL(endpoint);
+      url.searchParams.set("data", query);
+      const response = await fetch(url, {
+        headers: { Accept: "application/json" },
+        signal: controller.signal,
+      });
+      if (!response.ok) throw new Error(`Overpass responded with HTTP ${response.status}.`);
+      const data = await response.json();
+      if (!Array.isArray(data.elements)) throw new TypeError("Overpass returned an invalid elements list.");
+      return data.elements;
+    } catch (error) {
+      if (signal.aborted) throw new DOMException("City scan was cancelled.", "AbortError");
+      lastError = error;
+      console.warn(`CITY SCANNER endpoint failed: ${endpoint}`, error);
+    } finally {
+      window.clearTimeout(timeout);
+      signal.removeEventListener("abort", abortFromRequest);
+    }
+  }
+  throw lastError || new Error("All Overpass endpoints failed.");
+}
+
+function recordCityScanMessage(role, text, voice = false) {
+  addMessage(role, text);
+  history.push({ role, content: text });
+  trimHistory();
+  persistHistory();
+  if (role === "assistant" && voice && voiceOutputEnabled) void speakReply(text);
+}
+
+async function scanTacticalCity({ place = "", sourceText = "", voice = false } = {}) {
+  if (systemLocked || sentryStandbyActive) return;
+  if (!openCityProjector()) return;
+
+  cityScanController?.abort();
+  const controller = new AbortController();
+  cityScanController = controller;
+  const scanId = ++cityScanRequestId;
+  cityScanStatus.textContent = place ? `GEOCODING TARGET // ${place}` : "ACQUIRING OPERATOR LOCATION...";
+  holoStatus.textContent = "CITY SCANNER // ACQUIRING MAP DATA";
+  appendSystemLog("CITY SCANNER // MAP DATA REQUESTED");
+  playSfx("transmit", true);
+  if (sourceText) recordCityScanMessage("user", sourceText);
+
+  try {
+    const center = place
+      ? await geocodeCityPlace(place, controller.signal)
+      : await getCityOperatorLocation();
+    if (controller.signal.aborted || scanId !== cityScanRequestId) return;
+    cityScanStatus.textContent = `QUERYING OPENSTREETMAP // ${center.source}`;
+    const elements = await fetchCityOverpassData(center, controller.signal);
+    if (controller.signal.aborted || scanId !== cityScanRequestId) return;
+    createCityModel(elements, center, place ? "TARGET LOCATION" : "OPERATOR LOCATION");
+    cityScanStatus.textContent =
+      `SCAN COMPLETE // ${cityMapCounts.buildings} BUILDINGS · ${cityMapCounts.roads} ROADS`;
+    holoStatus.textContent =
+      `${place ? "TARGET" : "OPERATOR"} // ${center.latitude.toFixed(4)}, ${center.longitude.toFixed(4)} // DRAG / WHEEL TO ORBIT`;
+    appendSystemLog(`CITY SCANNER // ${cityMapCounts.buildings} BUILDINGS · ${cityMapCounts.roads} ROADS`);
+    const response =
+      `3D都市スキャンが完了しました、伊吹様。\n` +
+      `対象: ${center.source}\n` +
+      `座標: ${center.latitude.toFixed(4)}, ${center.longitude.toFixed(4)}\n` +
+      `検出: 建物 ${cityMapCounts.buildings} 棟 / 道路 ${cityMapCounts.roads} 区間\n` +
+      `地図データ: OpenStreetMap。高さ情報がない建物は表示用の推定値で補っています。`;
+    recordCityScanMessage("assistant", response, voice);
+  } catch (error) {
+    if (controller.signal.aborted || scanId !== cityScanRequestId) return;
+    console.error("CITY SCANNER could not retrieve map data.", error);
+    const message = error instanceof Error ? error.message : String(error);
+    cityScanStatus.textContent = `SCAN FAILED // ${message}`;
+    holoStatus.textContent = "CITY MAP UNAVAILABLE // CHECK NETWORK AND RETRY";
+    appendSystemLog("CITY SCANNER // MAP REQUEST FAILED");
+    recordCityScanMessage(
+      "assistant",
+      `都市スキャンを完了できませんでした、伊吹様。${message} 時間をおいて再試行してください。`,
+      voice,
+    );
+  } finally {
+    if (cityScanController === controller) cityScanController = null;
+  }
+}
+
 function closeHoloProjector() {
   if (holoAnimationFrame !== null) cancelAnimationFrame(holoAnimationFrame);
   holoAnimationFrame = null;
+  cityScanController?.abort();
+  cityScanController = null;
+  cityScanRequestId += 1;
 }
 
 function updateGlobalRadar(time) {
@@ -1864,6 +2947,28 @@ function updateGlobalRadar(time) {
   context.arc(centerX, centerY, radius, 0, Math.PI * 2);
   context.stroke();
 
+  earthquakeData.slice(0, 18).forEach((event, index) => {
+    const epicenter = project(event.latitude, event.longitude);
+    if (epicenter.depth <= 0) return;
+    const pulse = (time * 0.012 + index * 1.7) % 1;
+    const maxRadius = 4 + Math.min(event.magnitude, 8) * 0.9;
+    context.save();
+    context.globalAlpha = 0.78 * (1 - pulse);
+    context.strokeStyle = "#ff4357";
+    context.lineWidth = 0.8;
+    context.shadowBlur = 7;
+    context.shadowColor = "#ff304d";
+    context.beginPath();
+    context.arc(epicenter.x, epicenter.y, 1.5 + pulse * maxRadius, 0, Math.PI * 2);
+    context.stroke();
+    context.globalAlpha = 0.9;
+    context.beginPath();
+    context.arc(epicenter.x, epicenter.y, 1.6, 0, Math.PI * 2);
+    context.fillStyle = "#ff5265";
+    context.fill();
+    context.restore();
+  });
+
   context.save();
   context.translate(centerX, centerY);
   context.rotate(-0.3);
@@ -1925,6 +3030,239 @@ function updateGlobalRadar(time) {
 
 function startGlobalRadar() {
   if (globalRadarFrame === null) globalRadarFrame = requestAnimationFrame(updateGlobalRadar);
+}
+
+function getGeomagneticLevel(kp) {
+  if (!Number.isFinite(kp)) return null;
+  if (kp >= 9) return "G5";
+  if (kp >= 8) return "G4";
+  if (kp >= 7) return "G3";
+  if (kp >= 6) return "G2";
+  if (kp >= 5) return "G1";
+  return "NONE";
+}
+
+function getSolarFlareClass(flux) {
+  if (!Number.isFinite(flux) || flux < 0) return null;
+  const classes = [
+    ["X", 1e-4],
+    ["M", 1e-5],
+    ["C", 1e-6],
+    ["B", 1e-7],
+    ["A", 1e-8],
+  ];
+  const [name, baseline] = classes.find(([, threshold]) => flux >= threshold) || classes.at(-1);
+  return `${name}${(flux / baseline).toFixed(1)}`;
+}
+
+function updateThreatMonitor() {
+  if (kpTelemetry) {
+    threatKp.textContent = kpTelemetry.kp.toFixed(1);
+    const level = getGeomagneticLevel(kpTelemetry.kp);
+    threatGeomagneticAlert.textContent = level === "NONE"
+      ? "GEOMAGNETIC // QUIET"
+      : `GEOMAGNETIC // ${level} STORM`;
+  } else {
+    threatKp.textContent = noaaFeedFailed ? "OFFLINE" : "--";
+    threatGeomagneticAlert.textContent = noaaFeedFailed ? "GEOMAGNETIC // OFFLINE" : "GEOMAGNETIC // --";
+  }
+
+  if (solarXrayTelemetry) {
+    threatSolarFlux.textContent = solarXrayTelemetry.flareClass;
+    const level = solarXrayTelemetry.flareClass[0];
+    threatSolarAlert.textContent = level === "M" || level === "X"
+      ? `FLARE // ELEVATED ${level}-CLASS`
+      : level === "C"
+        ? "FLARE // C-CLASS"
+        : "FLARE // LOW";
+  } else {
+    threatSolarFlux.textContent = solarFeedFailed ? "OFFLINE" : "--";
+    threatSolarAlert.textContent = solarFeedFailed ? "FLARE // OFFLINE" : "FLARE // --";
+  }
+
+  if (usgsReceivedAt && earthquakeData.length) {
+    const latest = earthquakeData[0];
+    threatEarthquake.textContent =
+      `M${latest.magnitude.toFixed(1)} // ${latest.place || "LOCATION UNAVAILABLE"}`;
+  } else if (usgsReceivedAt) {
+    threatEarthquake.textContent = "NO M4.5+ EVENT // 24H";
+  } else {
+    threatEarthquake.textContent = usgsFeedFailed ? "USGS FEED OFFLINE" : "ACQUIRING DATA";
+  }
+
+  const ageLabel = (receivedAt) => {
+    if (!receivedAt) return "OFFLINE";
+    const seconds = Math.max(0, Math.floor((Date.now() - receivedAt) / 1000));
+    return seconds < 60 ? `${seconds}S` : `${Math.floor(seconds / 60)}M`;
+  };
+  threatMonitorStatus.textContent =
+    `USGS ${ageLabel(usgsReceivedAt)} // Kp ${ageLabel(noaaReceivedAt)} // X-RAY ${ageLabel(solarReceivedAt)}`;
+}
+
+async function fetchThreatJSON(url, source) {
+  const controller = new AbortController();
+  const timeout = setTimeout(() => controller.abort(), THREAT_REQUEST_TIMEOUT);
+  try {
+    const response = await fetch(url, {
+      cache: "no-store",
+      signal: controller.signal,
+    });
+    if (!response.ok) throw new Error(`${source} returned HTTP ${response.status}`);
+    return await response.json();
+  } finally {
+    clearTimeout(timeout);
+  }
+}
+
+function refreshUSGSEarthquakes() {
+  if (usgsRequestPromise) return usgsRequestPromise;
+  const request = (async () => {
+    try {
+      const payload = await fetchThreatJSON(USGS_EARTHQUAKE_URL, "USGS");
+      if (!Array.isArray(payload.features)) throw new TypeError("USGS feed has no feature list.");
+      earthquakeData = payload.features.flatMap((feature) => {
+        const properties = feature?.properties;
+        const coordinates = feature?.geometry?.coordinates;
+        const rawMagnitude = properties?.mag;
+        const rawTime = properties?.time;
+        if (
+          rawMagnitude === null || rawMagnitude === undefined ||
+          rawTime === null || rawTime === undefined ||
+          !Array.isArray(coordinates) || coordinates.some((value) => value === null || value === undefined)
+        ) return [];
+        const magnitude = Number(properties?.mag);
+        const longitude = Number(coordinates?.[0]);
+        const latitude = Number(coordinates?.[1]);
+        const depth = Number(coordinates?.[2]);
+        const time = Number(rawTime);
+        if (
+          !Number.isFinite(magnitude) || magnitude < 0 ||
+          !Number.isFinite(latitude) || latitude < -90 || latitude > 90 ||
+          !Number.isFinite(longitude) || longitude < -180 || longitude > 180 ||
+          !Number.isFinite(depth) || !Number.isFinite(time) ||
+          !Number.isFinite(new Date(time).getTime())
+        ) return [];
+        return [{
+          magnitude,
+          latitude,
+          longitude,
+          depth_km: depth,
+          time: new Date(time).toISOString(),
+          timeValue: time,
+          place: typeof properties.place === "string" ? properties.place.slice(0, 180) : "",
+        }];
+      }).sort((left, right) => right.timeValue - left.timeValue);
+      usgsReceivedAt = Date.now();
+      usgsFeedFailed = false;
+      startGlobalRadar();
+    } catch (error) {
+      console.warn("USGS earthquake feed could not be refreshed.", error);
+      if (!usgsReceivedAt) usgsFeedFailed = true;
+    } finally {
+      updateThreatMonitor();
+      usgsRequestPromise = null;
+    }
+  })();
+  usgsRequestPromise = request;
+  return request;
+}
+
+function refreshNOAAKp() {
+  if (noaaRequestPromise) return noaaRequestPromise;
+  const request = (async () => {
+    try {
+      const payload = await fetchThreatJSON(NOAA_KP_URL, "NOAA planetary K-index");
+      if (!Array.isArray(payload)) throw new TypeError("NOAA Kp feed has no data list.");
+      const sample = [...payload].reverse().find((item) => {
+        const rawValue = item?.kp_index ?? item?.estimated_kp ?? item?.kp;
+        if (rawValue === null || rawValue === undefined || rawValue === "") return false;
+        const value = Number(rawValue);
+        return Number.isFinite(value) && value >= 0 && value <= 9;
+      });
+      if (!sample) throw new TypeError("NOAA Kp feed contains no valid sample.");
+      kpTelemetry = {
+        kp: Number(sample.kp_index ?? sample.estimated_kp ?? sample.kp),
+        observedAt: typeof sample.time_tag === "string" ? sample.time_tag.slice(0, 40) : "",
+        receivedAt: Date.now(),
+      };
+      noaaReceivedAt = kpTelemetry.receivedAt;
+      noaaFeedFailed = false;
+    } catch (error) {
+      console.warn("NOAA Kp feed could not be refreshed.", error);
+      if (!noaaReceivedAt) noaaFeedFailed = true;
+    } finally {
+      updateThreatMonitor();
+      noaaRequestPromise = null;
+    }
+  })();
+  noaaRequestPromise = request;
+  return request;
+}
+
+function refreshNOAASolarXray() {
+  if (solarRequestPromise) return solarRequestPromise;
+  const request = (async () => {
+    try {
+      const payload = await fetchThreatJSON(NOAA_XRAY_URL, "NOAA GOES X-ray");
+      if (!Array.isArray(payload)) throw new TypeError("NOAA X-ray feed has no data list.");
+      const sample = [...payload].reverse().find((item) => {
+        if (item?.energy !== "0.1-0.8nm" || item?.electron_contaminaton === true) return false;
+        const flux = Number(item?.flux ?? item?.observed_flux);
+        return Number.isFinite(flux) && flux >= 0;
+      });
+      if (!sample) throw new TypeError("NOAA X-ray feed contains no valid 0.1-0.8nm sample.");
+      const flux = Number(sample.flux ?? sample.observed_flux);
+      solarXrayTelemetry = {
+        flux,
+        flareClass: getSolarFlareClass(flux),
+        observedAt: typeof sample.time_tag === "string" ? sample.time_tag.slice(0, 40) : "",
+        receivedAt: Date.now(),
+      };
+      solarReceivedAt = solarXrayTelemetry.receivedAt;
+      solarFeedFailed = false;
+    } catch (error) {
+      console.warn("NOAA GOES X-ray feed could not be refreshed.", error);
+      if (!solarReceivedAt) solarFeedFailed = true;
+    } finally {
+      updateThreatMonitor();
+      solarRequestPromise = null;
+    }
+  })();
+  solarRequestPromise = request;
+  return request;
+}
+
+async function refreshThreatMonitor() {
+  await Promise.all([
+    refreshUSGSEarthquakes(),
+    refreshNOAAKp(),
+    refreshNOAASolarXray(),
+  ]);
+  return {
+    fetched_at: new Date(Math.max(usgsReceivedAt, noaaReceivedAt) || Date.now()).toISOString(),
+    earthquakes: earthquakeData.slice(0, 8).map((event) => ({
+      magnitude: event.magnitude,
+      latitude: event.latitude,
+      longitude: event.longitude,
+      depth_km: event.depth_km,
+      time: event.time,
+      place: event.place,
+    })),
+    geomagnetic: {
+      kp: kpTelemetry?.kp ?? null,
+      observed_at: kpTelemetry?.observedAt ?? "",
+      g_level: kpTelemetry ? getGeomagneticLevel(kpTelemetry.kp) : null,
+    },
+    solar: {
+      flux_w_m2: solarXrayTelemetry?.flux ?? null,
+      observed_at: solarXrayTelemetry?.observedAt ?? "",
+    },
+  };
+}
+
+function isThreatQuestion(text) {
+  const normalized = text.normalize("NFKC").toLowerCase();
+  return /(地震|宇宙天気|宇宙の天気|地磁気|kp指数|kp値|太陽フレア|磁気嵐|geomagnetic|solar flare)/u.test(normalized);
 }
 
 function getISSLocationLabel(latitude, longitude) {
@@ -2252,6 +3590,85 @@ function updateMissionTimerDisplay() {
   checkIcingAlert();
 }
 
+function restoreOperatorAnalytics() {
+  try {
+    const stored = JSON.parse(window.localStorage.getItem(OPERATOR_ANALYTICS_STORAGE_KEY) || "null");
+    if (!stored || typeof stored !== "object") return;
+    for (const [key, maximum] of [
+      ["completedFocusSessions", 1_000_000],
+      ["completedFocusMinutes", 25_000_000],
+      ["completedTasks", 1_000_000],
+      ["conversations", 10_000_000],
+    ]) {
+      const value = stored[key];
+      if (Number.isSafeInteger(value) && value >= 0 && value <= maximum) {
+        operatorAnalytics[key] = value;
+      }
+    }
+  } catch (error) {
+    console.error("OPERATOR ANALYTICS could not be restored from localStorage.", error);
+  }
+}
+
+function getOperatorPoints() {
+  return operatorAnalytics.completedFocusSessions * 100 +
+    operatorAnalytics.completedTasks * 50 +
+    operatorAnalytics.conversations * 5;
+}
+
+function updateOperatorAnalytics(announcePromotion = false) {
+  const previousRank = currentOperatorRankIndex;
+  const points = getOperatorPoints();
+  currentOperatorRankIndex = OPERATOR_RANKS.reduce(
+    (rank, item, index) => points >= item.points ? index : rank,
+    0,
+  );
+  const currentRank = OPERATOR_RANKS[currentOperatorRankIndex];
+  const nextRank = OPERATOR_RANKS[currentOperatorRankIndex + 1];
+  const progress = nextRank
+    ? Math.min(100, Math.floor(((points - currentRank.points) / (nextRank.points - currentRank.points)) * 100))
+    : 100;
+  analyticsRank.textContent = currentRank.name;
+  analyticsPoints.textContent = points.toLocaleString("ja-JP");
+  analyticsProgressFill.style.width = `${progress}%`;
+  analyticsProgress.setAttribute("aria-valuenow", String(progress));
+  analyticsProgress.setAttribute(
+    "aria-valuetext",
+    nextRank ? `${points - currentRank.points} / ${nextRank.points - currentRank.points} XP` : "最高ランク",
+  );
+  analyticsFocusCount.textContent = operatorAnalytics.completedFocusMinutes.toLocaleString("ja-JP");
+  analyticsTaskCount.textContent = operatorAnalytics.completedTasks.toLocaleString("ja-JP");
+  analyticsConversationCount.textContent = operatorAnalytics.conversations.toLocaleString("ja-JP");
+
+  try {
+    window.localStorage.setItem(OPERATOR_ANALYTICS_STORAGE_KEY, JSON.stringify(operatorAnalytics));
+  } catch (error) {
+    console.error("OPERATOR ANALYTICS could not be saved to localStorage.", error);
+    appendSystemLog("ANALYTICS STORAGE // WRITE FAILED");
+  }
+  if (announcePromotion && currentOperatorRankIndex > previousRank) {
+    const announcement = `ランクアップです、伊吹様。${currentRank.name}へ昇格いたしました。`;
+    appendSystemLog(`OPERATOR PROMOTION // ${currentRank.name}`);
+    playSfx("rank-up", true);
+    if (voiceOutputEnabled) void speakReply(announcement);
+  }
+}
+
+function recordOperatorActivity(activity) {
+  if (activity === "focus") {
+    operatorAnalytics.completedFocusSessions += 1;
+    operatorAnalytics.completedFocusMinutes += 25;
+  } else if (activity === "task") {
+    operatorAnalytics.completedTasks += 1;
+  } else if (activity === "conversation") {
+    operatorAnalytics.conversations += 1;
+  } else {
+    console.error(`Unknown OPERATOR ANALYTICS activity: ${activity}`);
+    return;
+  }
+  updateOperatorAnalytics(true);
+}
+
 function tickMissionTimer() {
   if (!missionTimerDeadline) return;
   missionRemainingSeconds = Math.max(
@@ -2264,6 +3681,7 @@ function tickMissionTimer() {
     missionTimerDeadline = 0;
     updateMissionTimerDisplay();
     playSfx("ready");
+    recordOperatorActivity("focus");
     return;
   }
   updateMissionTimerDisplay();
@@ -2355,7 +3773,7 @@ function checkSentryIdle() {
   ) return;
   sentryPromptPending = true;
   updateSentryStatus();
-  [simulationDialog, cipherDialog, memoryDialog, holoDialog].forEach((dialog) => {
+  [simulationDialog, cipherDialog, memoryDialog, holoDialog, prototypeDialog, knowledgeDialog].forEach((dialog) => {
     if (dialog.open) dialog.close();
   });
   sentryDialog.showModal();
@@ -2393,7 +3811,7 @@ function resumeFromSentryStandby() {
 function setSystemLocked(locked) {
   systemLocked = locked;
   if (locked) {
-    [simulationDialog, sentryDialog, cipherDialog, memoryDialog, holoDialog].forEach((dialog) => {
+    [simulationDialog, sentryDialog, cipherDialog, memoryDialog, holoDialog, prototypeDialog, knowledgeDialog].forEach((dialog) => {
       if (dialog.open) dialog.close();
     });
   }
@@ -3550,7 +4968,7 @@ function updateTargetLockReadouts() {
   });
 }
 
-function addMessage(role, text, { typing = false, scroll = null } = {}) {
+function addMessage(role, text, { typing = false, scroll = null, images = [] } = {}) {
   const article = document.createElement("article");
   article.className = `message ${role === "user" ? "user-message" : "assistant-message"}${typing ? " typing" : ""}`;
 
@@ -3600,6 +5018,17 @@ function addMessage(role, text, { typing = false, scroll = null } = {}) {
     body.textContent = text;
   }
   content.append(toolbar, body);
+  if (role === "user" && images.length) {
+    const previews = document.createElement("div");
+    previews.className = "message-images";
+    images.forEach((image) => {
+      const preview = document.createElement("img");
+      preview.src = image.dataUrl;
+      preview.alt = image.name || "添付画像";
+      previews.append(preview);
+    });
+    content.append(previews);
+  }
   article.append(avatar, content);
   messagesElement.append(article);
   if (!typing && systemLogReady) {
@@ -3777,6 +5206,7 @@ function setBusy(busy) {
   promptInput.disabled = busy;
   microphoneButton.disabled = busy;
   simulationLaunchButton.disabled = busy;
+  prototypeBuildButton.disabled = busy || prototypeBuildPending;
   if (busy) startProcessingSfx();
   else stopProcessingSfx();
   syncCoreState();
@@ -3797,8 +5227,154 @@ function getSimulationTarget(text) {
   return null;
 }
 
+function getPrototypeForgeTarget(text) {
+  const source = text.normalize("NFKC").trim();
+  const patterns = [
+    /^(?:プロトタイプ生成|prototype forge|forge prototype)\s*[:：]?\s*(.+)$/iu,
+    /^(.+?)(?:の)?アプリを(?:試作|作って|作成|開発)(?:して|してください|して下さい|する)?[。.!！?？]*$/u,
+    /^(.+?)(?:の)?シミュレーターを(?:試作|作って|作成|開発)(?:して|してください|して下さい|する)?[。.!！?？]*$/u,
+  ];
+  for (const pattern of patterns) {
+    const match = source.match(pattern);
+    if (match?.[1]?.trim()) return match[1].trim().replace(/^[「『]|[」』]$/gu, "");
+  }
+  return null;
+}
+
+function openPrototypeDialog() {
+  [knowledgeDialog, memoryDialog, holoDialog, ideaDialog, cipherDialog, simulationDialog, sentryDialog].forEach((dialog) => {
+    if (dialog.open) dialog.close();
+  });
+  if (sentryPromptPending) {
+    sentryPromptPending = false;
+    lastOperatorActivity = Date.now();
+    updateSentryStatus();
+  }
+  if (!prototypeDialog.open) prototypeDialog.showModal();
+  if (prototypeHtmlSource && !prototypeFrame.hasAttribute("srcdoc")) {
+    loadPrototypePreview(prototypeHtmlSource);
+  }
+}
+
+function loadPrototypePreview(source) {
+  prototypeFrame.title = `${prototypeTopicInput.value.trim() || "Prototype"} // isolated preview`;
+  prototypeFrame.srcdoc = createPrototypeSrcdoc(source);
+  prototypeFrame.hidden = false;
+}
+
+function extractPrototypeHtml(reply) {
+  const blocks = [...reply.matchAll(/```([^\r\n`]*)\r?\n([\s\S]*?)```/gu)];
+  const fencedSource = blocks
+    .filter((match) => !match[1].trim() || /^(?:html|html5|htm)$/iu.test(match[1].trim()))
+    .map((match) => match[2].trim())
+    .find((block) => /<html\b/iu.test(block) && /<body\b/iu.test(block) && /<script\b/iu.test(block));
+  const directSource = reply.match(/(?:<!doctype\s+html\b|<html\b)[\s\S]*?<\/html\s*>/iu)?.[0]?.trim();
+  const source = fencedSource || (
+    directSource && /<body\b/iu.test(directSource) && /<script\b/iu.test(directSource)
+      ? directSource
+      : null
+  );
+  if (!source) return null;
+  if (source.length > MAX_PROTOTYPE_HTML_LENGTH) {
+    throw new RangeError(`生成されたHTMLが上限（${MAX_PROTOTYPE_HTML_LENGTH.toLocaleString("ja-JP")}文字）を超えています。短い構成でもう一度生成してください。`);
+  }
+  return source;
+}
+
+function getPrototypeReplyNarrative(reply) {
+  return reply
+    .replace(/```[^\r\n`]*\r?\n[\s\S]*?```/gu, "")
+    .replace(/(?:<!doctype\s+html\b|<html\b)[\s\S]*?<\/html\s*>/iu, "")
+    .trim()
+    .slice(0, 1800);
+}
+
+function createPrototypeSrcdoc(source) {
+  const policy = `<meta http-equiv="Content-Security-Policy" content="default-src 'none'; script-src 'unsafe-inline'; style-src 'unsafe-inline'; img-src data: blob:; media-src data: blob:; font-src data:; connect-src 'none'; object-src 'none'; frame-src 'none'; form-action 'none'; base-uri 'none'; navigate-to 'none'">`;
+  const head = source.match(/<head\b[^>]*>/iu);
+  if (head) return source.replace(head[0], `${head[0]}${policy}`);
+  const html = source.match(/<html\b[^>]*>/iu);
+  if (html) return source.replace(html[0], `${html[0]}<head>${policy}</head>`);
+  throw new TypeError("完全なHTMLドキュメントとして解釈できませんでした。");
+}
+
+function formatPrototypeReply(reply, target) {
+  let source;
+  try {
+    source = extractPrototypeHtml(reply);
+  } catch (error) {
+    console.error("PROTOTYPE FORGE output was rejected.", error);
+    prototypeStatus.textContent = error.message;
+    return {
+      displayText: [getPrototypeReplyNarrative(reply), error.message].filter(Boolean).join("\n\n"),
+      historyText: `PROTOTYPE FORGE // ${target}\n${error.message}`,
+      spokenText: "試作コードのサイズが上限を超えました。条件を絞ってもう一度お試しください。",
+    };
+  }
+  if (!source) {
+    prototypeHtmlSource = "";
+    prototypeDownloadButton.disabled = true;
+    prototypeFullscreenButton.disabled = true;
+    prototypeStatus.textContent = "COMPLETE HTML CODE BLOCK NOT FOUND // REFINE THE REQUEST AND RETRY";
+    return {
+      displayText: getPrototypeReplyNarrative(reply) || "完全な単一HTMLコードを回答から検出できませんでした。条件を絞って再生成してください。",
+      historyText: `PROTOTYPE FORGE // ${target}\n完全なHTMLコードを検出できませんでした。`,
+      spokenText: "回答を受信しましたが、完全なHTMLコードを検出できませんでした。出力をご確認ください。",
+    };
+  }
+
+  prototypeHtmlSource = source;
+  if (prototypeDialog.open) loadPrototypePreview(source);
+  prototypeDownloadButton.disabled = false;
+  prototypeFullscreenButton.disabled = false;
+  prototypeStatus.textContent = `BUILD COMPLETE // ${target} // SANDBOX ACTIVE · NETWORK RESTRICTED`;
+  appendSystemLog("PROTOTYPE FORGE // ISOLATED APP DEPLOYED");
+  const explanation = getPrototypeReplyNarrative(reply);
+  const displayText = [
+    explanation,
+    `LIVE PROTOTYPE SANDBOXに「${target}」を展開しました。操作して動作を確認し、HTMLファイルとして保存できます。`,
+  ].filter(Boolean).join("\n\n");
+  return {
+    displayText,
+    historyText: `PROTOTYPE FORGE // ${target}\n単一HTMLアプリを隔離プレビューへ展開しました。`,
+    spokenText: `試作アプリ「${target}」をサンドボックスに展開いたしました。`,
+  };
+}
+
+function runPrototypeForge(target, sourceText = "", voice = false) {
+  if (!target || prototypeBuildPending || sendButton.disabled) return;
+  prototypeBuildPending = true;
+  prototypeBuildButton.disabled = true;
+  openPrototypeDialog();
+  prototypeTopicInput.value = target;
+  prototypeHtmlSource = "";
+  prototypeFrame.removeAttribute("srcdoc");
+  prototypeFrame.hidden = true;
+  prototypeDownloadButton.disabled = true;
+  prototypeFullscreenButton.disabled = true;
+  prototypeStatus.textContent = `AI BUILD IN PROGRESS // ${target}`;
+  const buildPrompt =
+    `PROTOTYPE FORGE // TARGET: ${target}\n` +
+    `Create a useful, polished, fully working browser prototype from this idea. Return a short Japanese introduction followed by exactly one fenced \`\`\`html code block containing a complete standalone HTML document with inline CSS and JavaScript. The document must include <!doctype html>, <html>, <body>, and any required inline <script>. Keep it concise (under ${MAX_PROTOTYPE_HTML_LENGTH.toLocaleString("en-US")} characters), responsive, keyboard-friendly, and usable without setup.\n` +
+    `Security and runtime constraints: use no external scripts, CDNs, imports, fonts, images, network requests, fetch, WebSocket, or service workers. Use only inline HTML/CSS/JavaScript and local browser APIs. Do not attempt to access the parent window, cookies, local storage, credentials, or data outside the prototype. Do not add code outside the single HTML code block.`;
+  const spokenInput = sourceText || `プロトタイプ生成：${target}`;
+  void sendMessage(spokenInput, {
+    voice,
+    displayText: sourceText || `PROTOTYPE FORGE // ${target}`,
+    requestText: buildPrompt,
+    formatReply: (reply) => formatPrototypeReply(reply, target),
+    onError: (error) => {
+      prototypeStatus.textContent = `BUILD FAILED // ${error.message}`;
+    },
+    restorePromptFocus: false,
+  }).finally(() => {
+    prototypeBuildPending = false;
+    prototypeBuildButton.disabled = sendButton.disabled;
+  });
+}
+
 function openSimulationDialog(target = "") {
-  [sentryDialog, cipherDialog, memoryDialog, holoDialog].forEach((dialog) => {
+  [sentryDialog, cipherDialog, memoryDialog, holoDialog, prototypeDialog, knowledgeDialog].forEach((dialog) => {
     if (dialog.open) dialog.close();
   });
   if (sentryPromptPending) {
@@ -3990,6 +5566,7 @@ function submitUserInput(
     forcedProtocol = null,
     displayText = text,
     detectCommands = true,
+    imageAttachments = [],
   } = {},
 ) {
   if (systemLocked) {
@@ -4034,6 +5611,16 @@ function submitUserInput(
     triggerVeronicaProtocol(veronicaTarget, text, voice);
     return;
   }
+  const prototypeTarget = detectCommands ? getPrototypeForgeTarget(text) : null;
+  if (prototypeTarget) {
+    runPrototypeForge(prototypeTarget, text, voice);
+    return;
+  }
+  const cityTarget = detectCommands ? getCityScanTarget(text) : null;
+  if (cityTarget !== null) {
+    void scanTacticalCity({ place: cityTarget, sourceText: text, voice });
+    return;
+  }
   const holoCommand = detectCommands ? getHoloCommand(text) : null;
   if (holoCommand) {
     runHoloCommand(holoCommand, voice, text);
@@ -4061,6 +5648,8 @@ function submitUserInput(
     displayText,
     requestText,
     includeISSContext: detectCommands && isISSQuestion(text),
+    includeThreatContext: detectCommands && isThreatQuestion(text),
+    imageAttachments,
   });
 }
 
@@ -4126,7 +5715,7 @@ function setHousePartyControlsLocked(locked) {
 
 function triggerHousePartyProtocol(text, voice) {
   if (housePartyPending || sendButton.disabled) return;
-  [holoDialog, cipherDialog, memoryDialog].forEach((dialog) => {
+  [holoDialog, cipherDialog, memoryDialog, prototypeDialog, knowledgeDialog].forEach((dialog) => {
     if (dialog.open) dialog.close();
   });
   housePartyPending = true;
@@ -4289,7 +5878,7 @@ function triggerCleanSlateProtocol(text, voice) {
     recognition.abort();
   }
   if (isSpeaking) stopSpeech();
-  [holoDialog, cipherDialog, memoryDialog].forEach((dialog) => {
+  [holoDialog, cipherDialog, memoryDialog, prototypeDialog, knowledgeDialog].forEach((dialog) => {
     if (dialog.open) dialog.close();
   });
   setCleanSlateControlsLocked(true);
@@ -4358,6 +5947,7 @@ async function scanClipboard() {
 function setOpticalToggle(enabled) {
   opticalToggle.setAttribute("aria-pressed", String(enabled));
   opticalToggleState.textContent = enabled ? "ON" : "OFF";
+  updateScanViewButton();
 }
 
 function showOpticalError(error) {
@@ -4416,6 +6006,7 @@ async function startOpticalSensor() {
     opticalVideo.srcObject = stream;
     await opticalVideo.play();
     if (requestVersion !== opticalRequestVersion) return;
+    updateScanViewButton();
     opticalStatus.textContent = "LOCAL FEED // NOT TRANSMITTED";
     updateOpticalReadouts();
     opticalReadoutInterval = setInterval(updateOpticalReadouts, 1100);
@@ -4453,6 +6044,7 @@ function updateAirGestureToggle(enabled, state = enabled ? "ON" : "OFF") {
   airGestureToggle.setAttribute("aria-pressed", String(enabled));
   airGestureToggleState.textContent = state;
   airGestureToggle.setAttribute("aria-busy", String(state === "LINK"));
+  updateScanViewButton();
 }
 
 function setAirGestureIndicator(locked, message) {
@@ -4721,6 +6313,191 @@ function requestAirGestureStart() {
   );
 }
 
+function readBlobAsDataUrl(blob) {
+  return new Promise((resolve, reject) => {
+    const reader = new FileReader();
+    reader.addEventListener("load", () => {
+      if (typeof reader.result !== "string") {
+        reject(new Error("画像ファイルを読み込めませんでした。"));
+        return;
+      }
+      resolve(reader.result);
+    }, { once: true });
+    reader.addEventListener("error", () => reject(new Error("画像ファイルの読み込みに失敗しました。")), { once: true });
+    reader.readAsDataURL(blob);
+  });
+}
+
+async function createImageAttachment(blob, name) {
+  const allowedTypes = new Set(["image/jpeg", "image/png", "image/webp"]);
+  if (!blob.type.startsWith("image/")) throw new Error("画像ファイルを選択してください。");
+  if (blob.size > 24 * 1024 * 1024) throw new Error("画像ファイルは24MB以下にしてください。");
+  let normalizedBlob = blob;
+  if (!allowedTypes.has(blob.type) || blob.size > MAX_IMAGE_BYTES) {
+    if (typeof createImageBitmap !== "function") {
+      throw new Error("このブラウザーでは大きな画像やGIFを変換できません。JPEG、PNG、WebPの4MB以下をご利用ください。");
+    }
+    let bitmap;
+    try {
+      bitmap = await createImageBitmap(blob);
+      if (bitmap.width * bitmap.height > 100_000_000) {
+        throw new Error("画像の解像度が大きすぎます。");
+      }
+      let scale = Math.min(1, 1800 / Math.max(bitmap.width, bitmap.height));
+      for (let attempt = 0; attempt < 4; attempt += 1) {
+        const canvas = document.createElement("canvas");
+        canvas.width = Math.max(1, Math.round(bitmap.width * scale));
+        canvas.height = Math.max(1, Math.round(bitmap.height * scale));
+        const context = canvas.getContext("2d");
+        if (!context) throw new Error("画像変換用Canvasを利用できません。");
+        context.drawImage(bitmap, 0, 0, canvas.width, canvas.height);
+        const converted = await new Promise((resolve, reject) => {
+          canvas.toBlob(
+            (result) => result
+              ? resolve(result)
+              : reject(new Error("画像を圧縮できませんでした。")),
+            "image/jpeg",
+            attempt < 2 ? 0.88 : 0.76,
+          );
+        });
+        if (converted.size <= MAX_IMAGE_BYTES) {
+          normalizedBlob = converted;
+          break;
+        }
+        scale *= 0.72;
+      }
+    } finally {
+      bitmap?.close();
+    }
+    if (normalizedBlob === blob || normalizedBlob.size > MAX_IMAGE_BYTES) {
+      throw new Error("圧縮後も画像が4MBを超えています。小さい画像をお選びください。");
+    }
+  }
+
+  if (normalizedBlob.size > MAX_IMAGE_BYTES) {
+    throw new Error("画像1枚あたりのサイズは4MB以下にしてください。");
+  }
+  const dataUrl = await readBlobAsDataUrl(normalizedBlob);
+  const separator = dataUrl.indexOf(",");
+  if (separator < 0) throw new Error("画像データを読み取れませんでした。");
+  return {
+    id: `image-${++imageAttachmentSequence}`,
+    name: name || "camera-frame.jpg",
+    mimeType: normalizedBlob.type,
+    data: dataUrl.slice(separator + 1),
+    dataUrl,
+    size: normalizedBlob.size,
+  };
+}
+
+function renderPendingImages() {
+  imageAttachments.replaceChildren();
+  imageAttachments.hidden = pendingImages.length === 0;
+  pendingImages.forEach((image) => {
+    const item = document.createElement("div");
+    item.className = "image-attachment";
+    const preview = document.createElement("img");
+    preview.src = image.dataUrl;
+    preview.alt = image.name;
+    const label = document.createElement("span");
+    label.textContent = image.name;
+    const remove = document.createElement("button");
+    remove.type = "button";
+    remove.textContent = "×";
+    remove.setAttribute("aria-label", `${image.name}を添付から削除`);
+    remove.addEventListener("click", () => {
+      pendingImages = pendingImages.filter((pending) => pending.id !== image.id);
+      renderPendingImages();
+    });
+    item.append(preview, label, remove);
+    imageAttachments.append(item);
+  });
+}
+
+async function addImageFiles(files) {
+  const selectedFiles = [...files].filter((file) => file.type.startsWith("image/"));
+  if (!selectedFiles.length) {
+    addMessage("assistant", "対応する画像を選択してください、伊吹様。");
+    return;
+  }
+  for (const file of selectedFiles) {
+    if (pendingImages.length >= MAX_IMAGE_ATTACHMENTS) {
+      addMessage("assistant", `画像は最大${MAX_IMAGE_ATTACHMENTS}枚まで添付できます、伊吹様。`);
+      break;
+    }
+    try {
+      const attachment = await createImageAttachment(file, file.name);
+      if (pendingImages.length >= MAX_IMAGE_ATTACHMENTS) {
+        addMessage("assistant", `画像は最大${MAX_IMAGE_ATTACHMENTS}枚まで添付できます、伊吹様。`);
+        break;
+      }
+      const totalSize = pendingImages.reduce((sum, image) => sum + image.size, 0);
+      if (totalSize + attachment.size > MAX_TOTAL_IMAGE_BYTES) {
+        throw new Error("添付画像の合計サイズは8MB以下にしてください。");
+      }
+      pendingImages.push(attachment);
+    } catch (error) {
+      console.warn("An image could not be attached.", error);
+      addMessage("assistant", `画像を添付できませんでした、伊吹様。${error.message}`);
+    }
+  }
+  renderPendingImages();
+}
+
+function updateScanViewButton() {
+  const opticalReady = Boolean(opticalStream?.active && opticalVideo.readyState >= HTMLMediaElement.HAVE_CURRENT_DATA);
+  const gestureReady = Boolean(airGestureCamera && airGestureVideo.readyState >= HTMLMediaElement.HAVE_CURRENT_DATA);
+  scanViewButton.hidden = !opticalReady && !gestureReady;
+}
+
+function getActiveCameraVideo() {
+  if (opticalStream?.active && opticalVideo.readyState >= HTMLMediaElement.HAVE_CURRENT_DATA) {
+    return opticalVideo;
+  }
+  if (airGestureCamera && airGestureVideo.readyState >= HTMLMediaElement.HAVE_CURRENT_DATA) {
+    return airGestureVideo;
+  }
+  return null;
+}
+
+async function scanCurrentCameraView() {
+  const video = getActiveCameraVideo();
+  if (!video || sendButton.disabled) return;
+  try {
+    const canvas = document.createElement("canvas");
+    canvas.width = video.videoWidth;
+    canvas.height = video.videoHeight;
+    const context = canvas.getContext("2d");
+    if (!context || !canvas.width || !canvas.height) {
+      throw new Error("カメラ映像を取得できませんでした。");
+    }
+    context.drawImage(video, 0, 0, canvas.width, canvas.height);
+    const frame = await new Promise((resolve, reject) => {
+      canvas.toBlob(
+        (blob) => blob ? resolve(blob) : reject(new Error("カメラ映像を画像化できませんでした。")),
+        "image/jpeg",
+        0.88,
+      );
+    });
+    const attachment = await createImageAttachment(frame, "camera-frame.jpg");
+    const totalSize = pendingImages.reduce((sum, image) => sum + image.size, 0);
+    if (pendingImages.length >= MAX_IMAGE_ATTACHMENTS || totalSize + attachment.size > MAX_TOTAL_IMAGE_BYTES) {
+      throw new Error("添付画像の枚数または合計サイズの上限を超えています。");
+    }
+    pendingImages.push(attachment);
+    renderPendingImages();
+    const request = promptInput.value.trim() || "このカメラ画像に映っている内容を解析してください。";
+    submitUserInput(request, {
+      displayText: "SCAN VIEW // CAMERA FRAME",
+      detectCommands: false,
+      imageAttachments: [...pendingImages],
+    });
+  } catch (error) {
+    console.error("Camera frame capture failed.", error);
+    addMessage("assistant", `カメラ映像を解析用に取得できませんでした、伊吹様。${error.message}`);
+  }
+}
+
 async function sendMessage(
   text,
   {
@@ -4730,11 +6507,16 @@ async function sendMessage(
     displayText = text,
     requestText = text,
     includeISSContext = false,
+    includeThreatContext = false,
+    imageAttachments = [],
     simulationTarget = null,
     onReply = null,
+    formatReply = null,
+    onError = null,
+    restorePromptFocus = true,
   } = {},
 ) {
-  if (!text || sendButton.disabled) return;
+  if ((!text && !imageAttachments.length) || sendButton.disabled) return;
   playSfx("transmit", true);
   if (voiceStandbyEnabled && recognitionMode === "standby" && recognition) {
     cancelRecognition = true;
@@ -4745,10 +6527,11 @@ async function sendMessage(
     stopSpeech();
     setVoiceStatus("VOICE LINK // READY");
   }
-  addMessage("user", displayText);
+  addMessage("user", displayText, { images: imageAttachments });
   history.push({ role: "user", content: text });
   trimHistory();
   persistHistory();
+  recordOperatorActivity("conversation");
   if (!voice) {
     promptInput.value = "";
     promptInput.style.height = "auto";
@@ -4760,10 +6543,12 @@ async function sendMessage(
   });
 
   try {
+    const weatherData = await getWeatherForChat();
     if (includeISSContext) {
       const telemetry = await refreshISSTelemetry();
       requestText = buildISSQuestionContext(requestText, telemetry);
     }
+    const threatData = includeThreatContext ? await refreshThreatMonitor() : null;
     if (hudMode === "mark-iii") {
       requestText +=
         "\n\nMARK-III TACTICAL BRIEFING FORMAT: 回答は必ず以下の3見出しで簡潔に構成してください。" +
@@ -4785,13 +6570,33 @@ async function sendMessage(
         messages: requestMessages,
         memories: memoryItems,
         hud_mode: hudMode,
+        ...(weatherData ? { weather_data: weatherData } : {}),
+        ...(imageAttachments.length
+          ? {
+              images: imageAttachments.map(({ mimeType, data }) => ({
+                mime_type: mimeType,
+                data,
+              })),
+            }
+          : {}),
+        ...(threatData ? { threat_data: threatData } : {}),
         ...(launcherAction ? { launcher_action: launcherAction, launcher_opened: launcherOpened } : {}),
       }),
     });
     const data = await response.json();
     if (!response.ok) throw new Error(data.error || "リクエストに失敗しました。");
     if (typeof data.reply !== "string" || !data.reply.trim()) throw new Error("AIから空の応答が返されました。");
+    const presentation = formatReply ? formatReply(data.reply) : null;
+    const displayedReply =
+      typeof presentation?.displayText === "string" ? presentation.displayText : data.reply;
+    const storedReply =
+      typeof presentation?.historyText === "string" ? presentation.historyText : data.reply;
     appendSystemLog("PACKET VERIFIED // AI RESPONSE RECEIVED");
+    if (imageAttachments.length) {
+      const sentImageIds = new Set(imageAttachments.map((image) => image.id));
+      pendingImages = pendingImages.filter((image) => !sentImageIds.has(image.id));
+      renderPendingImages();
+    }
     typingMessage.remove();
     const searchMetadata = normalizeSearchMetadata({
       status: data.search_status,
@@ -4799,7 +6604,7 @@ async function sendMessage(
       results: data.search_results,
       warning: data.search_warning,
     });
-    const assistantMessage = { role: "assistant", content: data.reply };
+    const assistantMessage = { role: "assistant", content: storedReply };
     if (searchMetadata) assistantMessage.search = searchMetadata;
     if (launcherAction) {
       assistantMessage.launcher_action = launcherAction;
@@ -4808,7 +6613,7 @@ async function sendMessage(
     history.push(assistantMessage);
     trimHistory();
     persistHistory();
-    addMessage("assistant", data.reply, { scroll: "start" });
+    addMessage("assistant", displayedReply, { scroll: "start" });
     if (simulationTarget) renderSimulationResult(simulationTarget, data.reply);
     if (onReply) onReply(data.reply);
     playSfx("ready");
@@ -4834,11 +6639,12 @@ async function sendMessage(
         : "記憶データをブラウザーから復元しました。";
     }
     if (voice) {
-      if (voiceOutputEnabled) speakReply(data.reply);
+      if (voiceOutputEnabled) speakReply(presentation?.spokenText || data.reply);
       else setVoiceStatus("VOICE OUTPUT // MUTED", "muted");
     }
   } catch (error) {
     typingMessage.remove();
+    if (onError) onError(error);
     if (simulationTarget) simulationStatus.textContent = `SIMULATION FAILED // ${error.message}`;
     addMessage("assistant", `申し訳ありません、伊吹様。${error.message}`, {
       scroll: "start",
@@ -4851,14 +6657,15 @@ async function sendMessage(
   } finally {
     setBusy(false);
     scheduleStandbyRecognition();
-    if (!voice) promptInput.focus();
+    if (!voice && restorePromptFocus) promptInput.focus();
   }
 }
 
 form.addEventListener("submit", (event) => {
   event.preventDefault();
-  const text = promptInput.value.trim();
-  if (!text || sendButton.disabled) return;
+  const enteredText = promptInput.value.trim();
+  const images = [...pendingImages];
+  if ((!enteredText && !images.length) || sendButton.disabled) return;
   if (voiceStandbyEnabled && recognition) {
     cancelRecognition = true;
     isListening = false;
@@ -4866,7 +6673,46 @@ form.addEventListener("submit", (event) => {
   } else if (isListening) {
     toggleVoiceInput();
   }
-  submitUserInput(text);
+  submitUserInput(enteredText || "添付画像の内容を解析してください。", {
+    displayText: enteredText || "VISION // IMAGE ANALYSIS",
+    detectCommands: images.length === 0,
+    imageAttachments: images,
+  });
+});
+
+imageAttachButton.addEventListener("click", () => imageInput.click());
+imageInput.addEventListener("change", () => {
+  void addImageFiles(imageInput.files || []);
+  imageInput.value = "";
+});
+promptInput.addEventListener("paste", (event) => {
+  const images = [...(event.clipboardData?.items || [])]
+    .filter((item) => item.type.startsWith("image/"))
+    .map((item) => item.getAsFile())
+    .filter(Boolean);
+  if (!images.length) return;
+  event.preventDefault();
+  void addImageFiles(images);
+});
+form.addEventListener("dragover", (event) => {
+  if (![...(event.dataTransfer?.types || [])].includes("Files")) return;
+  event.preventDefault();
+  form.classList.add("is-image-dragging");
+});
+form.addEventListener("dragleave", (event) => {
+  if (event.relatedTarget instanceof Node && form.contains(event.relatedTarget)) return;
+  form.classList.remove("is-image-dragging");
+});
+form.addEventListener("drop", (event) => {
+  if (![...(event.dataTransfer?.types || [])].includes("Files")) return;
+  event.preventDefault();
+  form.classList.remove("is-image-dragging");
+  void addImageFiles(event.dataTransfer.files);
+});
+scanViewButton.addEventListener("click", () => void scanCurrentCameraView());
+[opticalVideo, airGestureVideo].forEach((video) => {
+  video.addEventListener("loadeddata", updateScanViewButton);
+  video.addEventListener("emptied", updateScanViewButton);
 });
 
 document.querySelectorAll("[data-protocol]").forEach((button) => {
@@ -4924,9 +6770,32 @@ document.addEventListener("pointermove", (event) => {
   document.addEventListener(eventName, markOperatorActivity, { passive: true, capture: true });
 });
 holoOpenButton.addEventListener("click", openHoloProjector);
+cityMapOpenButton.addEventListener("click", () => {
+  void scanTacticalCity();
+});
 holoCloseButton.addEventListener("click", () => holoDialog.close());
 holoDialog.addEventListener("close", closeHoloProjector);
 holoModelSelect.addEventListener("change", () => setHoloModel(holoModelSelect.value));
+holoCityToggle.addEventListener("click", () => {
+  if (!openHoloProjector()) return;
+  setCityViewEnabled(!cityModeActive);
+  if (cityModeActive && cityMapCounts.buildings === 0 && cityMapCounts.roads === 0) {
+    void scanTacticalCity();
+  }
+});
+cityScanForm.addEventListener("submit", (event) => {
+  event.preventDefault();
+  const place = cityPlaceInput.value.trim();
+  if (!place) {
+    cityScanStatus.textContent = "ENTER A CITY OR LANDMARK TO SCAN";
+    cityPlaceInput.focus();
+    return;
+  }
+  void scanTacticalCity({ place });
+});
+cityCurrentScanButton.addEventListener("click", () => {
+  void scanTacticalCity();
+});
 holoExplodeButton.addEventListener("click", () => {
   holoExploded = !holoExploded;
   updateHoloExplodeButton();
@@ -4988,6 +6857,124 @@ cipherOpenButton.addEventListener("click", () => {
 cipherCloseButton.addEventListener("click", () => cipherDialog.close());
 cipherEncryptButton.addEventListener("click", () => void runCipherOperation("encrypt"));
 cipherDecryptButton.addEventListener("click", () => void runCipherOperation("decrypt"));
+prototypeOpenButton.addEventListener("click", () => openPrototypeDialog());
+prototypeCloseButton.addEventListener("click", () => prototypeDialog.close());
+prototypeDialog.addEventListener("close", () => {
+  prototypeFrame.removeAttribute("srcdoc");
+  prototypeFrame.hidden = true;
+});
+prototypeForm.addEventListener("submit", (event) => {
+  event.preventDefault();
+  const target = prototypeTopicInput.value.trim();
+  if (!target) {
+    prototypeStatus.textContent = "ENTER A PROJECT BRIEF BEFORE BUILDING";
+    prototypeTopicInput.focus();
+    return;
+  }
+  if (sendButton.disabled || prototypeBuildPending) {
+    prototypeStatus.textContent = "ANOTHER AI REQUEST IS IN PROGRESS";
+    return;
+  }
+  runPrototypeForge(target);
+});
+prototypeFullscreenButton.addEventListener("click", () => {
+  if (typeof prototypeFrame.requestFullscreen !== "function") {
+    prototypeStatus.textContent = "FULLSCREEN IS NOT AVAILABLE IN THIS BROWSER";
+    return;
+  }
+  void prototypeFrame.requestFullscreen().catch((error) => {
+    console.error("PROTOTYPE FORGE could not enter fullscreen.", error);
+    prototypeStatus.textContent = `FULLSCREEN FAILED // ${error.message}`;
+  });
+});
+prototypeDownloadButton.addEventListener("click", () => {
+  if (!prototypeHtmlSource) return;
+  const blob = new Blob([prototypeHtmlSource], { type: "text/html;charset=utf-8" });
+  const url = URL.createObjectURL(blob);
+  const link = document.createElement("a");
+  const safeName = (prototypeTopicInput.value || "prototype")
+    .normalize("NFKC")
+    .replace(/[^\p{L}\p{N}_-]+/gu, "-")
+    .replace(/^-+|-+$/gu, "")
+    .slice(0, 48) || "prototype";
+  link.href = url;
+  link.download = `${safeName}.html`;
+  document.body.append(link);
+  link.click();
+  link.remove();
+  window.setTimeout(() => URL.revokeObjectURL(url), 1000);
+});
+knowledgeOpenButton.addEventListener("click", openKnowledgeMatrix);
+knowledgeCloseButton.addEventListener("click", () => knowledgeDialog.close());
+knowledgeDialog.addEventListener("close", closeKnowledgeMatrix);
+knowledgeCanvas.addEventListener("pointerdown", (event) => {
+  const bounds = knowledgeCanvas.getBoundingClientRect();
+  if (!bounds.width || !bounds.height) return;
+  const x = event.clientX - bounds.left;
+  const y = event.clientY - bounds.top;
+  let nodeIndex = -1;
+  for (let index = knowledgeNodes.length - 1; index >= 0; index -= 1) {
+    const node = knowledgeNodes[index];
+    const nodeX = node.x * bounds.width;
+    const nodeY = node.y * bounds.height;
+    if (Math.hypot(x - nodeX, y - nodeY) <= node.radius + 8) {
+      nodeIndex = index;
+      break;
+    }
+  }
+  knowledgePointer = {
+    pointerId: event.pointerId,
+    startX: x,
+    startY: y,
+    nodeIndex,
+    moved: false,
+  };
+  if (nodeIndex >= 0) {
+    knowledgeSelectedIndex = nodeIndex;
+    requestKnowledgeFrame();
+  }
+  knowledgeCanvas.setPointerCapture(event.pointerId);
+});
+knowledgeCanvas.addEventListener("pointermove", (event) => {
+  if (!knowledgePointer || event.pointerId !== knowledgePointer.pointerId || knowledgePointer.nodeIndex < 0) return;
+  const bounds = knowledgeCanvas.getBoundingClientRect();
+  if (!bounds.width || !bounds.height) return;
+  const x = event.clientX - bounds.left;
+  const y = event.clientY - bounds.top;
+  if (Math.hypot(x - knowledgePointer.startX, y - knowledgePointer.startY) > 4) {
+    knowledgePointer.moved = true;
+  }
+  if (!knowledgePointer.moved) return;
+  const node = knowledgeNodes[knowledgePointer.nodeIndex];
+  node.x = Math.max(0.04, Math.min(0.96, x / bounds.width));
+  node.y = Math.max(0.05, Math.min(0.95, y / bounds.height));
+  requestKnowledgeFrame();
+});
+knowledgeCanvas.addEventListener("pointerup", (event) => {
+  if (!knowledgePointer || event.pointerId !== knowledgePointer.pointerId) return;
+  if (knowledgePointer.nodeIndex >= 0 && !knowledgePointer.moved) {
+    showKnowledgeNode(knowledgePointer.nodeIndex);
+  }
+  knowledgePointer = null;
+});
+["pointercancel", "lostpointercapture"].forEach((eventName) => {
+  knowledgeCanvas.addEventListener(eventName, () => {
+    knowledgePointer = null;
+  });
+});
+knowledgeCanvas.addEventListener("keydown", (event) => {
+  if (!knowledgeNodes.length) return;
+  if (["ArrowRight", "ArrowDown", "ArrowLeft", "ArrowUp"].includes(event.key)) {
+    event.preventDefault();
+    const direction = event.key === "ArrowRight" || event.key === "ArrowDown" ? 1 : -1;
+    knowledgeSelectedIndex =
+      (knowledgeSelectedIndex + direction + knowledgeNodes.length) % knowledgeNodes.length;
+    requestKnowledgeFrame();
+  } else if (event.key === "Enter" || event.key === " ") {
+    event.preventDefault();
+    showKnowledgeNode(Math.max(0, knowledgeSelectedIndex));
+  }
+});
 microphoneButton.addEventListener("click", toggleVoiceInput);
 standbyButton.addEventListener("click", toggleVoiceStandby);
 speakerButton.addEventListener("click", toggleVoiceOutput);
@@ -5071,6 +7058,10 @@ document.querySelector("#close-memory").addEventListener("click", () => memoryDi
 document.querySelector("#clear-memory").addEventListener("click", clearMemory);
 missionTimerToggle.addEventListener("click", toggleMissionTimer);
 missionTimerReset.addEventListener("click", resetMissionTimer);
+analyticsTaskButton.addEventListener("click", () => {
+  recordOperatorActivity("task");
+  appendSystemLog("OPERATOR TASK // COMPLETION RECORDED");
+});
 window.addEventListener("pagehide", () => {
   clearInterval(sentryCheckInterval);
   sentryCheckInterval = null;
@@ -5096,6 +7087,8 @@ window.addEventListener("pagehide", () => {
   setCleanSlateControlsLocked(false);
   clearTimeout(veronicaDropTimer);
   veronicaDropTimer = null;
+  closeKnowledgeMatrix();
+  prototypeFrame.removeAttribute("srcdoc");
   closeHoloProjector();
   holoResizeObserver?.disconnect();
   holoModelParts.forEach((part) => {
@@ -5140,11 +7133,14 @@ restoreHoloNotes();
 restoreChronoEvents();
 systemLogReady = true;
 renderChronoTimeline();
+restoreWeatherCache();
 appendSystemLog("NEURAL LINK: ACTIVE");
 appendSystemLog("BIOMETRIC SESSION: VERIFIED");
 updateVoiceStandbyButton();
 updateSfxButton();
 updateMissionTimerDisplay();
+restoreOperatorAnalytics();
+updateOperatorAnalytics();
 updateMarkModeSystems();
 updateSentryStatus();
 clearModeInlineOverrides();
@@ -5154,6 +7150,7 @@ sfxVolumeValue.textContent = `${sfxVolumeInput.value}%`;
 preloadWakeAcknowledgement();
 void refreshWeather();
 void refreshISSTelemetry();
+void refreshThreatMonitor();
 updateClock();
 updateTelemetryTicker();
 updateBiometricWaveform();
@@ -5172,4 +7169,7 @@ setInterval(animateTelemetry, 1800);
 setInterval(updateTrafficWaveforms, 120);
 setInterval(() => void refreshWeather(), WEATHER_REFRESH_INTERVAL);
 setInterval(() => void refreshISSTelemetry(), ISS_REFRESH_INTERVAL);
+setInterval(() => void refreshUSGSEarthquakes(), USGS_REFRESH_INTERVAL);
+setInterval(() => void refreshNOAAKp(), NOAA_REFRESH_INTERVAL);
+setInterval(() => void refreshNOAASolarXray(), NOAA_REFRESH_INTERVAL);
 startGlobalRadar();

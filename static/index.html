@@ -127,6 +127,20 @@
             <div class="panel-foot"><span>RESERVE CAPACITY</span><span>SIM DATA</span></div>
           </section>
 
+          <section class="panel analytics-panel" aria-label="オペレーター活動分析">
+            <div class="panel-heading"><span>OPERATOR ANALYTICS</span><span class="panel-code">XP / LOCAL</span></div>
+            <div class="analytics-rank"><strong id="analytics-rank">RANK I: TRAINEE</strong><span><b id="analytics-points">0</b> XP</span></div>
+            <div class="analytics-progress" id="analytics-progress" role="progressbar" aria-label="次のランクまでの経験値" aria-valuemin="0" aria-valuemax="100" aria-valuenow="0">
+              <i id="analytics-progress-fill"></i>
+            </div>
+            <div class="analytics-stats">
+              <span>FOCUS MIN <b id="analytics-focus-count">0</b></span>
+              <span>TASKS <b id="analytics-task-count">0</b></span>
+              <span>COMMS <b id="analytics-conversation-count">0</b></span>
+            </div>
+            <button class="analytics-task-button" id="analytics-task-complete" type="button">+ TASK COMPLETE</button>
+          </section>
+
           <section class="panel mission-timer-panel" aria-label="25分集中ミッションタイマー">
             <div class="target-lock-corners" aria-hidden="true">
               <span class="target-lock target-lock-a"><b>[LOCKED]</b><small>RANGE <i>024</i>M // PRI 01</small></span>
@@ -222,6 +236,10 @@
                 <svg viewBox="0 0 24 24" aria-hidden="true"><rect x="3" y="4" width="18" height="13" rx="1"/><path d="m10 8 5 2.5-5 2.5zM8 21h8m-4-4v4"/></svg>
                 <span>WATCHING</span><small>MEDIA LINK</small>
               </a>
+              <button class="launcher-button prototype-launcher" id="prototype-open" type="button" aria-haspopup="dialog" aria-controls="prototype-dialog">
+                <svg viewBox="0 0 24 24" aria-hidden="true"><path d="M4 5h16v14H4zM8 9l3 3-3 3m5 0h3"/><path d="M7 2v3m10-3v3"/></svg>
+                <span>PROTOTYPE FORGE</span><small>LIVE APP BUILDER</small>
+              </button>
             </div>
             <div class="launcher-tools">
               <button id="simulate-open" type="button">SIMULATE <small>MISSION ANALYSIS</small></button>
@@ -236,6 +254,7 @@
             <div class="stage-readout stage-readout-right"><span>POWER OUTPUT</span><strong>3.7 <small>GW</small></strong></div>
             <div class="stage-tools" aria-label="追加システム">
               <button id="holo-open" type="button" aria-haspopup="dialog" aria-controls="holo-dialog">HOLO-3D</button>
+              <button id="city-map-open" type="button" aria-haspopup="dialog" aria-controls="holo-dialog">3D CITY MAP</button>
               <button id="idea-open" type="button" aria-haspopup="dialog" aria-controls="idea-dialog">SYNTHESIZE</button>
               <button id="cipher-open" type="button" aria-haspopup="dialog" aria-controls="cipher-dialog">STARK CIPHER</button>
             </div>
@@ -315,7 +334,7 @@
               <label class="sr-only" for="prompt">メッセージ</label>
               <div class="entry-row">
                 <span class="input-prompt" aria-hidden="true">›</span>
-                <textarea id="prompt" name="prompt" rows="1" maxlength="4000" placeholder="コマンドまたはメッセージを入力..." required></textarea>
+                <textarea id="prompt" name="prompt" rows="1" maxlength="4000" placeholder="コマンドまたはメッセージを入力..."></textarea>
                 <div class="voice-controls">
                   <button class="voice-control speaker-control" id="voice-output" type="button" aria-label="音声読み上げをオフにする" aria-pressed="true" title="音声読み上げ ON">
                     <span class="control-icon" aria-hidden="true"><svg viewBox="0 0 24 24"><path d="M4 10v4h4l5 4V6l-5 4z"/><path d="M16 9a5 5 0 0 1 0 6m2-9a9 9 0 0 1 0 12"/></svg></span><span class="control-label">VOICE ON</span>
@@ -328,6 +347,12 @@
                   </button>
                 </div>
               </div>
+              <div class="composer-tools">
+                <input id="image-input" type="file" accept="image/jpeg,image/png,image/webp,image/gif" multiple hidden>
+                <button class="composer-action" id="image-attach" type="button" aria-label="画像を添付" title="画像を選択">📷 IMAGE</button>
+                <button class="composer-action" id="scan-view" type="button" hidden>SCAN VIEW // AI ANALYSIS</button>
+              </div>
+              <div class="image-attachments" id="image-attachments" aria-live="polite" hidden></div>
               <div class="composer-meta">
                 <p class="voice-status" id="voice-status" data-state="ready" aria-live="polite">VOICE LINK // READY</p>
                 <p class="composer-hint">ENTER TRANSMIT <span>//</span> SHIFT + ENTER NEW LINE</p>
@@ -376,6 +401,11 @@
               <span>RANGE <b id="iss-distance">-- KM</b></span>
               <small id="iss-region">ISS LINK // ACQUIRING TELEMETRY</small>
             </div>
+            <div class="threat-monitor" aria-label="地震・宇宙天気の監視情報">
+              <div><span>NOAA Kp</span><b id="threat-kp">--</b><strong id="threat-geomagnetic-alert">GEOMAGNETIC // --</strong></div>
+              <div><span>GOES X-RAY</span><b id="threat-solar-flux">--</b><strong id="threat-solar-alert">FLARE // --</strong></div>
+              <div class="threat-earthquake-row"><span>USGS // M4.5+</span><b id="threat-earthquake">ACQUIRING DATA</b><small id="threat-monitor-status">THREAT FEED // CONNECTING</small></div>
+            </div>
           </section>
 
           <section class="panel weather-panel">
@@ -401,6 +431,7 @@
             <div class="memory-bank-content">
               <div class="memory-bank-count"><strong id="memory-count">--</strong><span>FACTS</span></div>
               <div class="memory-bank-info"><span id="memory-status">CONNECTING...</span><span id="session-status">SESSION // 0 / 40</span></div>
+              <button class="memory-open-button" id="knowledge-open" type="button" aria-haspopup="dialog" aria-controls="knowledge-dialog">MATRIX</button>
               <button class="memory-open-button" id="open-memory" type="button" aria-haspopup="dialog">ACCESS <b aria-hidden="true">↗</b></button>
             </div>
           </section>
@@ -457,9 +488,18 @@
               <option value="helmet">HELMET MK-III</option>
               <option value="dna">HELIX DNA</option>
             </select>
+            <button id="holo-city-toggle" type="button" aria-pressed="false">3D CITY MAP</button>
             <button id="holo-explode" type="button" aria-pressed="false">EXPLODE</button>
           </div>
+          <form class="city-scan-form" id="city-scan-form">
+            <label for="city-place">CITY / LANDMARK</label>
+            <input id="city-place" type="text" maxlength="160" placeholder="例：東京タワー、釧路駅">
+            <button type="submit">SCAN PLACE</button>
+            <button id="city-current-scan" type="button">OPERATOR LOCATION</button>
+          </form>
           <div id="holo-canvas" class="holo-canvas" role="img" aria-label="ドラッグで回転、スクロールで拡大縮小できる3Dワイヤーフレーム"></div>
+          <p class="city-scan-status" id="city-scan-status" role="status" aria-live="polite">CITY SCANNER // READY · 500M RADIUS</p>
+          <p class="city-attribution">© OpenStreetMap contributors · Geocoding: Nominatim · Map data: Overpass API</p>
           <p class="feature-dialog-status" id="holo-status" aria-live="polite">DRAG TO ROTATE // 360° CONTROL</p>
         </section>
       </dialog>
@@ -479,6 +519,41 @@
             <div class="idea-map-nodes" id="idea-map-nodes"></div>
           </div>
           <p class="feature-dialog-status" id="idea-status" aria-live="polite">ENTER A THEME // SIX RELATED IDEAS WILL BE GENERATED</p>
+        </section>
+      </dialog>
+      <dialog class="feature-dialog prototype-dialog" id="prototype-dialog" aria-labelledby="prototype-title">
+        <section class="feature-dialog-panel">
+          <div class="feature-dialog-heading">
+            <div><p class="eyebrow">RAPID ENGINEERING BAY <span>// SINGLE-FILE BUILD</span></p><h2 id="prototype-title">PROTOTYPE FORGE <small>LIVE PROTOTYPE SANDBOX</small></h2></div>
+            <button class="feature-close" id="prototype-close" type="button" aria-label="試作ラボを閉じる">×</button>
+          </div>
+          <form class="prototype-form" id="prototype-form">
+            <label for="prototype-topic">PROJECT BRIEF / 作りたいもの</label>
+            <input id="prototype-topic" type="text" maxlength="500" required placeholder="例：反射神経を鍛えるミニゲーム">
+            <button id="prototype-build" type="submit">BUILD PROTOTYPE</button>
+          </form>
+          <div class="prototype-toolbar">
+            <span>LIVE PROTOTYPE SANDBOX</span>
+            <div>
+              <button id="prototype-fullscreen" type="button" disabled>FULLSCREEN</button>
+              <button id="prototype-download" type="button" disabled>DOWNLOAD HTML</button>
+            </div>
+          </div>
+          <iframe class="prototype-frame" id="prototype-frame" title="生成された試作アプリの隔離プレビュー" sandbox="allow-scripts" referrerpolicy="no-referrer" hidden></iframe>
+          <p class="prototype-status" id="prototype-status" role="status" aria-live="polite">入力されたアイデアから単一HTMLアプリを生成します。</p>
+          <p class="prototype-security">ISOLATED SANDBOX // NO PARENT ACCESS · NETWORK ACCESS RESTRICTED</p>
+        </section>
+      </dialog>
+      <dialog class="feature-dialog knowledge-dialog" id="knowledge-dialog" aria-labelledby="knowledge-title">
+        <section class="feature-dialog-panel">
+          <div class="feature-dialog-heading">
+            <div><p class="eyebrow">MEMORY / OPS <span>// NEURAL NETWORK</span></p><h2 id="knowledge-title">NEURAL KNOWLEDGE MATRIX <small>MEMORY + CONVERSATION NODES</small></h2></div>
+            <button class="feature-close" id="knowledge-close" type="button" aria-label="知識マトリクスを閉じる">×</button>
+          </div>
+          <div class="knowledge-summary"><span id="knowledge-node-count">0 NODES</span><span>DRAG NODES // SELECT TO INSPECT</span></div>
+          <canvas class="knowledge-canvas" id="knowledge-canvas" role="application" aria-label="記憶と会話キーワードの相関ネットワーク。ノードをドラッグまたは選択できます。" tabindex="0"></canvas>
+          <div class="knowledge-detail" id="knowledge-detail" aria-live="polite">ノードを選択すると関連する記憶や会話を表示します。</div>
+          <p class="feature-dialog-status" id="knowledge-status" aria-live="polite">LOCAL MEMORY + RECENT CONVERSATION ANALYSIS</p>
         </section>
       </dialog>
       <dialog class="feature-dialog cipher-dialog" id="cipher-dialog" aria-labelledby="cipher-title">

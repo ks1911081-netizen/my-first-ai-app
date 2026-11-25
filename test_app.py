@@ -1,3 +1,4 @@
+import base64
 import json
 import os
 import unittest
@@ -69,6 +70,158 @@ class SystemPromptIdentityTests(unittest.TestCase):
         self.assertIn("短い箇条書き", mark_iii_prompt)
 
 
+class ClientWeatherValidationTests(unittest.TestCase):
+    def test_validates_browser_weather_and_keeps_seven_day_forecast(self):
+        weather = app_module.validate_client_weather(KUSHIRO_WEATHER)
+
+        self.assertEqual(weather["current"]["temperature_c"], 4.2)
+        self.assertEqual(weather["forecast"], KUSHIRO_WEATHER["forecast"])
+        self.assertEqual(weather["source"], "Open-Meteo")
+
+    def test_rejects_browser_weather_with_invalid_forecast_or_location(self):
+        with self.assertRaises(ValueError):
+            app_module.validate_client_weather(
+                {**KUSHIRO_WEATHER, "forecast": KUSHIRO_WEATHER["forecast"][:6]}
+            )
+        with self.assertRaises(ValueError):
+            app_module.validate_client_weather(
+                {**KUSHIRO_WEATHER, "latitude": 0}
+            )
+
+
+class VisionAndThreatDataTests(unittest.TestCase):
+    def test_selects_active_vision_models_in_fallback_order(self):
+        models = [
+            {"id": "llama-3.2-11b-vision-preview"},
+            {"id": "meta-llama/llama-4-scout-17b-16e-instruct"},
+            {"id": "llama-3.2-90b-vision-preview", "active": False},
+        ]
+
+        self.assertEqual(
+            app_module.select_vision_models(models),
+            [
+                "meta-llama/llama-4-scout-17b-16e-instruct",
+                "llama-3.2-11b-vision-preview",
+            ],
+        )
+
+    def test_image_validation_checks_mime_signature_and_count(self):
+        png = base64.b64encode(b"\x89PNG\r\n\x1a\nimage").decode("ascii")
+        self.assertEqual(
+            app_module.validate_images([{"mime_type": "image/png", "data": png}])[0]["mime_type"],
+            "image/png",
+        )
+        with self.assertRaises(ValueError):
+            app_module.validate_images([{"mime_type": "image/jpeg", "data": png}])
+        with self.assertRaises(ValueError):
+            app_module.validate_images([])
+
+    def test_threat_validation_rejects_out_of_range_kp(self):
+        with self.assertRaises(ValueError):
+            app_module.validate_threat_data(
+                {
+                    "earthquakes": [],
+                    "geomagnetic": {"kp": 12, "observed_at": "", "g_level": "G5"},
+                }
+            )
+
+    def test_threat_prompt_uses_kp_and_measured_xray_class_with_context(self):
+        threat = app_module.validate_threat_data(
+            {
+                "fetched_at": "2026-11-24T23:48:00Z",
+                "earthquakes": [
+                    {
+                        "magnitude": 5.2,
+                        "latitude": 42.1,
+                        "longitude": 144.3,
+                        "depth_km": 38.0,
+                        "time": "2026-11-24T23:40:00Z",
+                        "place": "Kushiro region",
+                    }
+                ],
+                "geomagnetic": {"kp": 5, "observed_at": "2026-11-24T23:48Z", "g_level": "G1"},
+                "solar": {"flux_w_m2": 1.5e-7, "observed_at": "2026-11-24T23:48Z"},
+            }
+        )
+        prompt = app_module.build_system_prompt([], threat_data=threat)
+
+        self.assertEqual(threat["solar"]["flare_class"], "B1.5")
+        self.assertIn("USGS地震速報", prompt)
+        self.assertIn("公式の警報・予報ではありません", prompt)
+        self.assertIn('"g_level": "G1"', prompt)
+
+    @patch.dict(os.environ, {"GROQ_API_KEY": "test-key"})
+    def test_chat_attaches_image_and_falls_back_to_available_vision_model(self):
+        analysis_response = Mock(
+            ok=True,
+            json=lambda: {
+                "choices": [
+                    {
+                        "message": {
+                            "content": json.dumps(
+                                {
+                                    "memories": [],
+                                    "search": {"needed": False, "query": ""},
+                                }
+                            )
+                        }
+                    }
+                ]
+            },
+        )
+        unavailable_vision_response = Mock(
+            ok=False,
+            status_code=404,
+            text="model unavailable",
+            reason="Not Found",
+        )
+        vision_response = Mock(
+            ok=True,
+            json=lambda: {"choices": [{"message": {"content": "画像を確認しました。"}}]},
+        )
+        png = base64.b64encode(b"\x89PNG\r\n\x1a\nimage").decode("ascii")
+        with (
+            patch("app.get_kushiro_weather", return_value=KUSHIRO_WEATHER),
+            patch(
+                "app.requests.get",
+                return_value=Mock(
+                    ok=True,
+                    json=lambda: {
+                        "data": [
+                            {"id": "llama-test"},
+                            {"id": "meta-llama/llama-4-scout-17b-16e-instruct"},
+                            {"id": "llama-3.2-11b-vision-preview"},
+                        ]
+                    },
+                ),
+            ),
+            patch(
+                "app.requests.post",
+                side_effect=[analysis_response, unavailable_vision_response, vision_response],
+            ) as post,
+        ):
+            response = app_module.app.test_client().post(
+                "/api/chat",
+                json={
+                    "weather_data": KUSHIRO_WEATHER,
+                    "messages": [{"role": "user", "content": "この画像を説明してください"}],
+                    "images": [{"mime_type": "image/png", "data": png}],
+                },
+            )
+
+        self.assertEqual(response.status_code, 200)
+        self.assertEqual(response.get_json()["reply"], "画像を確認しました。")
+        vision_payload = post.call_args.kwargs["json"]
+        self.assertEqual(vision_payload["model"], "llama-3.2-11b-vision-preview")
+        user_content = vision_payload["messages"][-1]["content"]
+        self.assertEqual(user_content[0]["text"], "この画像を説明してください")
+        self.assertEqual(
+            user_content[1]["image_url"]["url"],
+            f"data:image/png;base64,{png}",
+        )
+        self.assertIn("添付した画像", vision_payload["messages"][0]["content"])
+
+
 class SelectChatModelTests(unittest.TestCase):
     def test_prefers_llama_and_skips_inactive_or_audio_models(self):
         models = [
@@ -130,10 +283,11 @@ class SelectChatModelTests(unittest.TestCase):
             ),
         ]
 
-        with patch("app.get_kushiro_weather", return_value=KUSHIRO_WEATHER):
+        with patch("app.get_kushiro_weather", return_value=KUSHIRO_WEATHER) as weather_fetch:
             response = app_module.app.test_client().post(
                 "/api/chat",
                 json={
+                    "weather_data": KUSHIRO_WEATHER,
                     "hud_mode": "mark-iii",
                     "memories": [
                         {
@@ -170,7 +324,9 @@ class SelectChatModelTests(unittest.TestCase):
         self.assertIn("戦術補佐AI", system_prompt)
         self.assertIn("結論や最優先の解決策を最初に", system_prompt)
         self.assertIn("短い箇条書き", system_prompt)
+        self.assertIn('"temperature_c": 4.2', system_prompt)
         self.assertNotIn("サー", system_prompt)
+        weather_fetch.assert_not_called()
         get.assert_called_once_with(
             app_module.GROQ_MODELS_URL,
             headers={"Authorization": "Bearer test-key"},
