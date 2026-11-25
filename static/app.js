@@ -213,7 +213,7 @@ const ISS_REQUEST_TIMEOUT = 4200;
 const ISS_MAX_TRACK_POINTS = 180;
 const EARTH_RADIUS_KM = 6371;
 const CITY_DEFAULT_CENTER = { latitude: 42.9849, longitude: 144.3814 };
-const CITY_SCAN_RADIUS_METERS = 350;
+const CITY_SCAN_RADIUS_METERS = 180;
 const CITY_OSM_SCALE = 0.0044;
 const CITY_BUILDING_HEIGHT_SCALE = 0.014;
 const CITY_MAX_BUILDINGS = 600;
@@ -2657,7 +2657,7 @@ function drawHoloProjector() {
     cityModelGroup.rotation.x += (holoRotationX - cityModelGroup.rotation.x) * 0.18;
     cityModelGroup.rotation.y += (holoRotationY - cityModelGroup.rotation.y) * 0.18 + 0.0015;
     cityModelGroup.scale.setScalar(holoGestureScale);
-    const distance = 8.6;
+    const distance = 2.6;
     holoCamera.position.set(0, distance * 0.68, distance);
     holoCamera.lookAt(0, 0, 0);
     animateCityScan(performance.now());
