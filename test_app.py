@@ -69,6 +69,12 @@ class SystemPromptIdentityTests(unittest.TestCase):
         self.assertIn("結論や最優先の解決策を最初に", mark_iii_prompt)
         self.assertIn("短い箇条書き", mark_iii_prompt)
 
+    def test_system_prompt_requires_self_contained_html_for_prototype_requests(self):
+        prompt = app_module.build_system_prompt([])
+
+        self.assertIn("CSSとJavaScriptを内包した完全な単一HTML文書", prompt)
+        self.assertIn("単一の```htmlコードブロック内", prompt)
+
 
 class ClientWeatherValidationTests(unittest.TestCase):
     def test_validates_browser_weather_and_keeps_seven_day_forecast(self):

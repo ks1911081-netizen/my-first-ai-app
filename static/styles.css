@@ -1604,11 +1604,16 @@ body[data-hud-mode="mark-iii"] .sensor-toggles button#sentry-toggle[aria-pressed
 body[data-hud-mode="mark-iii"] .sentry-readout { color: #c28a4c; }
 
 .message-toolbar { min-width: 0; margin: 2px 0 6px; display: flex; align-items: center; justify-content: space-between; gap: 8px; }
+.message-toolbar.has-prototype { justify-content: flex-start; flex-wrap: wrap; gap: 5px; }
 .message-sender { margin: 0; }
 .message-note-button { flex: 0 0 auto; padding: 3px 5px; border: 1px solid #28627375; background: #071722; color: #70a5b2; cursor: pointer; font: 6px var(--mono); letter-spacing: .04em; opacity: .68; }
 .message-note-button:hover, .message-note-button:focus-visible { border-color: var(--cyan); color: #b6fcff; opacity: 1; outline: none; }
+.message-prototype-button { flex: 0 0 auto; padding: 3px 5px; border: 1px solid #00f3ff70; background: #061c25; color: #a9fbff; cursor: pointer; font: 6px var(--mono); letter-spacing: .02em; }
+.message-prototype-button:hover, .message-prototype-button:focus-visible { border-color: var(--cyan); color: #fff; outline: none; box-shadow: 0 0 9px #00f3ff32; }
 body[data-hud-mode="mark-iii"] .message-note-button { border-color: #8a383988; background: #1b0c11; color: #c28a4c; }
 body[data-hud-mode="mark-iii"] .message-note-button:hover { border-color: #ffb700; color: #ffdc72; }
+body[data-hud-mode="mark-iii"] .message-prototype-button { border-color: #ffb70070; background: #1b0c11; color: #ffdc72; }
+body[data-hud-mode="mark-iii"] .message-prototype-button:hover { border-color: #ffb700; color: #fff0c1; box-shadow: 0 0 9px #ffb70032; }
 
 .target-lock-corners { position: absolute; z-index: 4; inset: 0; display: none; overflow: hidden; pointer-events: none; }
 body[data-hud-mode="mark-iii"] .target-lock-corners { display: block; }

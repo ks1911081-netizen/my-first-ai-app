@@ -5067,7 +5067,7 @@ function updateTargetLockReadouts() {
   });
 }
 
-function addMessage(role, text, { typing = false, scroll = null, images = [] } = {}) {
+function addMessage(role, text, { typing = false, scroll = null, images = [], prototype = null } = {}) {
   const article = document.createElement("article");
   article.className = `message ${role === "user" ? "user-message" : "assistant-message"}${typing ? " typing" : ""}`;
 
@@ -5088,6 +5088,20 @@ function addMessage(role, text, { typing = false, scroll = null, images = [] } =
     time.textContent = new Intl.DateTimeFormat("ja-JP", { hour: "2-digit", minute: "2-digit" }).format(new Date());
     sender.append(" ", time);
     if (role === "assistant") {
+      if (prototype?.html) {
+        const launchButton = document.createElement("button");
+        toolbar.classList.add("has-prototype");
+        launchButton.className = "message-prototype-button";
+        launchButton.type = "button";
+        launchButton.textContent = "▶ 再起動（LAUNCH）";
+        launchButton.addEventListener("click", () => launchPrototypePreview(prototype.html, prototype.target));
+        const downloadButton = document.createElement("button");
+        downloadButton.className = "message-prototype-button";
+        downloadButton.type = "button";
+        downloadButton.textContent = "⬇ HTML保存";
+        downloadButton.addEventListener("click", () => downloadPrototypeHtml(prototype.html, prototype.target));
+        toolbar.append(launchButton, downloadButton);
+      }
       const noteButton = document.createElement("button");
       noteButton.className = "message-note-button";
       noteButton.type = "button";
@@ -5361,18 +5375,47 @@ function loadPrototypePreview(source) {
   prototypeFrame.hidden = false;
 }
 
+function launchPrototypePreview(source, target = "AI prototype") {
+  prototypeHtmlSource = source;
+  prototypeTopicInput.value = target;
+  openPrototypeDialog();
+  prototypeStatus.textContent = `LIVE SANDBOX // ${target} // RESTARTED`;
+  loadPrototypePreview(source);
+  prototypeDownloadButton.disabled = false;
+  prototypeFullscreenButton.disabled = false;
+  appendSystemLog("PROTOTYPE FORGE // SANDBOX RESTARTED");
+}
+
+function downloadPrototypeHtml(source, target = "prototype") {
+  const blob = new Blob([source], { type: "text/html;charset=utf-8" });
+  const url = URL.createObjectURL(blob);
+  const link = document.createElement("a");
+  const safeName = target
+    .normalize("NFKC")
+    .replace(/[^\p{L}\p{N}_-]+/gu, "-")
+    .replace(/^-+|-+$/gu, "")
+    .slice(0, 48) || "prototype";
+  link.href = url;
+  link.download = `${safeName}.html`;
+  document.body.append(link);
+  link.click();
+  link.remove();
+  window.setTimeout(() => URL.revokeObjectURL(url), 1000);
+}
+
 function extractPrototypeHtml(reply) {
   const blocks = [...reply.matchAll(/```([^\r\n`]*)\r?\n([\s\S]*?)```/gu)];
   const fencedSource = blocks
-    .filter((match) => !match[1].trim() || /^(?:html|html5|htm)$/iu.test(match[1].trim()))
+    .filter((match) =>
+      !match[1].trim() ||
+      /^(?:html|html5|htm)$/iu.test(match[1].trim()) ||
+      /(?:<!doctype\s+html\b|<html\b)/iu.test(match[2]),
+    )
     .map((match) => match[2].trim())
-    .find((block) => /<html\b/iu.test(block) && /<body\b/iu.test(block) && /<script\b/iu.test(block));
+    .map((block) => block.match(/(?:<!doctype\s+html\b|<html\b)[\s\S]*?<\/html\s*>/iu)?.[0]?.trim() || block)
+    .find((block) => /(?:<!doctype\s+html\b|<html\b)/iu.test(block) && /<\/html\s*>/iu.test(block));
   const directSource = reply.match(/(?:<!doctype\s+html\b|<html\b)[\s\S]*?<\/html\s*>/iu)?.[0]?.trim();
-  const source = fencedSource || (
-    directSource && /<body\b/iu.test(directSource) && /<script\b/iu.test(directSource)
-      ? directSource
-      : null
-  );
+  const source = fencedSource || directSource || null;
   if (!source) return null;
   if (source.length > MAX_PROTOTYPE_HTML_LENGTH) {
     throw new RangeError(`生成されたHTMLが上限（${MAX_PROTOTYPE_HTML_LENGTH.toLocaleString("ja-JP")}文字）を超えています。短い構成でもう一度生成してください。`);
@@ -5411,32 +5454,22 @@ function formatPrototypeReply(reply, target) {
     };
   }
   if (!source) {
-    prototypeHtmlSource = "";
-    prototypeDownloadButton.disabled = true;
-    prototypeFullscreenButton.disabled = true;
-    prototypeStatus.textContent = "COMPLETE HTML CODE BLOCK NOT FOUND // REFINE THE REQUEST AND RETRY";
-    return {
-      displayText: getPrototypeReplyNarrative(reply) || "完全な単一HTMLコードを回答から検出できませんでした。条件を絞って再生成してください。",
-      historyText: `PROTOTYPE FORGE // ${target}\n完全なHTMLコードを検出できませんでした。`,
-      spokenText: "回答を受信しましたが、完全なHTMLコードを検出できませんでした。出力をご確認ください。",
-    };
+    return null;
   }
 
   prototypeHtmlSource = source;
-  if (prototypeDialog.open) loadPrototypePreview(source);
+  prototypeTopicInput.value = target;
+  if (!prototypeDialog.open) openPrototypeDialog();
+  loadPrototypePreview(source);
   prototypeDownloadButton.disabled = false;
   prototypeFullscreenButton.disabled = false;
   prototypeStatus.textContent = `BUILD COMPLETE // ${target} // SANDBOX ACTIVE · NETWORK RESTRICTED`;
   appendSystemLog("PROTOTYPE FORGE // ISOLATED APP DEPLOYED");
-  const explanation = getPrototypeReplyNarrative(reply);
-  const displayText = [
-    explanation,
-    `LIVE PROTOTYPE SANDBOXに「${target}」を展開しました。操作して動作を確認し、HTMLファイルとして保存できます。`,
-  ].filter(Boolean).join("\n\n");
   return {
-    displayText,
-    historyText: `PROTOTYPE FORGE // ${target}\n単一HTMLアプリを隔離プレビューへ展開しました。`,
+    displayText: "[PROTOTYPE COMPILED] 試作プログラムを起動しました、伊吹様。",
+    historyText: `PROTOTYPE COMPILED // ${target}`,
     spokenText: `試作アプリ「${target}」をサンドボックスに展開いたしました。`,
+    prototype: { html: source, target },
   };
 }
 
@@ -6685,7 +6718,13 @@ async function sendMessage(
     const data = await response.json();
     if (!response.ok) throw new Error(data.error || "リクエストに失敗しました。");
     if (typeof data.reply !== "string" || !data.reply.trim()) throw new Error("AIから空の応答が返されました。");
-    const presentation = formatReply ? formatReply(data.reply) : null;
+    const prototypeTarget =
+      getPrototypeForgeTarget(text) ||
+      text.normalize("NFKC").replace(/\s+/gu, " ").trim().slice(0, 64) ||
+      "AI GENERATED PROTOTYPE";
+    const presentation = formatReply
+      ? formatReply(data.reply)
+      : formatPrototypeReply(data.reply, prototypeTarget);
     const displayedReply =
       typeof presentation?.displayText === "string" ? presentation.displayText : data.reply;
     const storedReply =
@@ -6712,7 +6751,10 @@ async function sendMessage(
     history.push(assistantMessage);
     trimHistory();
     persistHistory();
-    addMessage("assistant", displayedReply, { scroll: "start" });
+    addMessage("assistant", displayedReply, {
+      scroll: "start",
+      prototype: presentation?.prototype || null,
+    });
     if (simulationTarget) renderSimulationResult(simulationTarget, data.reply);
     if (onReply) onReply(data.reply);
     playSfx("ready");
@@ -6988,20 +7030,7 @@ prototypeFullscreenButton.addEventListener("click", () => {
 });
 prototypeDownloadButton.addEventListener("click", () => {
   if (!prototypeHtmlSource) return;
-  const blob = new Blob([prototypeHtmlSource], { type: "text/html;charset=utf-8" });
-  const url = URL.createObjectURL(blob);
-  const link = document.createElement("a");
-  const safeName = (prototypeTopicInput.value || "prototype")
-    .normalize("NFKC")
-    .replace(/[^\p{L}\p{N}_-]+/gu, "-")
-    .replace(/^-+|-+$/gu, "")
-    .slice(0, 48) || "prototype";
-  link.href = url;
-  link.download = `${safeName}.html`;
-  document.body.append(link);
-  link.click();
-  link.remove();
-  window.setTimeout(() => URL.revokeObjectURL(url), 1000);
+  downloadPrototypeHtml(prototypeHtmlSource, prototypeTopicInput.value || "prototype");
 });
 knowledgeOpenButton.addEventListener("click", openKnowledgeMatrix);
 knowledgeCloseButton.addEventListener("click", () => knowledgeDialog.close());
