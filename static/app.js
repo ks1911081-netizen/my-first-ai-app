@@ -214,6 +214,8 @@ const ISS_MAX_TRACK_POINTS = 180;
 const EARTH_RADIUS_KM = 6371;
 const CITY_DEFAULT_CENTER = { latitude: 42.9849, longitude: 144.3814 };
 const CITY_SCAN_RADIUS_METERS = 180;
+const CITY_TARGET_SEARCH_RADIUS_METERS = 700;
+const CITY_TARGET_FALLBACK_RADIUS_METERS = 160;
 const CITY_OSM_SCALE = 0.0044;
 const CITY_BUILDING_HEIGHT_SCALE = 0.014;
 const CITY_MAX_BUILDINGS = 600;
@@ -352,6 +354,9 @@ let cityScanStartedAt = 0;
 let cityScanRequestVersion = 0;
 let cityOperatorLocation = null;
 let cityMapCounts = { buildings: 0, roads: 0 };
+let cityModelScale = 1;
+let cityCameraDistance = 2.6;
+let cityScanMode = "area";
 let nominatimLastRequestAt = 0;
 let nominatimQueue = Promise.resolve();
 let cityScanController = null;
@@ -2312,6 +2317,8 @@ function clearCityModel() {
   cityPaletteMaterials = [];
   cityScanRings = [];
   cityMapCounts = { buildings: 0, roads: 0 };
+  cityModelScale = 1;
+  cityCameraDistance = 2.6;
 }
 
 function setCityViewEnabled(enabled) {
@@ -2354,23 +2361,23 @@ function getCityBuildingHeight(tags, id, index) {
 function createCityLocationLabel(text) {
   const THREE = window.THREE;
   const canvas = document.createElement("canvas");
-  canvas.width = 512;
-  canvas.height = 96;
+  canvas.width = 1024;
+  canvas.height = 128;
   const context = canvas.getContext("2d");
   if (!context) {
     console.error("CITY SCANNER location label canvas is unavailable.");
     return null;
   }
   context.fillStyle = "rgba(2, 14, 24, 0.88)";
-  context.fillRect(4, 9, 504, 78);
+  context.fillRect(4, 9, 1016, 110);
   context.strokeStyle = "#bfffff";
   context.lineWidth = 2;
-  context.strokeRect(4, 9, 504, 78);
+  context.strokeRect(4, 9, 1016, 110);
   context.fillStyle = "#ffffff";
-  context.font = "600 26px monospace";
+  context.font = "600 28px monospace";
   context.textAlign = "center";
   context.textBaseline = "middle";
-  context.fillText(text.slice(0, 30), 256, 48, 480);
+  context.fillText(text.slice(0, 72), 512, 64, 980);
   const texture = addCityResource(new THREE.CanvasTexture(canvas));
   const material = addCityPaletteMaterial(new THREE.SpriteMaterial({
     map: texture,
@@ -2382,12 +2389,54 @@ function createCityLocationLabel(text) {
   return new THREE.Sprite(material);
 }
 
-function createCityModel(elements, center, locationLabel = "OPERATOR LOCATION") {
+function addTargetBuildingStructure(points, height, material) {
+  const THREE = window.THREE;
+  const outline = points.length > 3 &&
+    points[0].x === points[points.length - 1].x &&
+    points[0].z === points[points.length - 1].z
+    ? points.slice(0, -1)
+    : points;
+  if (outline.length < 3) return;
+
+  const floorHeight = 3.2 * CITY_BUILDING_HEIGHT_SCALE;
+  const floorCount = Math.min(48, Math.max(1, Math.floor(height / floorHeight)));
+  for (let floor = 1; floor <= floorCount; floor += 1) {
+    const y = Math.min(height, floor * floorHeight);
+    const floorPoints = outline.map((point) => new THREE.Vector3(point.x, y, point.z));
+    const geometry = addCityResource(new THREE.BufferGeometry().setFromPoints(floorPoints));
+    cityModelGroup.add(new THREE.LineLoop(geometry, material));
+  }
+
+  outline.forEach((start, index) => {
+    const end = outline[(index + 1) % outline.length];
+    const edgeLength = Math.hypot(end.x - start.x, end.z - start.z);
+    const divisions = Math.min(12, Math.max(1, Math.ceil(edgeLength / (3 * CITY_OSM_SCALE))));
+    for (let division = 0; division <= divisions; division += 1) {
+      const progress = division / divisions;
+      const x = start.x + (end.x - start.x) * progress;
+      const z = start.z + (end.z - start.z) * progress;
+      const geometry = addCityResource(new THREE.BufferGeometry().setFromPoints([
+        new THREE.Vector3(x, 0, z),
+        new THREE.Vector3(x, height, z),
+      ]));
+      cityModelGroup.add(new THREE.Line(geometry, material));
+    }
+  });
+}
+
+function createCityModel(
+  elements,
+  center,
+  locationLabel = "OPERATOR LOCATION",
+  { mode = "area" } = {},
+) {
   const THREE = window.THREE;
   if (!THREE || !cityModelGroup) throw new Error("Three.js city renderer is unavailable.");
   clearCityModel();
+  cityScanMode = mode;
 
   const palette = holoPalette();
+  const detailed = mode === "target";
   const roadMaterial = addCityPaletteMaterial(new THREE.LineBasicMaterial({
     color: palette.secondary,
     transparent: true,
@@ -2403,24 +2452,35 @@ function createCityModel(elements, center, locationLabel = "OPERATOR LOCATION") 
     depthWrite: false,
   }));
   const buildingMaterial = addCityPaletteMaterial(new THREE.MeshBasicMaterial({
-    color: palette.primary,
+    color: detailed ? palette.secondary : palette.primary,
     transparent: true,
-    opacity: 0.1,
+    opacity: detailed ? 0.19 : 0.1,
     side: THREE.DoubleSide,
     blending: THREE.AdditiveBlending,
     depthWrite: false,
-  }));
+  }), detailed);
   const buildingEdgeMaterial = addCityPaletteMaterial(new THREE.LineBasicMaterial({
-    color: palette.primary,
+    color: detailed ? palette.secondary : palette.primary,
     transparent: true,
-    opacity: 0.82,
+    opacity: detailed ? 1 : 0.82,
     blending: THREE.AdditiveBlending,
     depthWrite: false,
-  }));
+  }), detailed);
+
+  const structureMaterial = detailed
+    ? addCityPaletteMaterial(new THREE.LineBasicMaterial({
+      color: palette.primary,
+      transparent: true,
+      opacity: 0.95,
+      blending: THREE.AdditiveBlending,
+      depthWrite: false,
+    }), true)
+    : null;
+  const targetBounds = detailed ? new THREE.Box3() : null;
 
   const roads = elements
     .filter((element) => element.type === "way" && element.tags?.highway && Array.isArray(element.geometry))
-    .slice(0, CITY_MAX_ROADS);
+    .slice(0, detailed ? 0 : CITY_MAX_ROADS);
   roads.forEach((way) => {
     const points = way.geometry
       .filter((node) => Number.isFinite(Number(node.lat)) && Number.isFinite(Number(node.lon)))
@@ -2437,15 +2497,15 @@ function createCityModel(elements, center, locationLabel = "OPERATOR LOCATION") 
 
   const buildings = elements
     .filter((element) => element.type === "way" && element.tags?.building && Array.isArray(element.geometry))
-    .slice(0, CITY_MAX_BUILDINGS);
+    .slice(0, detailed ? 1 : CITY_MAX_BUILDINGS);
   buildings.forEach((way, index) => {
     const points = way.geometry
       .filter((node) => Number.isFinite(Number(node.lat)) && Number.isFinite(Number(node.lon)))
       .map((node) => getCityCoordinate(Number(node.lat), Number(node.lon), center));
     if (points.length < 3) return;
     const shape = new THREE.Shape();
-    shape.moveTo(points[0].x, points[0].z);
-    points.slice(1).forEach((point) => shape.lineTo(point.x, point.z));
+    shape.moveTo(points[0].x, -points[0].z);
+    points.slice(1).forEach((point) => shape.lineTo(point.x, -point.z));
     shape.closePath();
     const height = getCityBuildingHeight(way.tags, way.id, index);
     const geometry = addCityResource(new THREE.ExtrudeGeometry(shape, {
@@ -2458,10 +2518,29 @@ function createCityModel(elements, center, locationLabel = "OPERATOR LOCATION") 
     cityModelGroup.add(building);
     const edgeGeometry = addCityResource(new THREE.EdgesGeometry(geometry, 1));
     cityModelGroup.add(new THREE.LineSegments(edgeGeometry, buildingEdgeMaterial));
+    if (detailed) {
+      addTargetBuildingStructure(points, height * CITY_BUILDING_HEIGHT_SCALE, structureMaterial);
+      targetBounds.expandByObject(building);
+    }
     cityMapCounts.buildings += 1;
   });
 
-  const baseGeometry = addCityResource(new THREE.CircleGeometry(2.25, 96));
+  if (detailed && !targetBounds.isEmpty()) {
+    const targetSize = targetBounds.getSize(new THREE.Vector3());
+    const largestDimension = Math.max(targetSize.x, targetSize.y, targetSize.z);
+    cityModelScale = Math.min(7, Math.max(1, 1.4 / largestDimension));
+    const projectedHeight = targetSize.y * cityModelScale + 0.46;
+    const projectedWidth = Math.max(targetSize.x, targetSize.z) * cityModelScale;
+    cityCameraDistance = Math.max(
+      2.6,
+      Math.max(projectedHeight, projectedWidth) / (2 * Math.tan(19 * Math.PI / 180)) * 1.05,
+    );
+  }
+
+  const baseGeometry = addCityResource(new THREE.CircleGeometry(
+    detailed ? 0.42 / cityModelScale : 2.25,
+    96,
+  ));
   baseGeometry.rotateX(-Math.PI / 2);
   const baseMaterial = addCityPaletteMaterial(new THREE.MeshBasicMaterial({
     color: palette.primary,
@@ -2473,22 +2552,32 @@ function createCityModel(elements, center, locationLabel = "OPERATOR LOCATION") 
   }));
   cityModelGroup.add(new THREE.Mesh(baseGeometry, baseMaterial));
 
-  const beaconGeometry = addCityResource(new THREE.SphereGeometry(0.055, 14, 10));
+  const beaconGeometry = addCityResource(new THREE.SphereGeometry(
+    detailed ? 0.03 / cityModelScale : 0.055,
+    14,
+    10,
+  ));
   const beaconMaterial = addCityPaletteMaterial(new THREE.MeshBasicMaterial({
     color: palette.secondary,
     blending: THREE.AdditiveBlending,
   }), true);
   const beacon = new THREE.Mesh(beaconGeometry, beaconMaterial);
-  beacon.position.y = 0.12;
+  beacon.position.y = detailed ? 0.035 / cityModelScale : 0.12;
   cityModelGroup.add(beacon);
 
-  const beamGeometry = addCityResource(new THREE.BufferGeometry().setFromPoints([
-    new THREE.Vector3(0, 0.02, 0),
-    new THREE.Vector3(0, 0.82, 0),
-  ]));
-  cityModelGroup.add(new THREE.Line(beamGeometry, mainRoadMaterial));
+  if (!detailed) {
+    const beamGeometry = addCityResource(new THREE.BufferGeometry().setFromPoints([
+      new THREE.Vector3(0, 0.02, 0),
+      new THREE.Vector3(0, 0.82, 0),
+    ]));
+    cityModelGroup.add(new THREE.Line(beamGeometry, mainRoadMaterial));
+  }
 
-  const targetRingGeometry = addCityResource(new THREE.RingGeometry(0.1, 0.115, 64));
+  const targetRingGeometry = addCityResource(new THREE.RingGeometry(
+    detailed ? 0.1 / cityModelScale : 0.1,
+    detailed ? 0.115 / cityModelScale : 0.115,
+    64,
+  ));
   targetRingGeometry.rotateX(-Math.PI / 2);
   const targetRingMaterial = addCityPaletteMaterial(new THREE.MeshBasicMaterial({
     color: palette.secondary,
@@ -2499,11 +2588,16 @@ function createCityModel(elements, center, locationLabel = "OPERATOR LOCATION") 
     depthWrite: false,
   }), true);
   const targetRing = new THREE.Mesh(targetRingGeometry, targetRingMaterial);
-  targetRing.position.y = 0.035;
+  targetRing.position.y = detailed ? 0.035 / cityModelScale : 0.035;
   cityModelGroup.add(targetRing);
 
   for (let index = 0; index < 3; index += 1) {
-    const geometry = addCityResource(new THREE.RingGeometry(0.96, 0.98, 96));
+    const ringRadius = detailed ? 0.14 / cityModelScale : 0.96;
+    const geometry = addCityResource(new THREE.RingGeometry(
+      ringRadius,
+      ringRadius + (detailed ? 0.02 / cityModelScale : 0.02),
+      96,
+    ));
     geometry.rotateX(-Math.PI / 2);
     const material = addCityPaletteMaterial(new THREE.MeshBasicMaterial({
       color: palette.primary,
@@ -2514,15 +2608,27 @@ function createCityModel(elements, center, locationLabel = "OPERATOR LOCATION") 
       depthWrite: false,
     }));
     const ring = new THREE.Mesh(geometry, material);
-    ring.position.y = 0.026 + index * 0.002;
+    ring.position.y = detailed
+      ? (0.026 + index * 0.002) / cityModelScale
+      : 0.026 + index * 0.002;
     cityModelGroup.add(ring);
     cityScanRings.push({ ring, material, phase: index / 3 });
   }
 
   const label = createCityLocationLabel(locationLabel);
   if (label) {
-    label.position.set(0, 0.94, 0);
-    label.scale.set(1.7, 0.32, 1);
+    label.position.set(
+      0,
+      detailed && !targetBounds.isEmpty()
+        ? targetBounds.max.y + 0.12 / cityModelScale
+        : 0.94,
+      0,
+    );
+    label.scale.set(
+      detailed ? 1.8 / cityModelScale : 1.7,
+      detailed ? 0.34 / cityModelScale : 0.32,
+      1,
+    );
     cityModelGroup.add(label);
   }
   cityScanStartedAt = performance.now();
@@ -2606,7 +2712,7 @@ function animateCityScan(time) {
   if (!cityModeActive) return;
   cityScanRings.forEach(({ ring, material, phase }) => {
     const progress = ((time - cityScanStartedAt) / 3200 + phase) % 1;
-    const radius = 0.08 + progress * 2.25;
+    const radius = 0.08 + progress * (cityScanMode === "target" ? 0.55 : 2.25);
     ring.scale.set(radius, radius, radius);
     material.opacity = 0.72 * (1 - progress);
   });
@@ -2656,8 +2762,8 @@ function drawHoloProjector() {
   if (cityModeActive) {
     cityModelGroup.rotation.x += (holoRotationX - cityModelGroup.rotation.x) * 0.18;
     cityModelGroup.rotation.y += (holoRotationY - cityModelGroup.rotation.y) * 0.18 + 0.0015;
-    cityModelGroup.scale.setScalar(holoGestureScale);
-    const distance = 2.6;
+    cityModelGroup.scale.setScalar(cityModelScale * holoGestureScale);
+    const distance = cityCameraDistance;
     holoCamera.position.set(0, distance * 0.68, distance);
     holoCamera.lookAt(0, 0, 0);
     animateCityScan(performance.now());
@@ -2734,11 +2840,11 @@ function openCityProjector() {
 
 function getCityScanTarget(text) {
   const normalized = text.normalize("NFKC").trim();
-  const scanIntent = /(?:3d\s*(?:(?:tactical\s*)?city\s*(?:map|scanner)|scan|projection)|3d(?:スキャン|投影)|(?:都市|シティ).*(?:スキャン|スキャナ|投影)|(?:周辺|付近|近辺|近く).*(?:スキャン|スキャナ|投影)|(?:スキャン|スキャナ|投影).*(?:周辺|付近|近辺|近く))/iu;
+  const scanIntent = /(?:3d\s*(?:(?:tactical\s*)?city\s*(?:map|scanner)|scan|projection)|3d(?:スキャン|投影)|(?:都市|シティ).*(?:スキャン|スキャナ|投影)|(?:周辺|周り|周囲|付近|近辺|近く).*(?:スキャン|スキャナ|投影)|(?:スキャン|スキャナ|投影).*(?:周辺|周り|周囲|付近|近辺|近く))/iu;
   if (!scanIntent.test(normalized)) return null;
 
   const patterns = [
-    /^(.+?)(?:の)?(?:周辺|付近|近辺|近く)(?:を|に)?(?:3d\s*)?(?:スキャン|スキャナ(?:ー)?|投影)(?:して|してください|する|お願いします)?$/iu,
+    /^(.+?)(?:の)?(?:周辺|周り|周囲|付近|近辺|近く)(?:の?(?:街並み|建物|エリア|地域))?(?:を|に)?(?:3d\s*)?(?:スキャン|スキャナ(?:ー)?|投影)(?:して|してください|する|お願いします)?$/iu,
     /^(.+?)を(?:3d\s*)?(?:スキャン|スキャナ(?:ー)?|投影)(?:して|してください|する|お願いします)?$/iu,
     /^(?:3d\s*(?:tactical\s*)?city\s*(?:map|scanner)|3d\s*(?:scan|projection)|3d(?:スキャン|投影))(?:を|で)?(.+?)(?:してください|して|お願いします)?$/iu,
   ];
@@ -2747,12 +2853,24 @@ function getCityScanTarget(text) {
     if (!match) continue;
     const target = match[1]
       .replace(/^[\s「『"'、:：]+|[\s」』"'、。.!！?？]+$/gu, "")
-      .replace(/(?:の)?(?:周辺|付近|近辺|近く)(?:の?(?:街並み|建物|エリア|地域))?$/u, "")
+      .replace(/(?:の)?(?:周辺|周り|周囲|付近|近辺|近く)(?:の?(?:街並み|建物|エリア|地域))?$/u, "")
       .trim();
     if (/^(?:現在地|自分の場所|今いる場所|ここ|operator location|my location)$/iu.test(target)) return "";
     if (target) return target;
   }
   return "";
+}
+
+function getCityScanMode(text) {
+  return /(?:周辺|周り|周囲|付近|近辺|近く)/u.test(text.normalize("NFKC"))
+    ? "area"
+    : "target";
+}
+
+function cleanCityPlace(place) {
+  return place.normalize("NFKC")
+    .replace(/(?:の)?(?:周辺|周り|周囲|付近|近辺|近く)(?:の?(?:街並み|建物|エリア|地域))?$/u, "")
+    .trim();
 }
 
 function getCityOperatorLocation() {
@@ -2817,6 +2935,8 @@ function geocodeCityPlace(place, signal) {
         latitude,
         longitude,
         source: results[0].display_name || place,
+        osmType: results[0].osm_type || "",
+        osmId: Number(results[0].osm_id) || 0,
       };
     } finally {
       window.clearTimeout(timeout);
@@ -2827,8 +2947,7 @@ function geocodeCityPlace(place, signal) {
   return request;
 }
 
-async function fetchCityOverpassData(center, signal) {
-  const query = `[out:json][timeout:20];(way(around:${CITY_SCAN_RADIUS_METERS},${center.latitude},${center.longitude})[building];way(around:${CITY_SCAN_RADIUS_METERS},${center.latitude},${center.longitude})[highway];);out body geom;`;
+async function fetchCityOverpassQuery(query, signal) {
   let lastError;
   for (const endpoint of CITY_OVERPASS_ENDPOINTS) {
     if (signal.aborted) throw new DOMException("City scan was cancelled.", "AbortError");
@@ -2865,6 +2984,97 @@ async function fetchCityOverpassData(center, signal) {
   throw lastError || new Error("All Overpass endpoints failed.");
 }
 
+async function fetchCityOverpassData(center, signal) {
+  const query = `[out:json][timeout:20];(way(around:${CITY_SCAN_RADIUS_METERS},${center.latitude},${center.longitude})[building];way(around:${CITY_SCAN_RADIUS_METERS},${center.latitude},${center.longitude})[highway];);out body geom;`;
+  return fetchCityOverpassQuery(query, signal);
+}
+
+function getCityBuildingCenter(way) {
+  const nodes = way.geometry.filter((node) =>
+    Number.isFinite(Number(node.lat)) && Number.isFinite(Number(node.lon)));
+  if (nodes.length < 3) return null;
+  return {
+    latitude: nodes.reduce((sum, node) => sum + Number(node.lat), 0) / nodes.length,
+    longitude: nodes.reduce((sum, node) => sum + Number(node.lon), 0) / nodes.length,
+  };
+}
+
+function getCityBuildingArea(way, center) {
+  const points = way.geometry
+    .filter((node) => Number.isFinite(Number(node.lat)) && Number.isFinite(Number(node.lon)))
+    .map((node) => getCityCoordinate(Number(node.lat), Number(node.lon), center));
+  if (points.length < 3) return 0;
+  let twiceArea = 0;
+  points.forEach((point, index) => {
+    const next = points[(index + 1) % points.length];
+    twiceArea += point.x * next.z - next.x * point.z;
+  });
+  return Math.abs(twiceArea / 2) / (CITY_OSM_SCALE ** 2);
+}
+
+function selectCityTargetBuilding(elements, center, place) {
+  const buildings = elements.filter((element) =>
+    element.type === "way" &&
+    element.tags?.building &&
+    Array.isArray(element.geometry) &&
+    element.geometry.length >= 3);
+  if (!buildings.length) return null;
+
+  const normalizedPlace = place.normalize("NFKC").toLocaleLowerCase();
+  const matchingNames = buildings.filter((building) => {
+    const name = String(building.tags.name || building.tags["name:ja"] || "")
+      .normalize("NFKC")
+      .toLocaleLowerCase();
+    return normalizedPlace && name &&
+      (name.includes(normalizedPlace) || normalizedPlace.includes(name));
+  });
+  const candidates = matchingNames.length ? matchingNames : buildings;
+  const majorCandidates = candidates.filter((building) =>
+    getCityBuildingArea(building, center) >= 25);
+  const selectedPool = majorCandidates.length ? majorCandidates : candidates;
+  const selected = selectedPool
+    .map((building) => {
+      const location = getCityBuildingCenter(building);
+      if (!location) return null;
+      const coordinate = getCityCoordinate(location.latitude, location.longitude, center);
+      return {
+        building,
+        location,
+        distance: Math.hypot(coordinate.x, coordinate.z),
+      };
+    })
+    .filter(Boolean)
+    .sort((left, right) => left.distance - right.distance)[0];
+  if (!selected) return null;
+  return {
+    ...selected,
+    matchedName: matchingNames.includes(selected.building),
+  };
+}
+
+async function fetchCityTargetBuilding(center, place, signal) {
+  if (place) {
+    const escapedName = place
+      .replace(/[.*+?^${}()|[\]\\]/gu, "\\$&")
+      .replace(/"/gu, '\\"');
+    const selectors = [
+      `way(around:${CITY_TARGET_SEARCH_RADIUS_METERS},${center.latitude},${center.longitude})[building][name~"${escapedName}",i];`,
+    ];
+    if (center.osmType === "way" && Number.isSafeInteger(center.osmId) && center.osmId > 0) {
+      selectors.push(`way(${center.osmId})[building];`);
+    }
+    const namedQuery = `[out:json][timeout:20];(${selectors.join("")});out body geom;`;
+    const namedBuildings = await fetchCityOverpassQuery(namedQuery, signal);
+    const namedTarget = selectCityTargetBuilding(namedBuildings, center, place);
+    if (namedTarget) return namedTarget;
+  }
+
+  const nearbyQuery =
+    `[out:json][timeout:20];way(around:${CITY_TARGET_FALLBACK_RADIUS_METERS},${center.latitude},${center.longitude})[building];out body geom;`;
+  const nearbyBuildings = await fetchCityOverpassQuery(nearbyQuery, signal);
+  return selectCityTargetBuilding(nearbyBuildings, center, place);
+}
+
 function recordCityScanMessage(role, text, voice = false) {
   addMessage(role, text);
   history.push({ role, content: text });
@@ -2877,54 +3087,106 @@ async function scanTacticalCity({ place = "", sourceText = "", voice = false } =
   if (systemLocked || sentryStandbyActive) return;
   if (!openCityProjector()) return;
 
+  const rawPlace = place;
+  const targetPlace = cleanCityPlace(place);
+  const mode = sourceText
+    ? getCityScanMode(sourceText)
+    : rawPlace
+      ? getCityScanMode(rawPlace)
+      : "area";
+
   cityScanController?.abort();
   const controller = new AbortController();
   cityScanController = controller;
   const scanId = ++cityScanRequestId;
-  cityScanStatus.textContent = place ? `GEOCODING TARGET // ${place}` : "ACQUIRING OPERATOR LOCATION...";
+  cityScanStatus.textContent = targetPlace ? `GEOCODING TARGET // ${targetPlace}` : "ACQUIRING OPERATOR LOCATION...";
   holoStatus.textContent = "CITY SCANNER // ACQUIRING MAP DATA";
   appendSystemLog("CITY SCANNER // MAP DATA REQUESTED");
   playSfx("transmit", true);
   if (sourceText) recordCityScanMessage("user", sourceText);
 
   try {
-    const center = place
-      ? await geocodeCityPlace(place, controller.signal)
+    const center = targetPlace
+      ? await geocodeCityPlace(targetPlace, controller.signal)
       : await getCityOperatorLocation();
     if (controller.signal.aborted || scanId !== cityScanRequestId) return;
     cityScanStatus.textContent = `QUERYING OPENSTREETMAP // ${center.source}`;
-    let elements = [];
-    let osmUnavailable = false;
-    try {
-      elements = await fetchCityOverpassData(center, controller.signal);
-    } catch (error) {
+    let response;
+    let report;
+
+    if (mode === "target") {
+      const target = await fetchCityTargetBuilding(center, targetPlace, controller.signal);
       if (controller.signal.aborted || scanId !== cityScanRequestId) return;
-      osmUnavailable = true;
-      console.warn("CITY SCANNER is using generated fallback geometry.", error);
+      if (!target) {
+        clearCityModel();
+        cityScanStatus.textContent = "TARGET BUILDING NOT FOUND // TRY A MORE SPECIFIC NAME";
+        holoStatus.textContent = "NO MATCHING OSM BUILDING // REFINE TARGET";
+        recordCityScanMessage(
+          "assistant",
+          `「${targetPlace || "現在地"}」に対応する建物ポリゴンを確認できませんでした、伊吹様。名称を詳しく指定して再試行してください。`,
+          voice,
+        );
+        return;
+      }
+
+      const osmTargetName = target.building.tags.name || target.building.tags["name:ja"];
+      const targetName = (target.matchedName ? targetPlace : osmTargetName) ||
+        targetPlace ||
+        "OPERATOR LOCATION";
+      const targetCenter = {
+        ...center,
+        ...target.location,
+      };
+      createCityModel(
+        [target.building],
+        targetCenter,
+        `[TARGET LOCKED: ${targetName}]`,
+        { mode: "target" },
+      );
+      cityScanStatus.textContent = `TARGET LOCKED // ${targetName}`;
+      holoStatus.textContent =
+        `PINPOINT STRUCTURAL SCAN // ${targetCenter.latitude.toFixed(4)}, ${targetCenter.longitude.toFixed(4)} // DRAG / WHEEL TO ORBIT`;
+      appendSystemLog(`CITY SCANNER // TARGET LOCKED · OSM WAY ${target.building.id}`);
+      response = "対象建造物の詳細構造スキャンを完了しました、伊吹様。\n";
+      report =
+        `対象: ${targetName}\n` +
+        `座標: ${targetCenter.latitude.toFixed(4)}, ${targetCenter.longitude.toFixed(4)}\n` +
+        "投影: 対象建物のみ。階層ラインと構造グリッドを追加しました。\n" +
+        (target.matchedName
+          ? "地図データ: OpenStreetMapの名称一致建物ポリゴン。"
+          : "名称一致ポリゴンがないため、指定地点に最も近い主要建物を投影しました。");
+    } else {
+      let elements = [];
+      let osmUnavailable = false;
+      try {
+        elements = await fetchCityOverpassData(center, controller.signal);
+      } catch (error) {
+        if (controller.signal.aborted || scanId !== cityScanRequestId) return;
+        osmUnavailable = true;
+        console.warn("CITY SCANNER is using generated fallback geometry.", error);
+      }
+      if (controller.signal.aborted || scanId !== cityScanRequestId) return;
+      createCityModel(elements, center, targetPlace ? "TARGET LOCATION" : "OPERATOR LOCATION");
+      const missingBuildings = cityMapCounts.buildings === 0;
+      if (missingBuildings || osmUnavailable) addSyntheticCityFallback();
+      const supplemented = missingBuildings || osmUnavailable;
+      cityScanStatus.textContent = supplemented
+        ? `SUPPLEMENTAL PROJECTION COMPLETE // ${cityMapCounts.buildings} BUILDINGS · ${cityMapCounts.roads} ROADS`
+        : `SCAN COMPLETE // ${cityMapCounts.buildings} BUILDINGS · ${cityMapCounts.roads} ROADS`;
+      holoStatus.textContent =
+        `${supplemented ? "SUPPLEMENTAL CITY PROJECTION" : "AREA"} // ${center.latitude.toFixed(4)}, ${center.longitude.toFixed(4)} // DRAG / WHEEL TO ORBIT`;
+      appendSystemLog(`CITY SCANNER // ${supplemented ? "SUPPLEMENTAL MODEL" : "OSM MODEL"} · ${cityMapCounts.buildings} BUILDINGS`);
+      response = "周辺エリアの広域スキャンを完了しました、伊吹様。\n";
+      report =
+        `対象: ${center.source}\n` +
+        `座標: ${center.latitude.toFixed(4)}, ${center.longitude.toFixed(4)}\n` +
+        `検出: 建物 ${cityMapCounts.buildings} 棟 / 道路 ${cityMapCounts.roads} 区間 / 半径 ${CITY_SCAN_RADIUS_METERS}m\n` +
+        (osmUnavailable
+          ? "Overpass APIが応答しなかったため、周辺道路と建物の一部をSFモデルで補完しました。"
+          : missingBuildings
+            ? "建物データが見つからなかったため、周辺道路とSFワイヤーフレームビル群を補完投影しました。"
+            : "地図データ: OpenStreetMap。高さ情報がない建物は表示用の推定値で補っています。");
     }
-    if (controller.signal.aborted || scanId !== cityScanRequestId) return;
-    createCityModel(elements, center, place ? "TARGET LOCATION" : "OPERATOR LOCATION");
-    const missingBuildings = cityMapCounts.buildings === 0;
-    if (missingBuildings || osmUnavailable) addSyntheticCityFallback();
-    const supplemented = missingBuildings || osmUnavailable;
-    cityScanStatus.textContent = supplemented
-      ? `SUPPLEMENTAL PROJECTION COMPLETE // ${cityMapCounts.buildings} BUILDINGS · ${cityMapCounts.roads} ROADS`
-      : `SCAN COMPLETE // ${cityMapCounts.buildings} BUILDINGS · ${cityMapCounts.roads} ROADS`;
-    holoStatus.textContent =
-      `${supplemented ? "SUPPLEMENTAL CITY PROJECTION" : place ? "TARGET" : "OPERATOR"} // ${center.latitude.toFixed(4)}, ${center.longitude.toFixed(4)} // DRAG / WHEEL TO ORBIT`;
-    appendSystemLog(`CITY SCANNER // ${supplemented ? "SUPPLEMENTAL MODEL" : "OSM MODEL"} · ${cityMapCounts.buildings} BUILDINGS`);
-    const response = supplemented
-      ? `周辺データの補完投影を完了しました、伊吹様。\n`
-      : `3D都市スキャンが完了しました、伊吹様。\n`;
-    const report =
-      `対象: ${center.source}\n` +
-      `座標: ${center.latitude.toFixed(4)}, ${center.longitude.toFixed(4)}\n` +
-      `検出: 建物 ${cityMapCounts.buildings} 棟 / 道路 ${cityMapCounts.roads} 区間\n` +
-      (osmUnavailable
-        ? "Overpass APIが応答しなかったため、周辺道路と建物の一部をSFモデルで補完しました。"
-        : missingBuildings
-          ? "建物データが見つからなかったため、周辺道路とSFワイヤーフレームビル群を補完投影しました。"
-          : "地図データ: OpenStreetMap。高さ情報がない建物は表示用の推定値で補っています。");
     recordCityScanMessage("assistant", `${response}${report}`, voice);
   } catch (error) {
     if (controller.signal.aborted || scanId !== cityScanRequestId) return;
